@@ -5,8 +5,9 @@ export async function POST({ request }) {
     const { data } = await request.json();
 
     const file = data['image'];
+    const type = String(data["type"]);
 
 	
-    writeFileSync(`static/image.png`, file, 'base64');
+    writeFileSync(`static/images/image.${type}`, file, 'base64');
     return json({ "message": "Data uploaded successfully!" }, { status: 201 });
 }

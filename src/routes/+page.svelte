@@ -11,15 +11,18 @@
         bind:this={fileInput}
         on:change={() => getBase64(files[0])}/>
     <button
-        class="upload-btn"
         on:click={ () => fileInput.click() }>
         Upload
     </button>
-    {#if avatar}
-        <img id="uploadedImg" src={avatar} alt="avatar"/>
+    {#if uploadedImage}
+        <img id="uploadedImg" src={uploadedImage} alt="avatar"/>
+        <p>{messageUpload}</p>
+
+        <button
+            on:click={requestGeneration}>generate pattern</button>
     {/if}
 
-    <p>{messageErr}</p>
+    
 </div>
 
 
@@ -28,24 +31,29 @@
     let fileInput: HTMLElement;
 
     let files: File[];
-    let avatar: any;
-    let messageErr = "";
+    let uploadedImage: any;
+    let imageType: string;
+    let messageUpload = "";
 
 
     function getBase64(image: File) {
         const reader = new FileReader();
         reader.readAsDataURL(image);
+        imageType = String(image.type).split('/')[1];
         reader.onload = e => {
-            avatar = e?.target?.result;
-            uploadFunction(e?.target?.result);
+            uploadedImage = e?.target?.result;
+            uploadFunction(e?.target?.result, image);
             
         };
     };
 
-    async function uploadFunction(imgBase64) {
+    async function uploadFunction(imgBase64, originalImage: File) {
         const data = {}
         const imgData = imgBase64.split(',');
         data["image"] = imgData[1];
+        data["name"] = originalImage.name;
+        data["type"] = imageType;
+        console.log(data)
         const reponse = await fetch(`/uploadImage`, {
             method: 'POST',
             headers: {
@@ -55,8 +63,14 @@
             body: JSON.stringify({data})
         });
         const { message } = await reponse.json();
-        messageErr = message;
+        messageUpload = message;
     };
+
+    async function requestGeneration() {
+        const response = await fetch('/generatePattern');
+        const  message  = await response.json();
+        console.log(message) 
+    }
 </script>
 
 
@@ -77,7 +91,7 @@
         display: none;
     }
 
-    .upload-btn {
+    button {
         width: 128px;
         height: 32px;
         background-color: black;
