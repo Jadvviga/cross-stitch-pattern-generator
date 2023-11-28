@@ -1,5 +1,5 @@
 <h1>Pixel Art to Cross Stitch Pattern generator</h1>
-<p>Click button belowe to upload pixel art image.</p>
+<p>Click button below to upload pixel art image.</p>
 
 <div class="container">
     <input
@@ -16,8 +16,7 @@
     </button>
     {#if uploadedImage}
         <img id="uploadedImg" src={uploadedImage} alt="avatar"/>
-        <p>{messageUpload}</p>
-
+        {messageUpload}
         <button
             on:click={requestGeneration}>generate pattern</button>
     {/if}
@@ -27,6 +26,9 @@
 
 
 <script lang="ts">
+    import { goto } from "$app/navigation";
+    import { onMount } from "svelte";
+
 
     let fileInput: HTMLElement;
 
@@ -34,6 +36,7 @@
     let uploadedImage: any;
     let imageType: string;
     let messageUpload = "";
+    let uploadedFileName = "";
 
 
     function getBase64(image: File) {
@@ -42,18 +45,18 @@
         imageType = String(image.type).split('/')[1];
         reader.onload = e => {
             uploadedImage = e?.target?.result;
+            
             uploadFunction(e?.target?.result, image);
             
         };
     };
 
-    async function uploadFunction(imgBase64, originalImage: File) {
-        const data = {}
+    async function uploadFunction(imgBase64: any, originalImage: File) {
+        const data: any = {};
         const imgData = imgBase64.split(',');
         data["image"] = imgData[1];
         data["name"] = originalImage.name;
         data["type"] = imageType;
-        console.log(data)
         const reponse = await fetch(`/uploadImage`, {
             method: 'POST',
             headers: {
@@ -62,15 +65,32 @@
             },
             body: JSON.stringify({data})
         });
-        const { message } = await reponse.json();
-        messageUpload = message;
+        const{ fileName } = await reponse.json();
+        uploadedFileName = fileName;
+        sessionStorage.setItem('fileName', fileName);
     };
 
     async function requestGeneration() {
-        const response = await fetch('/generatePattern');
-        const  message  = await response.json();
-        console.log(message) 
+        const data: any = {};
+        data["fileName"] = uploadedFileName;
+        await fetch('/generatePattern', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json'
+            },
+            body: JSON.stringify({data})
+        })
+        .then(() => {
+            goto(`/settings/${uploadedFileName}`);
+        }
+        );
     }
+
+    onMount(() => {
+        uploadedImage = null;
+        sessionStorage.clear();
+    })
 </script>
 
 

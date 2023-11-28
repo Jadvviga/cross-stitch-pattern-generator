@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { randomUUID } from 'crypto';
 import { writeFileSync } from 'fs';
 
 export async function POST({ request }) {
@@ -7,7 +8,8 @@ export async function POST({ request }) {
     const file = data['image'];
     const type = String(data["type"]);
 
+    const fileName = randomUUID();
 	
-    writeFileSync(`static/images/image.${type}`, file, 'base64');
-    return json({ "message": "Data uploaded successfully!" }, { status: 201 });
+    writeFileSync(`static/images/${fileName}.png`, file, 'base64');
+    return json({ "fileName": fileName }, { status: 201 });
 }

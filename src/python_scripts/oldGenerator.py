@@ -87,7 +87,7 @@ def add_black_grid(img_path):
 
 
 if __name__ == "__main__":
-    img_name = "bionicle"
+    img_name = "./static/images/image"
 
     img = Image.open(img_name + ".png")
     generate_pattern(img, img_name + "_pattern.png")
@@ -98,6 +98,6 @@ if __name__ == "__main__":
 
     print("Saved color palette as " + img_name + "_palette.png")
     print(f"Number of colors: {len(colors)}"  )
-    # for color in colors:
-    #     print(color)
+    for color in colors:
+        print(color)
     img.close()

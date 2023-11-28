@@ -1,11 +1,19 @@
 import { error, json } from '@sveltejs/kit';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
+import { generatePattern } from './generatePattern.js';
  
-export async function GET() {
-    const execFunc = promisify(exec);
-    let message = "python run"
-    const { stdout, stderr } = await execFunc(`python ./src/python_scripts/main.py image.png`)
-    message = stderr || stdout;
+export async function POST({ request }) {
+    const { data } = await request.json();
+    const fileName = data["fileName"];
+    generatePattern(fileName);
+    let message = "test"
     return json(message);
+}
+
+// Not using pyhton for now
+async function runPython() {
+    const execFunc = promisify(exec);
+    const { stdout, stderr } = await execFunc(`python ./src/python_scripts/main.py image.png`)
+    return stderr || stdout;
 }
