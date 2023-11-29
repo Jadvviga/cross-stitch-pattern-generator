@@ -20,6 +20,10 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@types/node": "^20.9.0"
+		"@types/node": "^20.9.0",
+		"jimp": "^0.22.10"
+	},
+	"overrides": {
+		"xml2js": "^0.5.0"
 	}
 }

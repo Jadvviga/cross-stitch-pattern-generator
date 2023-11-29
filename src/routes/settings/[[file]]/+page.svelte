@@ -8,7 +8,7 @@
     <img id="uploadedImg" src={uploadedImage} alt="avatar"/>
 
     <div>
-        test text
+        test
     </div>
     
 
@@ -38,7 +38,7 @@ loading...
 
     onMount(() => {
         const storageFileName = sessionStorage.getItem('fileName');
-        uploadedImage = `/images/${data.fileName}.png`;
+        uploadedImage = `/images/${data.fileName}_test.png`;
         
         if (!storageFileName || storageFileName !== data.fileName) {
             goto('/');
