@@ -1,9 +1,12 @@
 import Jimp from "jimp";
-import { readFileSync } from "node:fs";
 
-const SCALE_SMALL = 8;
-const SCALE_MEDIUM = 6;
-const SCALE_BIG = 4;
+// const SCALE_SMALL = 64;
+// const SCALE_MEDIUM = 32;
+// const SCALE_BIG = 16;
+
+const SCALE_SMALL = 32;
+const SCALE_MEDIUM = 16;
+const SCALE_BIG = 8;
 
 const GRID_COLOR = 255;
 
@@ -11,21 +14,18 @@ const THRESHOLD_SMALL = 20;
 const THRESHOLD_BIG = 100;
 
 export  async function generatePattern(fileName: string) {
+  console.log(fileName)
     const path = 'static/images/';
     const fullFileName = `${path}${fileName}.png`;
     const resizedFileName = `${path}${fileName}_resize.png`;
 
     const imagePixelsArray: number[] = [];
-    const paletteSet = new Set();
+    const paletteSet = new Set<number>();
 
     const image = await Jimp.read(fullFileName);
     const ogWidth = image.bitmap.width;
     const ogHeight = image.bitmap.height;
     const scale = determineScale(ogWidth, ogHeight);
-    console.log(scale)
-    // image
-    //   .scale(scale) // resize
-    //   .write(resizedFileName); // save
 
     for (let y = 0; y < ogHeight; y ++) {
       for (let x = 0; x < ogWidth; x ++) {
@@ -33,14 +33,22 @@ export  async function generatePattern(fileName: string) {
         paletteSet.add(image.getPixelColor(x, y));
       }
     }
-    // console.log(paletteSet)
-    // console.log(imagePixelsArray)  
-    // console.log(typeof Jimp.intToRGBA(imagePixelsArray[0]))
+
+    const paletteFileName = `${path}${fileName}_palette.png`;
+
+    await generatePalette(paletteFileName, paletteSet);
 
     const resizedImagePixelsArray = getPixelsOfResizedImage(imagePixelsArray, ogWidth, ogHeight, scale)
     const newWidth = ogWidth * scale + ogWidth + 1; // width+1 is for grid
     const newHeight = ogHeight * scale + ogHeight + 1;
     
+    const icon = await Jimp.read(`static/icons/icon0.png`);
+    icon.resize(scale, scale, Jimp.RESIZE_BILINEAR);
+    // Jimp.RESIZE_NEAREST_NEIGHBOR;
+    // Jimp.RESIZE_BILINEAR;
+    // Jimp.RESIZE_BICUBIC;
+    // Jimp.RESIZE_HERMITE;
+    // Jimp.RESIZE_BEZIER;
 
     await new Jimp(newWidth, newHeight, (err, image) => {
       if (err) throw err;
@@ -51,8 +59,14 @@ export  async function generatePattern(fileName: string) {
           count++;
         }
       }
+
+      //test icons
+      image.composite(icon, 1, 1);
+
       image.write(resizedFileName);
     })
+
+   
         
 }
 
@@ -111,4 +125,17 @@ function getPixelsOfResizedImage(
   return resizedImagePixelsArray;
 
 
+}
+
+async function generatePalette(path: string, paletteSet: Set<number>) {
+  await new Jimp(paletteSet.size, 1, (err, image) => {
+    if (err) throw err;
+    const iterator = paletteSet.values()
+    for (let i = 0; i < paletteSet.size; i ++) {
+      image.setPixelColor(iterator.next().value, i, 0)
+    }
+
+
+    image.write(path);
+  })
 }

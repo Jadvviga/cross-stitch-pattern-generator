@@ -1,5 +1,5 @@
-{#if uploadedImage} 
-<h1>Here will be displayed preprocessed image, with simplest grid, and with psosibility to set
+{#if uploadedImage && !loading} 
+<h1>Here will be displayed preprocessed image, with simplest grid, and with possibility to set
     size, colors etc
 </h1>
 
@@ -22,7 +22,6 @@ loading...
 
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import test from 'node:test';
     import { onMount } from 'svelte';
 
 
@@ -30,6 +29,7 @@ loading...
 
     let files: File[];
     let uploadedImage: any;
+    let loading = true; 
     let imageType: string;
     let messageUpload = "";
 
@@ -37,15 +37,29 @@ loading...
 
 
     onMount(() => {
-        //TODO ogarnąć porządny loaidng tak zeby strona nie wczytywała się zanim sie obrazek nie wczyta
-        uploadedImage = `/images/${data.fileName}_resize.png`;
-        
-        
+        loading = true;
         const storageFileName = sessionStorage.getItem('fileName');
-        console.log("onMount settings", data.fileName, storageFileName)
         if (!storageFileName || storageFileName !== data.fileName) {
             goto('/');
         }
+
+        uploadedImage = `/images/${data.fileName}_resize.png`;
+        const loadImage = new Image();
+        loadImage.onload = () => {
+            loading = false;
+        }
+        let errorCount = 0;
+        loadImage.onerror = () => {
+            errorCount++;
+            if (errorCount > 3) {
+                goto('/');
+            } else {    
+                loadImage.src = uploadedImage;
+            }
+
+        }
+        loadImage.src = uploadedImage;
+        
     })
 </script>
 
@@ -53,31 +67,17 @@ loading...
 <style>
     .container {
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         align-items: center;
+        justify-content: center;
+        gap: 10px;
     }
 
     #uploadedImg {
         margin-bottom: 10px;
+        /* max-width: 600px;
+        height: auto; */
     }
 
-    .hidden {
-        display: none;
-    }
 
-    button {
-        width: 128px;
-        height: 32px;
-        background-color: black;
-        font-family: sans-serif;
-        color: white;
-        font-weight: bold;
-        border: none;
-    }
-
-    .upload-btn:hover {
-        background-color: white;
-        color: black;
-        outline: black solid 2px;
-    }
 </style>

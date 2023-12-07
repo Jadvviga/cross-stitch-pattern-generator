@@ -57,7 +57,7 @@
         data["image"] = imgData[1];
         data["name"] = originalImage.name;
         data["type"] = imageType;
-        const reponse = await fetch(`/uploadImage`, {
+        const response = await fetch(`/uploadImage`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -65,7 +65,7 @@
             },
             body: JSON.stringify({data})
         });
-        const{ fileName } = await reponse.json();
+        const{ fileName } = await response.json();
         uploadedFileName = fileName;
         sessionStorage.setItem('fileName', fileName);
     };
