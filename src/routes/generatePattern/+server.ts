@@ -6,7 +6,7 @@ import { generatePattern } from './generatePattern.js';
 export async function POST({ request }) {
     const { data } = await request.json();
     const fileName = data["fileName"];
-    generatePattern(fileName);
+    await generatePattern(fileName);
     let message = "test"
     return json(message);
 }

@@ -88,6 +88,7 @@
     }
 
     onMount(() => {
+        console.log("onMount")
         uploadedImage = null;
         sessionStorage.clear();
     })

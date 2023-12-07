@@ -37,9 +37,12 @@ loading...
 
 
     onMount(() => {
-        const storageFileName = sessionStorage.getItem('fileName');
-        uploadedImage = `/images/${data.fileName}_test.png`;
+        //TODO ogarnąć porządny loaidng tak zeby strona nie wczytywała się zanim sie obrazek nie wczyta
+        uploadedImage = `/images/${data.fileName}_resize.png`;
         
+        
+        const storageFileName = sessionStorage.getItem('fileName');
+        console.log("onMount settings", data.fileName, storageFileName)
         if (!storageFileName || storageFileName !== data.fileName) {
             goto('/');
         }
@@ -55,8 +58,6 @@ loading...
     }
 
     #uploadedImg {
-        height: auto;
-        width: 128px;
         margin-bottom: 10px;
     }
 
