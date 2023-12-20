@@ -1,12 +1,12 @@
 import { error, json } from '@sveltejs/kit';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
-import { generatePattern } from './generatePattern.js';
+import { generatePreview } from './generatePattern.js';
  
 export async function POST({ request }) {
     const { data } = await request.json();
     const fileName = data["fileName"];
-    await generatePattern(fileName);
+    await generatePreview(fileName);
     let message = "test"
     return json(message);
 }

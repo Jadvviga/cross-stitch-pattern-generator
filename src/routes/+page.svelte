@@ -20,6 +20,9 @@
         <button
             on:click={requestGeneration}>generate pattern</button>
     {/if}
+    {#if loading}
+        loading...
+    {/if}
 
     
 </div>
@@ -37,6 +40,8 @@
     let imageType: string;
     let messageUpload = "";
     let uploadedFileName = "";
+
+    let loading = false;
 
 
     function getBase64(image: File) {
@@ -71,9 +76,10 @@
     };
 
     async function requestGeneration() {
+        loading = true;
         const data: any = {};
         data["fileName"] = uploadedFileName;
-        await fetch('/generatePattern', {
+        await fetch('/generatePreview', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -43,7 +43,7 @@ loading...
             goto('/');
         }
 
-        uploadedImage = `/images/${data.fileName}_resize.png`;
+        uploadedImage = `/images/${data.fileName}_preview.png`;
         const loadImage = new Image();
         loadImage.onload = () => {
             loading = false;
