@@ -6,7 +6,6 @@ export async function POST({ request }) {
     const { data } = await request.json();
 
     const file = data['image'];
-    const type = String(data["type"]);
 
     //const fileName = randomUUID();
     const fileName = "testImage"

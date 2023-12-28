@@ -1,6 +1,6 @@
 import type { MulineData } from "./mulineData";
 
-export const ARIADNA: Array<MulineData> = [
+export const DMC: Array<MulineData> = [
     {
         id: "1500",
         RGBnumbers: [ 255, 255, 255 ]

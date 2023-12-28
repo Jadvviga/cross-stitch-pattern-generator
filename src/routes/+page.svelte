@@ -1,7 +1,7 @@
 <h1>Pixel Art to Cross Stitch Pattern generator</h1>
 <p>Click button below to upload pixel art image.</p>
 
-<div class="container">
+<div class="columnContainer">
     <input
         class="hidden"
         id="file-to-upload"
@@ -15,10 +15,22 @@
         Upload
     </button>
     {#if uploadedImage}
-        <img id="uploadedImg" src={uploadedImage} alt="avatar"/>
-        {messageUpload}
+        <div class="rowContainer">
+            <img id="uploadedImg" src={uploadedImage} alt="uplaoded by user"/>
+            <div class="columnContainer">
+                {uploadedFileName}
+                <MulineTypeSelector
+                label={"Select muline producer"}
+                    bind:selectedMulineType/>
+                
+            </div>
+        
+        </div>
+        
         <button
-            on:click={requestGeneration}>generate pattern</button>
+            on:click={requestGeneration}>
+            generate pattern
+        </button>
     {/if}
     {#if loading}
         loading...
@@ -31,6 +43,8 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     import { onMount } from "svelte";
+    import type { MULINE_TYPES } from "../data/mulineData";
+    import MulineTypeSelector from "../components/MulineTypeSelector.svelte"
 
 
     let fileInput: HTMLElement;
@@ -38,31 +52,33 @@
     let files: File[];
     let uploadedImage: any;
     let imageType: string;
-    let messageUpload = "";
+    let uploadedFileGeneratedName = "";
     let uploadedFileName = "";
 
     let loading = false;
 
+    let selectedMulineType: MULINE_TYPES;
+
 
     function getBase64(image: File) {
+        uploadedFileName = image.name;
         const reader = new FileReader();
         reader.readAsDataURL(image);
         imageType = String(image.type).split('/')[1];
         reader.onload = e => {
             uploadedImage = e?.target?.result;
-            
-            uploadFunction(e?.target?.result, image);
+            uploadFunction(e?.target?.result);
             
         };
     };
 
-    async function uploadFunction(imgBase64: any, originalImage: File) {
+    async function uploadFunction(imgBase64: any) {
         const data: any = {};
         const imgData = imgBase64.split(',');
         data["image"] = imgData[1];
-        data["name"] = originalImage.name;
-        data["type"] = imageType;
-        const response = await fetch(`/uploadImage`, {
+        // data["name"] = originalImage.name;
+        // data["type"] = imageType;
+        const response = await fetch(`/api/uploadImage`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -71,15 +87,16 @@
             body: JSON.stringify({data})
         });
         const{ fileName } = await response.json();
-        uploadedFileName = fileName;
+        uploadedFileGeneratedName = fileName;
         sessionStorage.setItem('fileName', fileName);
     };
 
     async function requestGeneration() {
         loading = true;
+        sessionStorage.setItem('mulineType', selectedMulineType);
         const data: any = {};
-        data["fileName"] = uploadedFileName;
-        await fetch('/generatePreview', {
+        data["fileName"] = uploadedFileGeneratedName;
+        await fetch('/api/generatePreview', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -88,13 +105,12 @@
             body: JSON.stringify({data})
         })
         .then(() => {
-            goto(`/settings/${uploadedFileName}`);
+            goto(`/preview/${uploadedFileGeneratedName}`);
         }
         );
     }
 
     onMount(() => {
-        console.log("onMount")
         uploadedImage = null;
         sessionStorage.clear();
     })
@@ -102,16 +118,11 @@
 
 
 <style>
-    .container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
     #uploadedImg {
         height: auto;
         width: 128px;
         margin-bottom: 10px;
+        border: 1px solid black;
     }
 
     .hidden {
@@ -122,13 +133,15 @@
         width: 128px;
         height: 32px;
         background-color: black;
+        outline: black solid 2px;
         font-family: sans-serif;
+        text-transform: uppercase;
         color: white;
         font-weight: bold;
         border: none;
     }
 
-    .upload-btn:hover {
+    button:hover {
         background-color: white;
         color: black;
         outline: black solid 2px;

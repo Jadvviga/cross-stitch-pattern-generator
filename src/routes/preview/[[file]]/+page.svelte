@@ -1,17 +1,13 @@
 {#if uploadedImage && !loading} 
-<h1>Here will be displayed preprocessed image, with simplest grid, and with possibility to set
-    size, colors etc
-</h1>
-
 <div class="container">
     
     <img id="uploadedImg" src={uploadedImage} alt="avatar"/>
 
     <div>
-        test
+        <PaletteSettings
+            {fileName}/>
     </div>
     
-
 </div>
 {:else}
 loading...
@@ -23,15 +19,14 @@ loading...
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
+    import PaletteSettings from '../../../components/PaletteSettings.svelte';
 
 
-    let fileInput: HTMLElement;
-
-    let files: File[];
+ 
     let uploadedImage: any;
+    let fileName: string;
     let loading = true; 
-    let imageType: string;
-    let messageUpload = "";
+
 
     export let data;
 
@@ -42,7 +37,7 @@ loading...
         if (!storageFileName || storageFileName !== data.fileName) {
             goto('/');
         }
-
+        fileName = data.fileName;
         uploadedImage = `/images/${data.fileName}_preview.png`;
         const loadImage = new Image();
         loadImage.onload = () => {
@@ -70,13 +65,13 @@ loading...
         flex-direction: row;
         align-items: center;
         justify-content: center;
-        gap: 10px;
+        gap: 20px;
     }
 
     #uploadedImg {
         margin-bottom: 10px;
-        /* max-width: 600px;
-        height: auto; */
+         max-width: 600px;
+        height: auto; 
     }
 
 

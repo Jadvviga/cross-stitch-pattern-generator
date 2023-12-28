@@ -1,0 +1,15 @@
+
+
+.columnContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.rowContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 2em 0;
+    gap: 2em;
+}

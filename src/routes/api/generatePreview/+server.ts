@@ -1,7 +1,7 @@
 import { error, json } from '@sveltejs/kit';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
-import { generatePreview } from './generatePattern.js';
+import { generatePreview } from '../generatePattern.js';
  
 export async function POST({ request }) {
     const { data } = await request.json();

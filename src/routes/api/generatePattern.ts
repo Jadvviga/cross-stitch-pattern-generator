@@ -1,4 +1,6 @@
 import Jimp from "jimp";
+import type { MULINE_TYPES, MulineData } from "../../data/mulineData";
+import { ARIADNA } from "../../data/ariadna";
 
 //A4 ma na 350 dpi 2893 x 4092 px
 
@@ -6,9 +8,6 @@ import Jimp from "jimp";
 // const SCALE_SMALL = 54;
 // const SCALE_MEDIUM = 32;
 // const SCALE_BIG = 16;
-
-
-
 
 //Sizes of squre in pixels and icons depending on size of image (the larger img the less size of square)
 //(these are porper ones)
@@ -52,7 +51,7 @@ export async function generatePreview(fileName: string) {
         paletteSet.add(image.getPixelColor(x, y));
       }
     }
-    await generatePalette(paletteFileName, paletteSet);
+    await generatePaletteImage(paletteFileName, paletteSet);
 
     // get resized image pixel array
     const newWidth = getResizedDimention(ogWidth, scale, GRID_SIZE, GRID_HIGHLITH_SIZE);
@@ -73,6 +72,25 @@ export async function generatePreview(fileName: string) {
       image.write(resizedFileName);
     })
      
+}
+
+export async function loadPalette(fileName: string, mulineType: MULINE_TYPES): Promise<MulineData[]> {
+  const paletteFileName = `${path}${fileName}_palette.png`;
+  console.log(mulineType)
+  const ogImageName = `${path}${fileName}.png`;
+  const paletteImage = await Jimp.read(paletteFileName);
+  const colors = [];
+  const palette: MulineData[] = [];
+
+  for (let i = 0; i < paletteImage.bitmap.width; i++) {
+    colors.push(Jimp.intToRGBA(paletteImage.getPixelColor(i, 0)));
+  }
+  
+  colors.forEach(color => {
+    palette
+  })
+
+  return colors;
 }
 
 export async function generatePattern(fileName: string) {
@@ -194,9 +212,6 @@ function getPixelsOgGriddedImage( //generic func
     }
     pxColCount++;
     const shouldBeHighlightCol = pxColCount % GRID_COUNTER === 0 || pxColCount === ogWidth;
-    if (pxColCount === ogWidth) {
-      console.log('end of row', shouldBeHighlightCol)
-    }
     addGridCol(shouldBeHighlightCol ? highlightGridWidth : gridWidth);
     
     if (pxColCount === ogWidth) {
@@ -205,7 +220,6 @@ function getPixelsOgGriddedImage( //generic func
       }
       pxColCount = 0;
       for(let i = 0; i < scale; i++) {
-       // console.log(row.slice(-5))
         row.forEach(px => resizedImagePixelsArray.push(px));
       }
       pxRowCount++;
@@ -221,7 +235,7 @@ function getPixelsOgGriddedImage( //generic func
   return resizedImagePixelsArray;
 }
 
-async function generatePalette(path: string, paletteSet: Set<number>) {
+async function generatePaletteImage(path: string, paletteSet: Set<number>) {
   await new Jimp(paletteSet.size, 1, (err, image) => {
     if (err) throw err;
     const iterator = paletteSet.values()

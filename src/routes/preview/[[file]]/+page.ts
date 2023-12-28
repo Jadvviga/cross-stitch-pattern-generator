@@ -4,8 +4,7 @@ export async function load({ params }) {
     if (!params.file) {
         throw redirect(303, '/')
     }
-    
-	return {
-		fileName: params.file
+    return {
+		fileName: params.file,
 	};
 }
