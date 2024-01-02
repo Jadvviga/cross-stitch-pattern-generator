@@ -59,40 +59,34 @@ export async function generatePreview(fileName: string) {
 
     const resizedImagePixelsArray = getPixelsOgGriddedImage(imagePixelsArray, ogWidth, ogHeight, newWidth, scale, GRID_SIZE, GRID_HIGHLITH_SIZE);
 
+    console.log(resizedImagePixelsArray.length)
+    console.log(newHeight * newWidth)
     //create resized image
-    await new Jimp(newWidth, newHeight, (err, image) => {
-      if (err) throw err;
-      let count = 0;
-      for (let y = 0; y < newHeight; y ++) {
-        for (let x = 0; x < newWidth; x ++) {
-          image.setPixelColor(resizedImagePixelsArray[count], x, y);
-          count++;
+    try {
+      await new Jimp(newWidth, newHeight, (err, image) => {
+        if (err) throw err;
+        let count = 0;
+        for (let y = 0; y < newHeight; y ++) {
+          for (let x = 0; x < newWidth; x ++) {
+            //console.log(resizedImagePixelsArray[count])
+            if (resizedImagePixelsArray[count]) {
+              image.setPixelColor(resizedImagePixelsArray[count], x, y);
+            } else {
+              image.setPixelColor(0, x, y);
+            }
+            
+            count++;
+          }
         }
-      }
-      image.write(resizedFileName);
-    })
-     
+        image.write(resizedFileName);
+      });
+    } catch (err) {
+      console.error("Something went wrong when generating the pattern preview: " + err);
+    }
 }
 
-export async function loadPalette(fileName: string, mulineType: MULINE_TYPES): Promise<MulineData[]> {
-  const paletteFileName = `${path}${fileName}_palette.png`;
-  console.log(mulineType)
-  const ogImageName = `${path}${fileName}.png`;
-  const paletteImage = await Jimp.read(paletteFileName);
-  const colors = [];
-  const palette: MulineData[] = [];
 
-  for (let i = 0; i < paletteImage.bitmap.width; i++) {
-    colors.push(Jimp.intToRGBA(paletteImage.getPixelColor(i, 0)));
-  }
-  
-  colors.forEach(color => {
-    palette
-  })
-
-  return colors;
-}
-
+//not yet used
 export async function generatePattern(fileName: string) {
   const fullFileName = `${path}${fileName}.png`;
   const paletteFileName = `${path}${fileName}_palette.png`;
@@ -163,15 +157,18 @@ function determineScale(width: number, height: number) {
 }
 
 function getResizedDimention(
-  ogDimention: number,
-  scale: number,
-  gridWidth: number,
-  highlightGridWidth: number
+  ogDimention: number, //30 / 45
+  scale: number, //10
+  gridWidth: number, //1
+  highlightGridWidth: number //3
 ): number {
-  const numOfHighlights = (x: number) => { return Math.floor(x / GRID_COUNTER) + 2 };
+  // num of highlits + making last and firt grid also a highlight (so either +1 or +2)
+  const numOfHighlights = Math.floor(ogDimention / GRID_COUNTER) + ogDimention % GRID_COUNTER === 0 ? 1 : 2; //If dimention is divisible by GRID_COUNTER=10, then the last of numOfHighlist will be on the v.last column, so we only add 1 for fisrt column, isnetad of 2 for both last and first columns
+  // colors
   const pixels = ogDimention * scale;
-  const highlits = numOfHighlights(ogDimention) * highlightGridWidth;
-  const grids = ogDimention * gridWidth + 1 - numOfHighlights(ogDimention);
+  const highlits = numOfHighlights * highlightGridWidth;
+  //normal grids that are not highlits
+  const grids = ogDimention * gridWidth + 1 - numOfHighlights;
   return pixels + highlits + grids;
 }
 
@@ -236,12 +233,21 @@ function getPixelsOgGriddedImage( //generic func
 }
 
 async function generatePaletteImage(path: string, paletteSet: Set<number>) {
-  await new Jimp(paletteSet.size, 1, (err, image) => {
-    if (err) throw err;
-    const iterator = paletteSet.values()
-    for (let i = 0; i < paletteSet.size; i ++) {
-      image.setPixelColor(iterator.next().value, i, 0)
-    }
-    image.write(path);
-  })
+  try {
+    await new Jimp(paletteSet.size, 1, (err, image) => {
+      if (err) {
+        console.log("aaa")
+        throw err;
+      }
+      const iterator = paletteSet.values()
+      for (let i = 0; i < paletteSet.size; i ++) {
+        image.setPixelColor(iterator.next().value, i, 0)
+      }
+      image.write(path);
+    });
+  } catch (err) {
+    console.error("Something went wrong when generating the color palette: " + err);
+  }
+  
+ 
 }

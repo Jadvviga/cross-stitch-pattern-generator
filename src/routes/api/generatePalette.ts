@@ -20,7 +20,7 @@ function getMulinePalette(mulineType: MULINE_TYPES) {
 export async function loadPalette(fileName: string, mulineType: MULINE_TYPES): Promise<RGBA[]> {
   const paletteFileName = `${path}${fileName}_palette.png`;
   const mulinePalette = getMulinePalette(mulineType);
-  console.log(mulinePalette)
+ // console.log(mulinePalette)
   const ogImageName = `${path}${fileName}.png`;
   const paletteImage = await Jimp.read(paletteFileName);
   const colors = [];
