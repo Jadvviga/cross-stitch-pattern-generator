@@ -5,9 +5,13 @@
         on:chnangedSelection={handleMulineChange}/>
     {#if imagePalette} 
         {#each imagePalette as color}
+            <div>
+                
+            </div>
             <div
                 class="colorTile"
                 style=" --tileColor: {RGBA2String(color)}"/> 
+                <div>{RGBA2String(color)}</div>
         {/each}
     {/if}
    

@@ -20,7 +20,7 @@ const SCALE_PREVIEW = 10;
 const GRID_COLOR = 255;
 
 const GRID_SIZE = 1;
-const GRID_BIG_SIZE = 2;
+const GRID_BIG_SIZE = 2; // grid size for way bigger images (for now not used)
 const GRID_HIGHLITH_SIZE = 3;
 
 const GRID_COUNTER = 10;
@@ -59,8 +59,8 @@ export async function generatePreview(fileName: string) {
 
     const resizedImagePixelsArray = getPixelsOgGriddedImage(imagePixelsArray, ogWidth, ogHeight, newWidth, scale, GRID_SIZE, GRID_HIGHLITH_SIZE);
 
-    console.log(resizedImagePixelsArray.length)
-    console.log(newHeight * newWidth)
+    console.log("actual resized img:", resizedImagePixelsArray.length)
+    console.log("what it should be:", newHeight * newWidth)
     //create resized image
     try {
       await new Jimp(newWidth, newHeight, (err, image) => {
@@ -162,14 +162,16 @@ function getResizedDimention(
   gridWidth: number, //1
   highlightGridWidth: number //3
 ): number {
-  // num of highlits + making last and firt grid also a highlight (so either +1 or +2)
-  const numOfHighlights = Math.floor(ogDimention / GRID_COUNTER) + ogDimention % GRID_COUNTER === 0 ? 1 : 2; //If dimention is divisible by GRID_COUNTER=10, then the last of numOfHighlist will be on the v.last column, so we only add 1 for fisrt column, isnetad of 2 for both last and first columns
+  // num of highlits without the edges ones
+  const numOfHighlightsNoEdges = Math.floor((ogDimention - 1)/ GRID_COUNTER); //If dimention is divisible by GRID_COUNTER=10, then the last of numOfHighlist will be on the v.last column, so we only add 1 for fisrt column, isnetad of 2 for both last and first columns
   // colors
   const pixels = ogDimention * scale;
-  const highlits = numOfHighlights * highlightGridWidth;
+  // we add 2 to highligth for edges
+  const highlits = (numOfHighlightsNoEdges + 2) * highlightGridWidth;
   //normal grids that are not highlits
-  const grids = ogDimention * gridWidth + 1 - numOfHighlights;
+  const grids = (ogDimention - 1 - numOfHighlightsNoEdges) * gridWidth;
   return pixels + highlits + grids;
+
 }
 
 function getPixelsOgGriddedImage( //generic func
@@ -221,7 +223,7 @@ function getPixelsOgGriddedImage( //generic func
       }
       pxRowCount++;
       const shouldBeHighlightRow = pxRowCount % GRID_COUNTER === 0 || pxRowCount === ogHeight;
-      addGridRow(shouldBeHighlightRow ? highlightGridWidth : 1);
+      addGridRow(shouldBeHighlightRow ? highlightGridWidth : gridWidth);
       if (pxRowCount !== ogHeight) {
         
         row = [];
