@@ -20,7 +20,7 @@
             <div class="columnContainer">
                 {uploadedFileName}
                 <MulineTypeSelector
-                label={"Select muline producer"}
+                    label={"Select embroidery thread producer"}
                     bind:selectedMulineType/>
                 
             </div>

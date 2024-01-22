@@ -22,7 +22,7 @@
 
     function changeSelection(selected: MULINE_TYPES) {
         selectedMulineType = selected;
-        dispatcher("chnangedSelection", {selected})
+        dispatcher("changedSelection", {selected})
     }
 
 </script>

@@ -30,6 +30,11 @@ loading...
 
     export let data;
 
+    function handleMulineChange(event: Event | any) {
+        const  { selected } = event.detail;
+        sessionStorage.setItem("mulineType", selected);
+    }
+
 
     onMount(() => {
         loading = true;

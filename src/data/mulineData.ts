@@ -5,8 +5,8 @@ export enum MULINE_TYPES {
 
 export type MulineData = {
     id: string;
-    RGBnumbers: number[];
-    hex?: number;
+    RGBnumbers?: number[];
+    hex?: string;
 }
 
 export type Palette = {

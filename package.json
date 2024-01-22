@@ -21,6 +21,7 @@
 	"type": "module",
 	"dependencies": {
 		"@types/node": "^20.9.0",
+		"colorsea": "^1.2.1",
 		"jimp": "^0.22.10"
 	},
 	"overrides": {
