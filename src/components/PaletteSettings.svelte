@@ -4,15 +4,23 @@
         {selectedMulineType}
         on:changedSelection={handleMulineChange}/>
     {#if imagePalette} 
+    <div class='palette'>
         {#each imagePalette as color}
             <div class="rowContainer colorsContainer">
                 <div
                 class="colorTile"
-                style=" --tileColor: {RGBA2String(color)}"/> 
-                <div>{RGBA2String(color)}</div>
+                style=" --tileColor: {color.colorHex}"/>
+                <p style="width: 70px">({color.colorHex})</p>
+                <p>→ </p> 
+                <div
+                class="colorTile"
+                style=" --tileColor: {color.muline.hex}"/>
+                <p>{color.muline.id}</p>
+                <p>({color.muline.hex})</p>
             </div>
             
         {/each}
+    </div>
     {:else}
         Loading palette...
     {/if}
@@ -23,9 +31,10 @@
     import { onMount } from "svelte";
     import MulineTypeSelector from "./MulineTypeSelector.svelte";
     import { MULINE_TYPES } from "../data/mulineData";
+    import type { Palette } from "../data/mulineData";
 
     export let fileName: string;
-    let imagePalette: Array<number> | null;
+    let imagePalette: Array<Palette> | null;
 
     $: selectedMulineType = sessionStorage.getItem("mulineType") || MULINE_TYPES.Ariadna;
         
@@ -39,6 +48,7 @@
     function RGBA2String(color: RGBA) {
         return `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
     }
+
 
     async function requestPalette() {
         const data: any = {};
@@ -78,5 +88,13 @@
         gap: 0;
         margin: 0;
         padding: 0;
+    }
+    .colorsContainer p {
+        padding: 2px;
+    }
+
+    .palette {
+        max-height: 90vh;
+        overflow: auto;
     }
 </style>

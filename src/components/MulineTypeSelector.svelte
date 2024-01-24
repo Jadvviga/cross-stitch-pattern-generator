@@ -15,7 +15,7 @@
     import { createEventDispatcher } from "svelte";
     import { MULINE_TYPES } from "../data/mulineData";
 
-    export let selectedMulineType: MULINE_TYPES | string;
+    export let selectedMulineType: MULINE_TYPES | string = MULINE_TYPES.Ariadna;
     export let label = "Select muline producer:";
 
     const dispatcher = createEventDispatcher();

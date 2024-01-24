@@ -1,5 +1,5 @@
 import Jimp from "jimp";
-import { MULINE_TYPES, type MulineData } from "../../data/mulineData";
+import { MULINE_TYPES, type MulineData, type Palette } from "../../data/mulineData";
 import { ARIADNA } from "../../data/ariadna";
 import { DMC } from "../../data/dmc";
 import colorsea from 'colorsea';
@@ -7,7 +7,7 @@ import colorsea from 'colorsea';
 
 const path = 'static/images/';
 
-function getMulinePalette(mulineType: MULINE_TYPES) {
+function getMulinePalette(mulineType: MULINE_TYPES): Array<MulineData> {
     switch (mulineType){
         case MULINE_TYPES.Ariadna:
             return ARIADNA;
@@ -39,28 +39,36 @@ function hexToRgb(hex: string) {
 //zrobic mapowanie bezposrednio do kolorow mulin
 // kazdy kolor zapisuje sie do plaety obraka i kazdy kolejny kolor najpierw
 //sprawdza czy w palecie obrazka jest juz wystarczajacy kolor - dodac to jako opcje do togglowania
-export async function loadPalette(fileName: string, mulineType: MULINE_TYPES): Promise<RGBA[]> {
+export async function loadPalette(fileName: string, mulineType: MULINE_TYPES): Promise<Palette[]> {
   const paletteFileName = `${path}${fileName}_palette.png`;
   const mulinePalette = getMulinePalette(mulineType);
-  console.log(mulinePalette)
+  //console.log(mulinePalette)
   const ogImageName = `${path}${fileName}.png`;
   const paletteImage = await Jimp.read(paletteFileName);
   const colors = [];
-  const palette: MulineData[] = [];
+  const palette: Array<Palette> = [];
 
   for (let i = 0; i < paletteImage.bitmap.width; i++) {
     colors.push(Jimp.intToRGBA(paletteImage.getPixelColor(i, 0)));
   }
+
   
   colors.forEach(color => {
-    console.log(color, rgbToHex(color))
-  })
-  ARIADNA.forEach(color => {
-    console.log(color.id)
+    const colorDistances: number[] = [];
+    mulinePalette.forEach(mulineColor => {
+      colorDistances.push(getColorDifference(mulineColor.hex, rgbToHex(color)))
+    });
+    const minDist = Math.min(...colorDistances);
+    
+    const minIndex = colorDistances.indexOf(minDist);
+    palette.push({
+      colorHex: rgbToHex(color),
+      muline: mulinePalette[minIndex] 
+    });
   })
   //console.log(ARIADNA["1500"])
 
-  return colors;
+  return palette;
 }
 
 function getColorFromPalette(colorID: string, palette: Array<MulineData>) {
@@ -75,6 +83,7 @@ function getColorDifference(colorHex1: string, colorHex2: string): number {
   const color1 = colorsea.lab(col1.r, col1.g, col1.b);
   const color2 = colorsea.lab(col2.r, col2.g, col2.b);
 
-
-  return color1.deltaE(color2, "CMC");
+  // CIE2000 not doing well with greens, otherwise very gud
+  // CIE1976 is better
+  return color1.deltaE(color2, "CIE1976");
 }

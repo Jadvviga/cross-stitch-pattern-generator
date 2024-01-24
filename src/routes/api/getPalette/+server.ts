@@ -5,8 +5,7 @@ import type { MULINE_TYPES } from '../../../data/mulineData.js';
 export async function POST({ request }) {
     const { data } = await request.json();
     const fileName = data["fileName"];
-    const selectedMulineType: MULINE_TYPES = data["mulineType"];
+    const selectedMulineType = data["mulineType"];
     let palette = await loadPalette(fileName, selectedMulineType);
-    //console.log(palette);
     return json({palette});
 }

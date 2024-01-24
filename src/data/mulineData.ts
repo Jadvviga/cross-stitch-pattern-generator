@@ -6,11 +6,11 @@ export enum MULINE_TYPES {
 export type MulineData = {
     id: string;
     RGBnumbers?: number[];
-    hex?: string;
+    hex: string;
 }
 
 export type Palette = {
-    colorHex: number;
+    colorHex: string;
     muline: MulineData;
-    count: number;
+    count?: number;
 }

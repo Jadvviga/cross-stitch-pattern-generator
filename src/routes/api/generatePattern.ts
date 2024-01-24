@@ -54,13 +54,11 @@ export async function generatePreview(fileName: string) {
     await generatePaletteImage(paletteFileName, paletteSet);
 
     // get resized image pixel array
-    const newWidth = getResizedDimention(ogWidth, scale, GRID_SIZE, GRID_HIGHLITH_SIZE);
-    const newHeight = getResizedDimention(ogHeight, scale, GRID_SIZE, GRID_HIGHLITH_SIZE);
+    const newWidth = getResizedDimension(ogWidth, scale, GRID_SIZE, GRID_HIGHLITH_SIZE);
+    const newHeight = getResizedDimension(ogHeight, scale, GRID_SIZE, GRID_HIGHLITH_SIZE);
 
     const resizedImagePixelsArray = getPixelsOgGriddedImage(imagePixelsArray, ogWidth, ogHeight, newWidth, scale, GRID_SIZE, GRID_HIGHLITH_SIZE);
 
-    console.log("actual resized img:", resizedImagePixelsArray.length)
-    console.log("what it should be:", newHeight * newWidth)
     //create resized image
     try {
       await new Jimp(newWidth, newHeight, (err, image) => {
@@ -109,8 +107,8 @@ export async function generatePattern(fileName: string) {
   }
   
   // get resized image pixel array
-  const newWidth = getResizedDimention(ogWidth, scale, gridSize, GRID_HIGHLITH_SIZE);
-  const newHeight = getResizedDimention(ogHeight, scale, gridSize, GRID_HIGHLITH_SIZE);
+  const newWidth = getResizedDimension(ogWidth, scale, gridSize, GRID_HIGHLITH_SIZE);
+  const newHeight = getResizedDimension(ogHeight, scale, gridSize, GRID_HIGHLITH_SIZE);
 
   const resizedImagePixelsArray = getPixelsOgGriddedImage(imagePixelsArray, ogWidth, ogHeight, newWidth, scale, gridSize, GRID_HIGHLITH_SIZE);
   
@@ -156,20 +154,20 @@ function determineScale(width: number, height: number) {
   return SCALE_MEDIUM;
 }
 
-function getResizedDimention(
-  ogDimention: number, //30 / 45
+function getResizedDimension(
+  ogDimension: number, //30 / 45
   scale: number, //10
   gridWidth: number, //1
   highlightGridWidth: number //3
 ): number {
   // num of highlits without the edges ones
-  const numOfHighlightsNoEdges = Math.floor((ogDimention - 1)/ GRID_COUNTER); //If dimention is divisible by GRID_COUNTER=10, then the last of numOfHighlist will be on the v.last column, so we only add 1 for fisrt column, isnetad of 2 for both last and first columns
+  const numOfHighlightsNoEdges = Math.floor((ogDimension - 1)/ GRID_COUNTER); //If dimention is divisible by GRID_COUNTER=10, then the last of numOfHighlist will be on the v.last column, so we only add 1 for fisrt column, isnetad of 2 for both last and first columns
   // colors
-  const pixels = ogDimention * scale;
+  const pixels = ogDimension * scale;
   // we add 2 to highligth for edges
   const highlits = (numOfHighlightsNoEdges + 2) * highlightGridWidth;
   //normal grids that are not highlits
-  const grids = (ogDimention - 1 - numOfHighlightsNoEdges) * gridWidth;
+  const grids = (ogDimension - 1 - numOfHighlightsNoEdges) * gridWidth;
   return pixels + highlits + grids;
 
 }
@@ -238,7 +236,6 @@ async function generatePaletteImage(path: string, paletteSet: Set<number>) {
   try {
     await new Jimp(paletteSet.size, 1, (err, image) => {
       if (err) {
-        console.log("aaa")
         throw err;
       }
       const iterator = paletteSet.values()
