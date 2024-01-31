@@ -1,5 +1,5 @@
 {#if uploadedImage && !loading} 
-<div class="container">
+<div transition:fade={{ delay: 250, duration: 300 }} class="container">
     
     <img id="uploadedImg" src={uploadedImage} alt="avatar"/>
 
@@ -10,7 +10,7 @@
     
 </div>
 {:else}
-loading...
+    <Loading/>
 {/if}
 
 
@@ -20,12 +20,14 @@ loading...
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
     import PaletteSettings from '../../../components/PaletteSettings.svelte';
+    import Loading from '../../../components/Loading.svelte';
+    import { fade } from 'svelte/transition';
 
 
  
     let uploadedImage: any;
     let fileName: string;
-    let loading = true; 
+    let loading = true;
 
 
     export let data;

@@ -59,11 +59,12 @@ export async function loadPalette(fileName: string, mulineType: MULINE_TYPES): P
       colorDistances.push(getColorDifference(mulineColor.hex, rgbToHex(color)))
     });
     const minDist = Math.min(...colorDistances);
+    console.log(minDist)
     
     const minIndex = colorDistances.indexOf(minDist);
     palette.push({
       colorHex: rgbToHex(color),
-      muline: mulinePalette[minIndex] 
+      muline: mulinePalette[minIndex] || '#FFFFFF'
     });
   })
   //console.log(ARIADNA["1500"])
@@ -82,6 +83,15 @@ function getColorDifference(colorHex1: string, colorHex2: string): number {
   
   const color1 = colorsea.lab(col1.r, col1.g, col1.b);
   const color2 = colorsea.lab(col2.r, col2.g, col2.b);
+
+//   export enum modes {
+//     CMC = 'CMC',
+//     CIE2000 = 'CIE2000',
+//     CIE1994 = 'CIE1994',
+//     CIE1976 = 'CIE1976',
+//     EUCLIDEAN = 'EUCLIDEAN'
+
+// }
 
   // CIE2000 not doing well with greens, otherwise very gud
   // CIE1976 is better

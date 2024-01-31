@@ -32,6 +32,7 @@ const path = 'static/images/upload/';
 
 
 export async function generatePreview(fileName: string) {
+  console.log(fileName)
     const fullFileName = `${path}${fileName}.png`;
     const resizedFileName = `${path}${fileName}_preview.png`;
     const paletteFileName = `${path}${fileName}_palette.png`;

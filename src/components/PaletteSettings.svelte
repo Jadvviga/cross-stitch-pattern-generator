@@ -22,7 +22,7 @@
         {/each}
     </div>
     {:else}
-        Loading palette...
+        <Loading/>
     {/if}
    
 </div>
@@ -32,9 +32,10 @@
     import MulineTypeSelector from "./MulineTypeSelector.svelte";
     import { MULINE_TYPES } from "../data/mulineData";
     import type { Palette } from "../data/mulineData";
+    import Loading from "./Loading.svelte";
 
     export let fileName: string;
-    let imagePalette: Array<Palette> | null;
+    export let imagePalette: Array<Palette> | null;
 
     $: selectedMulineType = sessionStorage.getItem("mulineType") || MULINE_TYPES.Ariadna;
         

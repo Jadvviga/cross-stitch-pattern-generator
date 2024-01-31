@@ -14,9 +14,10 @@
         on:click={ () => fileInput.click() }>
         Upload
     </button>
-    {#if uploadedImage}
-        <div class="rowContainer">
-            <img id="uploadedImg" src={uploadedImage} alt="uplaoded by user"/>
+    {#if uploadedImage && uploadedFileGeneratedName}
+    
+        <div transition:fade={{ delay: 250, duration: 300 }}  class="rowContainer">
+            <img id="uploadedImg" src={uploadedImage} alt="uploaded by user"/>
             <div class="columnContainer">
                 {uploadedFileName}
                 <MulineTypeSelector
@@ -27,13 +28,13 @@
         
         </div>
         
-        <button
+        <button transition:fade={{ delay: 250, duration: 300 }}
             on:click={requestGeneration}>
             generate pattern
         </button>
     {/if}
     {#if loading}
-        loading...
+        <Loading/>
     {/if}
 
     
@@ -43,8 +44,10 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     import { onMount } from "svelte";
+    import Loading from "../components/Loading.svelte";
     import type { MULINE_TYPES } from "../data/mulineData";
     import MulineTypeSelector from "../components/MulineTypeSelector.svelte"
+    import { fade } from "svelte/transition";
 
 
     let fileInput: HTMLElement;
@@ -61,13 +64,14 @@
 
 
     function getBase64(image: File) {
+        loading = true;
         uploadedFileName = image.name;
         const reader = new FileReader();
         reader.readAsDataURL(image);
         imageType = String(image.type).split('/')[1];
         reader.onload = e => {
-            uploadedImage = e?.target?.result;
             uploadFunction(e?.target?.result);
+            uploadedImage = e?.target?.result;
             
         };
     };
@@ -88,6 +92,7 @@
         });
         const{ fileName } = await response.json();
         uploadedFileGeneratedName = fileName;
+        loading = false;
         sessionStorage.setItem('fileName', fileName);
     };
 
