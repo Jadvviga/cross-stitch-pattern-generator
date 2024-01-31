@@ -5,7 +5,7 @@ import { DMC } from "../../data/dmc";
 import colorsea from 'colorsea';
 
 
-const path = 'static/images/';
+const path = 'static/images/upload/';
 
 function getMulinePalette(mulineType: MULINE_TYPES): Array<MulineData> {
     switch (mulineType){

@@ -28,7 +28,7 @@ const GRID_COUNTER = 10;
 const THRESHOLD_SMALL = 20;
 const THRESHOLD_BIG = 100;
 
-const path = 'static/images/';
+const path = 'static/images/upload/';
 
 
 export async function generatePreview(fileName: string) {

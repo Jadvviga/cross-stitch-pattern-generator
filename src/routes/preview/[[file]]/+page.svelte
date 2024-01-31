@@ -38,7 +38,7 @@ loading...
             goto('/');
         }
         fileName = data.fileName;
-        uploadedImage = `/images/${data.fileName}_preview.png`;
+        uploadedImage = `/images/upload/${data.fileName}_preview.png`;
         const loadImage = new Image();
         loadImage.onload = () => {
             loading = false;
