@@ -1,7 +1,10 @@
 {#if uploadedImage && !loading} 
 <div transition:fade={{ delay: 250, duration: 300 }} class="container">
-    
-    <img id="uploadedImg" src={uploadedImage} alt="avatar"/>
+    <div class='columnContainer'>
+        <img id="uploadedImg" src={uploadedImage} alt="avatar"/>
+        <p>{imgDimensions}</p>
+    </div>
+   
 
     <div>
         <PaletteSettings
@@ -28,6 +31,7 @@
     let uploadedImage: any;
     let fileName: string;
     let loading = true;
+    $: imgDimensions = sessionStorage.getItem('imageDimension');
 
 
     export let data;

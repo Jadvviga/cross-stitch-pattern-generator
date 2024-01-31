@@ -101,18 +101,18 @@
         sessionStorage.setItem('mulineType', selectedMulineType);
         const data: any = {};
         data["fileName"] = uploadedFileGeneratedName;
-        await fetch('/api/generatePreview', {
+        const response = await fetch('/api/generatePreview', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 Accept: 'application/json'
             },
             body: JSON.stringify({data})
-        })
-        .then(() => {
-            goto(`/preview/${uploadedFileGeneratedName}`);
-        }
-        );
+        });
+        const dimensions =  await response.json();
+        
+        sessionStorage.setItem("imageDimension", dimensions)
+        goto(`/preview/${uploadedFileGeneratedName}`);
     }
 
     onMount(() => {

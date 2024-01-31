@@ -31,7 +31,7 @@ const THRESHOLD_BIG = 100;
 const path = 'static/images/upload/';
 
 
-export async function generatePreview(fileName: string) {
+export async function generatePreview(fileName: string): string {
   console.log(fileName)
     const fullFileName = `${path}${fileName}.png`;
     const resizedFileName = `${path}${fileName}_preview.png`;
@@ -82,6 +82,7 @@ export async function generatePreview(fileName: string) {
     } catch (err) {
       console.error("Something went wrong when generating the pattern preview: " + err);
     }
+    return `${ogWidth} x ${ogHeight}`;
 }
 
 

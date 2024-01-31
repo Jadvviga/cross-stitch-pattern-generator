@@ -3,6 +3,7 @@ import { MULINE_TYPES, type MulineData, type Palette } from "../../data/mulineDa
 import { ARIADNA } from "../../data/ariadna";
 import { DMC } from "../../data/dmc";
 import colorsea from 'colorsea';
+import Color from "colorjs.io";
 
 
 const path = 'static/images/upload/';
@@ -75,23 +76,37 @@ export async function loadPalette(fileName: string, mulineType: MULINE_TYPES): P
 function getColorFromPalette(colorID: string, palette: Array<MulineData>) {
   return palette.find(col => col.id === colorID);
 }
+//     CMC 
+//     CIE2000 2000
+//     CIE1994 = 'CIE1994',
+//     CIE1976 76
+// ITP (only color.js)
 
 
+//color.js
 function getColorDifference(colorHex1: string, colorHex2: string): number {
+  const col1 = hexToRgb(colorHex1);
+  const col2 = hexToRgb(colorHex2);
+  
+  const color1 = new Color(colorHex1);
+  const color2 = new Color(colorHex2);
+
+
+
+  // CIE2000 is okay but some colors seems weird
+  // ITP seems teh best
+  return color1.deltaE(color2, "ITP");
+}
+
+//colorsea
+function getColorDifference_(colorHex1: string, colorHex2: string): number {
   const col1 = hexToRgb(colorHex1);
   const col2 = hexToRgb(colorHex2);
   
   const color1 = colorsea.lab(col1.r, col1.g, col1.b);
   const color2 = colorsea.lab(col2.r, col2.g, col2.b);
 
-//   export enum modes {
-//     CMC = 'CMC',
-//     CIE2000 = 'CIE2000',
-//     CIE1994 = 'CIE1994',
-//     CIE1976 = 'CIE1976',
-//     EUCLIDEAN = 'EUCLIDEAN'
 
-// }
 
   // CIE2000 not doing well with greens, otherwise very gud
   // CIE1976 is better
