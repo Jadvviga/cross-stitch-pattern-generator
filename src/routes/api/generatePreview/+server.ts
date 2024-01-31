@@ -11,10 +11,3 @@ export async function POST({ request }) {
     let message = "test"
     return json(message);
 }
-
-// Not using pyhton for now
-async function runPython() {
-    const execFunc = promisify(exec);
-    const { stdout, stderr } = await execFunc(`python ./src/python_scripts/main.py image.png`)
-    return stderr || stdout;
-}
