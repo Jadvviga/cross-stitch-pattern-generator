@@ -3,27 +3,49 @@
         label={"Currently chosen palette (changing this will cause a refresh)"}
         {selectedMulineType}
         on:changedSelection={handleMulineChange}/>
-    {#if imagePalette} 
-    <div class='palette'>
-        {#each imagePalette as color}
-            <div class="rowContainer colorsContainer">
-                <div
-                class="colorTile"
-                style=" --tileColor: {color.colorHex}"/>
-                <p style="width: 70px">({color.colorHex})</p>
-                <p>→ </p> 
-                <div
-                class="colorTile"
-                style=" --tileColor: {color.muline.hex}"/>
-                <p>{color.muline.id}</p>
-                <p>({color.muline.hex})</p>
-            </div>
-            
-        {/each}
+    <div>
+        <label>
+            <input type="checkbox" on:change={changePaletteSorting}>
+            Sort by embroidery floss colors
+        </label>
     </div>
-    {:else}
-        <Loading/>
-    {/if}
+   
+    
+        {#if imagePalette}
+        <div class="rowContainer paletteHeader">
+            <p>Pixel color</p>
+            <p>Embroidery floss color</p>
+        </div>
+            <div class='palette'>
+                {#each imagePalette as color, index}
+                    <div class="rowContainer colorsContainer">
+                        <div
+                        class="colorTile"
+                        style=" --tileColor: {color.colorHex}"/>
+                        <p style="width: 70px">({color.colorHex})</p>
+                        {#if !previousMulineColIsSame(color, index)}
+                            <p>→ </p>
+                            <div
+                            class="colorTile"
+                            style=" --tileColor: {color.muline.hex}"/>
+                            <div
+                            class="colorTile"
+                            style=" --tileColor: {color.muline.hex}">
+                            <img src="/images/icons/{color.icon}.png" alt="symbol for color {color.muline.hex}" class="icon {color.invertIcon ? 'inverted' : ''}">
+                            </div>
+                            <p>{color.muline.id}</p>
+                            <!-- <p>({color.muline.hex})</p> -->
+                        {/if}
+                        
+                    </div>
+                    
+                {/each}
+            </div>
+        {:else}
+            <Loading/>
+        {/if}
+   
+    
    
 </div>
 
@@ -35,7 +57,9 @@
     import Loading from "./Loading.svelte";
 
     export let fileName: string;
-    export let imagePalette: Array<Palette> | null;
+    let imagePalette: Array<Palette> | null;
+    let sortedByMuline = false;
+    
 
     $: selectedMulineType = sessionStorage.getItem("mulineType") || MULINE_TYPES.Ariadna;
         
@@ -44,10 +68,44 @@
         sessionStorage.setItem("mulineType", selected);
         imagePalette = null;
         imagePalette = await requestPalette();
+        imagePalette?.sort(sortedByMuline ? compareByMuline : compareByPixels);
+    }
+    
+    function changePaletteSorting() {
+        sortedByMuline = !sortedByMuline;
+        imagePalette?.sort(sortedByMuline ? compareByMuline : compareByPixels);
+        imagePalette = imagePalette;
     }
 
-    function RGBA2String(color: RGBA) {
-        return `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+    // function RGBA2String(color: RGBA) {
+    //     return `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+    // }
+
+    function compareByMuline(col1: Palette, col2: Palette ) {
+        if ( col1.muline.id < col2.muline.id ){
+            return -1;
+        }
+        if ( col1.muline.id > col2.muline.id ){
+            return 1;
+        }
+        return 0;
+    }
+
+    function compareByPixels(col1: Palette, col2: Palette ) {
+        if ( col1.index < col2.index ){
+            return -1;
+        }
+        if ( col1.index > col2.index ){
+            return 1;
+        }
+        return 0;
+    }
+
+    function previousMulineColIsSame(color: Palette, index: number) {
+        if (index === 0) {
+            return false;
+        }
+        return color.muline.id === imagePalette[index - 1].muline.id;
     }
 
 
@@ -70,7 +128,6 @@
 
     onMount(async () => {
         imagePalette = await requestPalette();
-        //console.log(imagePalette)
     })
     
 </script>
@@ -85,6 +142,15 @@
         background-color: var(--tileColor);
     }
 
+    .icon {
+        width: 30px;
+        height: 30px;
+    }
+
+    .inverted {
+        filter: invert(1);
+    }
+
     .colorsContainer {
         gap: 0;
         margin: 0;
@@ -94,8 +160,18 @@
         padding: 2px;
     }
 
+    .paletteHeader {
+        margin: 8px;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 0px;
+    }
+
     .palette {
-        max-height: 90vh;
-        overflow: auto;
+        margin-top: 0px;
+        max-height: 70vh;
+        overflow-y: scroll;
+        box-shadow: inset gray 0px 0px 20px -12px; 
+        border-radius: 10px;
     }
 </style>

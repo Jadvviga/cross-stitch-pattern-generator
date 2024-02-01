@@ -21,7 +21,7 @@ const GRID_COLOR = 255;
 
 const GRID_SIZE = 1;
 const GRID_BIG_SIZE = 2; // grid size for way bigger images (for now not used)
-const GRID_HIGHLITH_SIZE = 3;
+const GRID_HIGHLIGHT_SIZE = 3;  //grid size for grid every 10 square
 
 const GRID_COUNTER = 10;
 
@@ -31,8 +31,7 @@ const THRESHOLD_BIG = 100;
 const path = 'static/images/upload/';
 
 
-export async function generatePreview(fileName: string): string {
-  console.log(fileName)
+export async function generatePreview(fileName: string): Promise<string> {
     const fullFileName = `${path}${fileName}.png`;
     const resizedFileName = `${path}${fileName}_preview.png`;
     const paletteFileName = `${path}${fileName}_palette.png`;
@@ -48,17 +47,22 @@ export async function generatePreview(fileName: string): string {
     //get pixels from og image to array
     for (let y = 0; y < ogHeight; y ++) {
       for (let x = 0; x < ogWidth; x ++) {
-        imagePixelsArray.push(image.getPixelColor(x, y)); //value are in HEX
-        paletteSet.add(image.getPixelColor(x, y));
+        const pixel = image.getPixelColor(x, y)
+        imagePixelsArray.push(pixel); //value are in HEX
+        if(Jimp.intToRGBA(pixel).a !== 0) {
+          paletteSet.add(pixel);
+        }
+        
+        
       }
     }
     await generatePaletteImage(paletteFileName, paletteSet);
 
     // get resized image pixel array
-    const newWidth = getResizedDimension(ogWidth, scale, GRID_SIZE, GRID_HIGHLITH_SIZE);
-    const newHeight = getResizedDimension(ogHeight, scale, GRID_SIZE, GRID_HIGHLITH_SIZE);
+    const newWidth = getResizedDimension(ogWidth, scale, GRID_SIZE, GRID_HIGHLIGHT_SIZE);
+    const newHeight = getResizedDimension(ogHeight, scale, GRID_SIZE, GRID_HIGHLIGHT_SIZE);
 
-    const resizedImagePixelsArray = getPixelsOgGriddedImage(imagePixelsArray, ogWidth, ogHeight, newWidth, scale, GRID_SIZE, GRID_HIGHLITH_SIZE);
+    const resizedImagePixelsArray = getPixelsOgGriddedImage(imagePixelsArray, ogWidth, ogHeight, newWidth, scale, GRID_SIZE, GRID_HIGHLIGHT_SIZE);
 
     //create resized image
     try {
@@ -109,10 +113,10 @@ export async function generatePattern(fileName: string) {
   }
   
   // get resized image pixel array
-  const newWidth = getResizedDimension(ogWidth, scale, gridSize, GRID_HIGHLITH_SIZE);
-  const newHeight = getResizedDimension(ogHeight, scale, gridSize, GRID_HIGHLITH_SIZE);
+  const newWidth = getResizedDimension(ogWidth, scale, gridSize, GRID_HIGHLIGHT_SIZE);
+  const newHeight = getResizedDimension(ogHeight, scale, gridSize, GRID_HIGHLIGHT_SIZE);
 
-  const resizedImagePixelsArray = getPixelsOgGriddedImage(imagePixelsArray, ogWidth, ogHeight, newWidth, scale, gridSize, GRID_HIGHLITH_SIZE);
+  const resizedImagePixelsArray = getPixelsOgGriddedImage(imagePixelsArray, ogWidth, ogHeight, newWidth, scale, gridSize, GRID_HIGHLIGHT_SIZE);
   
   // TODO read palette
   const palletteImg = await Jimp.read(paletteFileName);

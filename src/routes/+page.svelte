@@ -1,5 +1,5 @@
 <h1>Pixel Art to Cross Stitch Pattern generator</h1>
-<p>Click button below to upload pixel art image.</p>
+<h2>Click button below to upload pixel art image.</h2>
 
 <div class="columnContainer">
     <input
@@ -132,23 +132,5 @@
 
     .hidden {
         display: none;
-    }
-
-    button {
-        width: 128px;
-        height: 32px;
-        background-color: black;
-        outline: black solid 2px;
-        font-family: sans-serif;
-        text-transform: uppercase;
-        color: white;
-        font-weight: bold;
-        border: none;
-    }
-
-    button:hover {
-        background-color: white;
-        color: black;
-        outline: black solid 2px;
     }
 </style>

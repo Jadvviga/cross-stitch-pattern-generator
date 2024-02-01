@@ -10,7 +10,11 @@ export type MulineData = {
 }
 
 export type Palette = {
+    index: number
     colorHex: string;
     muline: MulineData;
+    icon?: string;
+    invertIcon?: boolean;
     count?: number;
 }
+

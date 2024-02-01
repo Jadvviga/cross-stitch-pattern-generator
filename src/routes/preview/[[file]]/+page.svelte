@@ -1,12 +1,18 @@
 {#if uploadedImage && !loading} 
+<h1>Preview</h1>
 <div transition:fade={{ delay: 250, duration: 300 }} class="container">
-    <div class='columnContainer'>
+    <div class='columnContainer'
+        style="height: {paletteNodeHeight}px">
+       
         <img id="uploadedImg" src={uploadedImage} alt="avatar"/>
         <p>{imgDimensions}</p>
+        <button> GENERATE PATTERN</button>
+        
     </div>
+    
    
 
-    <div>
+    <div bind:offsetHeight={paletteNodeHeight}>
         <PaletteSettings
             {fileName}/>
     </div>
@@ -31,7 +37,9 @@
     let uploadedImage: any;
     let fileName: string;
     let loading = true;
-    $: imgDimensions = sessionStorage.getItem('imageDimension');
+    let imgDimensions: string;
+    let paletteNodeHeight: number;
+    
 
 
     export let data;
@@ -43,6 +51,7 @@
         if (!storageFileName || storageFileName !== data.fileName) {
             goto('/');
         }
+        imgDimensions = sessionStorage.getItem('imageDimension') || '';
         fileName = data.fileName;
         uploadedImage = `/images/upload/${data.fileName}_preview.png`;
         const loadImage = new Image();
@@ -71,14 +80,19 @@
         flex-direction: row;
         align-items: center;
         justify-content: center;
+        margin: auto;
         gap: 20px;
+    }
+
+
+    .container p {
+        margin: 0
     }
 
     #uploadedImg {
         margin-bottom: 10px;
-         max-width: 600px;
+        max-width: 600px;
         height: auto; 
     }
-
 
 </style>

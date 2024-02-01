@@ -7,6 +7,7 @@ import Color from "colorjs.io";
 
 
 const path = 'static/images/upload/';
+const ICON_COUNT = 55;
 
 function getMulinePalette(mulineType: MULINE_TYPES): Array<MulineData> {
     switch (mulineType){
@@ -48,24 +49,41 @@ export async function loadPalette(fileName: string, mulineType: MULINE_TYPES): P
   const paletteImage = await Jimp.read(paletteFileName);
   const colors = [];
   const palette: Array<Palette> = [];
+  const mulineColorSet = new Set<string>;
 
   for (let i = 0; i < paletteImage.bitmap.width; i++) {
     colors.push(Jimp.intToRGBA(paletteImage.getPixelColor(i, 0)));
   }
 
-  
-  colors.forEach(color => {
+  let iconID = -1;
+  colors.forEach((color, index) => {
     const colorDistances: number[] = [];
     mulinePalette.forEach(mulineColor => {
       colorDistances.push(getColorDifference(mulineColor.hex, rgbToHex(color)))
     });
     const minDist = Math.min(...colorDistances);
-    console.log(minDist)
-    
+    //console.log(minDist)
     const minIndex = colorDistances.indexOf(minDist);
+
+    let icon = `icon${iconID}`;
+    const mulineColor = mulinePalette[minIndex];
+    if (mulineColorSet.has(mulineColor.id)) {
+      const pal = palette.find(x => x.muline.id === mulineColor.id);
+      icon = pal?.icon || icon;
+    } else {
+      mulineColorSet.add(mulineColor.id);
+      iconID++;
+      if (iconID > ICON_COUNT) {
+        iconID = 0;
+      }
+    }
+    
     palette.push({
+      index,
       colorHex: rgbToHex(color),
-      muline: mulinePalette[minIndex] || '#FFFFFF'
+      muline: mulineColor,
+      icon,
+      invertIcon: isColorDark(mulineColor.hex)
     });
   })
   //console.log(ARIADNA["1500"])
@@ -85,30 +103,33 @@ function getColorFromPalette(colorID: string, palette: Array<MulineData>) {
 
 //color.js
 function getColorDifference(colorHex1: string, colorHex2: string): number {
-  const col1 = hexToRgb(colorHex1);
-  const col2 = hexToRgb(colorHex2);
-  
   const color1 = new Color(colorHex1);
   const color2 = new Color(colorHex2);
-
-
 
   // CIE2000 is okay but some colors seems weird
   // ITP seems teh best
   return color1.deltaE(color2, "ITP");
 }
 
-//colorsea
-function getColorDifference_(colorHex1: string, colorHex2: string): number {
-  const col1 = hexToRgb(colorHex1);
-  const col2 = hexToRgb(colorHex2);
-  
-  const color1 = colorsea.lab(col1.r, col1.g, col1.b);
-  const color2 = colorsea.lab(col2.r, col2.g, col2.b);
+function isColorDark(colorHex: string) {
+  const color1 = new Color(colorHex);
+  const color2 = new Color('#000000'); //black - color of icons
 
-
-
-  // CIE2000 not doing well with greens, otherwise very gud
-  // CIE1976 is better
-  return color1.deltaE(color2, "CIE1976");
+  const contrast = color1.contrastWCAG21(color2);
+  return contrast < 4.5;
 }
+
+//colorsea
+// function getColorDifference_(colorHex1: string, colorHex2: string): number {
+//   const col1 = hexToRgb(colorHex1);
+//   const col2 = hexToRgb(colorHex2);
+  
+//   const color1 = colorsea.lab(col1.r, col1.g, col1.b);
+//   const color2 = colorsea.lab(col2.r, col2.g, col2.b);
+
+
+
+//   // CIE2000 not doing well with greens, otherwise very gud
+//   // CIE1976 is better
+//   return color1.deltaE(color2, "CIE1976");
+// }
