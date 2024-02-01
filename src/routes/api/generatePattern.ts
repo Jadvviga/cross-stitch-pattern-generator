@@ -114,7 +114,7 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
       let alpha = Jimp.intToRGBA(pixel).a;
       const paletteColor = getColorFromPalette(rgbToHex(Jimp.intToRGBA(pixel)), palette);
       if (paletteColor && alpha !== 0) {
-        const rgb = hexToRgb(paletteColor.colorHex);
+        const rgb = hexToRgb(paletteColor.muline.hex);
         pixel = Jimp.rgbaToInt(rgb.r, rgb.g, rgb.b, rgb.a);
       }
       imagePixelsArray.push(pixel);  //value are in HEX number
