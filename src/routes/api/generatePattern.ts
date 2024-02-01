@@ -1,6 +1,6 @@
 import Jimp from "jimp";
-import type { MULINE_TYPES, MulineData } from "../../data/mulineData";
-import { ARIADNA } from "../../data/ariadna";
+import type { Palette } from "../../data/mulineData";
+import { hexToRgb, rgbToHex } from "./generatePalette";
 
 //A4 ma na 350 dpi 2893 x 4092 px
 
@@ -11,17 +11,20 @@ import { ARIADNA } from "../../data/ariadna";
 
 //Sizes of squre in pixels and icons depending on size of image (the larger img the less size of square)
 //(these are porper ones)
-const SCALE_SMALL = 128;
-const SCALE_MEDIUM = 64;
-const SCALE_BIG = 32;
+const SCALE_SMALL = 64;
+const SCALE_MEDIUM = 32;
+const SCALE_BIG = 16;
 
 const SCALE_PREVIEW = 10;
 
 const GRID_COLOR = 255;
 
-const GRID_SIZE = 1;
+const GRID_SIZE = 2;
 const GRID_BIG_SIZE = 2; // grid size for way bigger images (for now not used)
-const GRID_HIGHLIGHT_SIZE = 3;  //grid size for grid every 10 square
+const GRID_HIGHLIGHT_SIZE = 5;  //grid size for grid every 10 square
+
+const GRID_SIZE_PREVIEW = 1;
+const GRID_HIGHLIGHT_SIZE_PREVIEW = 3;  //grid size for grid every 10 square
 
 const GRID_COUNTER = 10;
 
@@ -30,7 +33,7 @@ const THRESHOLD_BIG = 100;
 
 const path = 'static/images/upload/';
 
-
+// generating preview (image just scaled only a bit with grid)
 export async function generatePreview(fileName: string): Promise<string> {
     const fullFileName = `${path}${fileName}.png`;
     const resizedFileName = `${path}${fileName}_preview.png`;
@@ -47,8 +50,9 @@ export async function generatePreview(fileName: string): Promise<string> {
     //get pixels from og image to array
     for (let y = 0; y < ogHeight; y ++) {
       for (let x = 0; x < ogWidth; x ++) {
-        const pixel = image.getPixelColor(x, y)
-        imagePixelsArray.push(pixel); //value are in HEX
+        const pixel = image.getPixelColor(x, y) //value are in HEX number
+        if ((y==9 && x==10) || (y==0 && x==0)) console.log(Jimp.intToRGBA(pixel))
+        imagePixelsArray.push(pixel); 
         if(Jimp.intToRGBA(pixel).a !== 0) {
           paletteSet.add(pixel);
         }
@@ -59,10 +63,10 @@ export async function generatePreview(fileName: string): Promise<string> {
     await generatePaletteImage(paletteFileName, paletteSet);
 
     // get resized image pixel array
-    const newWidth = getResizedDimension(ogWidth, scale, GRID_SIZE, GRID_HIGHLIGHT_SIZE);
-    const newHeight = getResizedDimension(ogHeight, scale, GRID_SIZE, GRID_HIGHLIGHT_SIZE);
+    const newWidth = getResizedDimension(ogWidth, scale, GRID_SIZE_PREVIEW, GRID_HIGHLIGHT_SIZE_PREVIEW);
+    const newHeight = getResizedDimension(ogHeight, scale, GRID_SIZE_PREVIEW, GRID_HIGHLIGHT_SIZE_PREVIEW);
 
-    const resizedImagePixelsArray = getPixelsOgGriddedImage(imagePixelsArray, ogWidth, ogHeight, newWidth, scale, GRID_SIZE, GRID_HIGHLIGHT_SIZE);
+    const resizedImagePixelsArray = getPixelsOfGriddedImage(imagePixelsArray, ogWidth, ogHeight, newWidth, scale, GRID_SIZE_PREVIEW, GRID_HIGHLIGHT_SIZE_PREVIEW);
 
     //create resized image
     try {
@@ -90,13 +94,12 @@ export async function generatePreview(fileName: string): Promise<string> {
 }
 
 
-//not yet used
-export async function generatePattern(fileName: string) {
+// generating pattern (image scaled properly with gri, palette and icons)
+export async function generatePattern(fileName: string, palette: Array<Palette>) {
   const fullFileName = `${path}${fileName}.png`;
-  const paletteFileName = `${path}${fileName}_palette.png`;
+  const resizedFileName = `${path}${fileName}_pattern.png`;
 
   const imagePixelsArray: number[] = [];
-  const paletteSet = new Set<number>();
 
   const image = await Jimp.read(fullFileName);
   const ogWidth = image.bitmap.width;
@@ -107,20 +110,30 @@ export async function generatePattern(fileName: string) {
   //get pixels from og image to array
   for (let y = 0; y < ogHeight; y ++) {
     for (let x = 0; x < ogWidth; x ++) {
-      imagePixelsArray.push(image.getPixelColor(x, y)); //value are in HEX
-      paletteSet.add(image.getPixelColor(x, y));
+      let pixel = image.getPixelColor(x, y);
+      let alpha = Jimp.intToRGBA(pixel).a;
+      const paletteColor = getColorFromPalette(rgbToHex(Jimp.intToRGBA(pixel)), palette);
+      if (paletteColor && alpha !== 0) {
+        const rgb = hexToRgb(paletteColor.colorHex);
+        pixel = Jimp.rgbaToInt(rgb.r, rgb.g, rgb.b, rgb.a);
+      }
+      imagePixelsArray.push(pixel);  //value are in HEX number
+      
     }
   }
+  console.log('prepared pixel array')
+  console.log(ogWidth , ogHeight)
   
   // get resized image pixel array
   const newWidth = getResizedDimension(ogWidth, scale, gridSize, GRID_HIGHLIGHT_SIZE);
   const newHeight = getResizedDimension(ogHeight, scale, gridSize, GRID_HIGHLIGHT_SIZE);
 
-  const resizedImagePixelsArray = getPixelsOgGriddedImage(imagePixelsArray, ogWidth, ogHeight, newWidth, scale, gridSize, GRID_HIGHLIGHT_SIZE);
+  const resizedImagePixelsArray = getPixelsOfGriddedImage(imagePixelsArray, ogWidth, ogHeight, newWidth, scale, gridSize, GRID_HIGHLIGHT_SIZE);
   
-  // TODO read palette
-  const palletteImg = await Jimp.read(paletteFileName);
 
+  console.log('got resized pixel array')
+  console.log(newWidth*newHeight)
+  console.log(resizedImagePixelsArray.length)
   // const icon = await Jimp.read(`static/icons/icon0.png`);
   // icon.resize(scale, scale,  Jimp.RESIZE_NEAREST_NEIGHBOR);
   // Jimp.RESIZE_NEAREST_NEIGHBOR;
@@ -128,26 +141,36 @@ export async function generatePattern(fileName: string) {
   // Jimp.RESIZE_BICUBIC;
   // Jimp.RESIZE_HERMITE;
   // Jimp.RESIZE_BEZIER;
+  
+  
+  //   //test icons
+  //   // image.composite(icon, 1, 1);
 
   //create resized image
-  await new Jimp(newWidth, newHeight, (err, image) => {
-    if (err) throw err;
-    let count = 0;
-    for (let y = 0; y < newHeight; y ++) {
-      for (let x = 0; x < newWidth; x ++) {
-        image.setPixelColor(resizedImagePixelsArray[count], x, y);
-        count++;
+  try {
+    await new Jimp(newWidth, newHeight, (err, image) => {
+     
+      let count = 0;
+      for (let y = 0; y < newHeight; y ++) {
+        for (let x = 0; x < newWidth; x ++) {
+          if (resizedImagePixelsArray[count]) {
+            image.setPixelColor(resizedImagePixelsArray[count], x, y);
+          } else {
+            image.setPixelColor(0, x, y);
+          }
+          
+          count++;
+        }
       }
-    }
+      image.write(resizedFileName);
+    });
+  } catch (err) {
+    console.error("Something went wrong when generating the pattern: " + err);
+  }
+}
 
-    //test icons
-    // image.composite(icon, 1, 1);
-
-    image.write(resizedFileName);
-  })
-
- 
-      
+function getColorFromPalette(colorHex: string, palette: Array<Palette>): Palette | undefined {
+  return palette.find(col => col.colorHex === colorHex);
 }
 
 function determineScale(width: number, height: number) {
@@ -178,7 +201,7 @@ function getResizedDimension(
 
 }
 
-function getPixelsOgGriddedImage( //generic func
+function getPixelsOfGriddedImage( //generic func
   ogImagePixelsArray: number[],
   ogWidth: number,
   ogHeight: number,

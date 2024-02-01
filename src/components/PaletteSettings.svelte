@@ -11,7 +11,7 @@
     </div>
    
     
-        {#if imagePalette}
+    {#if imagePalette}
         <div class="rowContainer paletteHeader">
             <p>Pixel color</p>
             <p>Embroidery floss color</p>
@@ -57,7 +57,7 @@
     import Loading from "./Loading.svelte";
 
     export let fileName: string;
-    let imagePalette: Array<Palette> | null;
+    export let imagePalette: Array<Palette> | null;
     let sortedByMuline = false;
     
 
@@ -66,6 +66,8 @@
     async function handleMulineChange(event: Event | any) {
         const  { selected } = event.detail;
         sessionStorage.setItem("mulineType", selected);
+        selectedMulineType = selected;
+        
         imagePalette = null;
         imagePalette = await requestPalette();
         imagePalette?.sort(sortedByMuline ? compareByMuline : compareByPixels);

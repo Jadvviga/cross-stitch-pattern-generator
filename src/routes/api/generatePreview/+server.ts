@@ -1,6 +1,4 @@
-import { error, json } from '@sveltejs/kit';
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
+import { json } from '@sveltejs/kit';
 import { generatePreview } from '../generatePattern.js';
  
 export async function POST({ request }) {
@@ -8,6 +6,5 @@ export async function POST({ request }) {
     const fileName = data["fileName"];
     console.log('generate preview', fileName)
     const message = await generatePreview(fileName);
-    console.log(message)
     return json(message);
 }

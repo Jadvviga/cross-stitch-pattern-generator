@@ -12,8 +12,9 @@
         on:change={() => getBase64(files[0])}/>
     <button
         on:click={ () => fileInput.click() }>
-        Upload
+        Upload image
     </button>
+
     {#if uploadedImage && uploadedFileGeneratedName}
     
         <div transition:fade={{ delay: 250, duration: 300 }}  class="rowContainer">
@@ -32,7 +33,10 @@
             on:click={requestGeneration}>
             generate pattern
         </button>
+    {:else}
+    <p class="note">note: your image MUST be CLEAR PIXEL ART (1 square on image = 1 pixel)</p>
     {/if}
+    
     {#if loading}
         <Loading/>
     {/if}
@@ -132,5 +136,11 @@
 
     .hidden {
         display: none;
+    }
+
+    .note {
+        margin: 0;
+        padding: 0;
+        font-size: 14px;
     }
 </style>

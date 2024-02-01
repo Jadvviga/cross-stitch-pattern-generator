@@ -25,17 +25,18 @@ function componentToHex(c: number) {
   return hex.length == 1 ? "0" + hex : hex;
 }
 
-function rgbToHex({r, g, b}: RGBA) {
+export function rgbToHex({r, g, b}: RGBA) {
   return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }
 
-function hexToRgb(hex: string) {
+export function hexToRgb(hex: string): RGBA {
   var result = /^#?([A-Fa-f\d]{2})([A-Fa-f\d]{2})([A-Fa-f\d]{2})$/i.exec(hex);
   return result ? {
     r: parseInt(result[1], 16),
     g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-  } : { r: 255, g: 255, b: 255 };
+    b: parseInt(result[3], 16),
+    a: 255
+  } : { r: 255, g: 255, b: 255, a:255 };
 }
 
 //zrobic mapowanie bezposrednio do kolorow mulin
@@ -44,8 +45,6 @@ function hexToRgb(hex: string) {
 export async function loadPalette(fileName: string, mulineType: MULINE_TYPES): Promise<Palette[]> {
   const paletteFileName = `${path}${fileName}_palette.png`;
   const mulinePalette = getMulinePalette(mulineType);
-  //console.log(mulinePalette)
-  const ogImageName = `${path}${fileName}.png`;
   const paletteImage = await Jimp.read(paletteFileName);
   const colors = [];
   const palette: Array<Palette> = [];
@@ -86,14 +85,11 @@ export async function loadPalette(fileName: string, mulineType: MULINE_TYPES): P
       invertIcon: isColorDark(mulineColor.hex)
     });
   })
-  //console.log(ARIADNA["1500"])
 
   return palette;
 }
 
-function getColorFromPalette(colorID: string, palette: Array<MulineData>) {
-  return palette.find(col => col.id === colorID);
-}
+
 //     CMC 
 //     CIE2000 2000
 //     CIE1994 = 'CIE1994',

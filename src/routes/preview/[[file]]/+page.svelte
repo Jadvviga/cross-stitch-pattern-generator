@@ -1,20 +1,25 @@
 {#if uploadedImage && !loading} 
 <h1>Preview</h1>
+
 <div transition:fade={{ delay: 250, duration: 300 }} class="container">
     <div class='columnContainer'
-        style="height: {paletteNodeHeight}px">
-       
+         style="height: {height}px">
+         <button
+            on:click={requestPatternGeneration}> GENERATE PATTERN</button>
+        {#if loadingPattern}
+            <Loading/>
+        {/if}
         <img id="uploadedImg" src={uploadedImage} alt="avatar"/>
         <p>{imgDimensions}</p>
-        <button> GENERATE PATTERN</button>
-        
+       
     </div>
     
    
 
     <div bind:offsetHeight={paletteNodeHeight}>
         <PaletteSettings
-            {fileName}/>
+            {fileName}
+            bind:imagePalette/>
     </div>
     
 </div>
@@ -31,18 +36,39 @@
     import PaletteSettings from '../../../components/PaletteSettings.svelte';
     import Loading from '../../../components/Loading.svelte';
     import { fade } from 'svelte/transition';
+    import type { Palette } from '../../../data/mulineData';
 
 
  
     let uploadedImage: any;
     let fileName: string;
     let loading = true;
+    let loadingPattern = false;
     let imgDimensions: string;
     let paletteNodeHeight: number;
+    let height: number;
+    let imagePalette: Array<Palette>
     
 
-
     export let data;
+
+    async function requestPatternGeneration() {
+        loadingPattern = true;
+        const data: any = {};
+        data["fileName"] = fileName;
+        data["palette"] = imagePalette;
+        const response = await fetch('/api/generatePattern', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json'
+            },
+            body: JSON.stringify({data})
+        });
+        const dimensions =  await response.json();
+        
+        goto(`/pattern/${fileName}`);
+    }
 
 
     onMount(() => {
@@ -52,6 +78,7 @@
             goto('/');
         }
         imgDimensions = sessionStorage.getItem('imageDimension') || '';
+        height = paletteNodeHeight;
         fileName = data.fileName;
         uploadedImage = `/images/upload/${data.fileName}_preview.png`;
         const loadImage = new Image();
@@ -92,7 +119,12 @@
     #uploadedImg {
         margin-bottom: 10px;
         max-width: 600px;
-        height: auto; 
+        max-height: 70vh;
+    }
+
+    button {
+        position: relative;
+        bottom: 60px;
     }
 
 </style>
