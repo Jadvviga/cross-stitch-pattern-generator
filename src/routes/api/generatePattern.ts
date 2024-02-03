@@ -5,15 +5,15 @@ import { hexToRgb, isColorDark, rgbToHex } from "./generatePalette";
 //A4 ma na 350 dpi 2893 x 4092 px
 
 //test ones
-// const SCALE_SMALL = 54;
-// const SCALE_MEDIUM = 32;
-// const SCALE_BIG = 16;
+const SCALE_SMALL = 128;
+const SCALE_MEDIUM = 64;
+const SCALE_BIG = 24;
 
 //Sizes of squre in pixels and icons depending on size of image (the larger img the less size of square)
 //(these are porper ones)
-const SCALE_SMALL = 64;
-const SCALE_MEDIUM = 32;
-const SCALE_BIG = 16;
+// const SCALE_SMALL = 64;
+// const SCALE_MEDIUM = 32;
+// const SCALE_BIG = 16;
 
 const SCALE_PREVIEW = 10;
 

@@ -13,8 +13,14 @@
     
     {#if imagePalette}
         <div class="rowContainer paletteHeader">
-            <p>Pixel color</p>
-            <p>Embroidery floss color</p>
+            <p>
+                Pixel color
+                <span>{numberOfColors} colors</span>
+            </p>
+            <p>
+                Embroidery floss color
+                <span>{numberOfMulineColors} colors</span>
+            </p>
         </div>
             <div class='palette'>
                 {#each imagePalette as color, index}
@@ -62,6 +68,8 @@
     
 
     $: selectedMulineType = sessionStorage.getItem("mulineType") || MULINE_TYPES.Ariadna;
+    $: numberOfColors = imagePalette?.length;
+    $: numberOfMulineColors = getMulineCount(imagePalette);
         
     async function handleMulineChange(event: Event | any) {
         const  { selected } = event.detail;
@@ -78,10 +86,6 @@
         imagePalette?.sort(sortedByMuline ? compareByMuline : compareByPixels);
         imagePalette = imagePalette;
     }
-
-    // function RGBA2String(color: RGBA) {
-    //     return `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
-    // }
 
     function compareByMuline(col1: Palette, col2: Palette ) {
         if ( col1.muline.id < col2.muline.id ){
@@ -108,6 +112,17 @@
             return false;
         }
         return color.muline.id === imagePalette[index - 1].muline.id;
+    }
+
+    function getMulineCount(palette: Array<Palette>): number {
+        if (!palette) {
+            return 0;
+        }
+        const colorsSet = new Set<string>;
+        for(const color of palette) {
+            colorsSet.add(color.muline.hex);
+        }
+        return colorsSet.size;
     }
 
 
@@ -167,6 +182,16 @@
         font-weight: bold;
         text-transform: uppercase;
         margin-bottom: 0px;
+    }
+
+    .paletteHeader span {
+        font-size: 14px;
+        font-weight: 500;
+        text-transform: none;
+    }
+    .paletteHeader span::before {
+        content: "\A";
+        white-space: pre;
     }
 
     .palette {
