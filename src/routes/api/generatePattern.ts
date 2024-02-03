@@ -115,7 +115,7 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
   for (let y = 0; y < ogHeight; y ++) {
     for (let x = 0; x < ogWidth; x ++) {
       let pixel = image.getPixelColor(x, y);
-      let alpha = Jimp.intToRGBA(pixel).a;
+      const alpha = Jimp.intToRGBA(pixel).a;
       const paletteColor = getColorFromPalette(rgbToHex(Jimp.intToRGBA(pixel)), palette);
       if (paletteColor && alpha !== 0) { //transparent pixel were not included in palette
         const rgb = hexToRgb(paletteColor.muline.hex);
@@ -147,6 +147,7 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
   // Jimp.RESIZE_HERMITE;
   // Jimp.RESIZE_BEZIER;
   
+  //positions for icons
   let iconPosX = GRID_HIGHLIGHT_SIZE;
   let iconPosY = GRID_HIGHLIGHT_SIZE;
   let counterX = 0;
@@ -167,6 +168,20 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
     }
   }
 
+  // loading icons
+  const icons = getPaletteIcons(palette);
+  const iconFiles: Array<Jimp> = [];
+  for(const fileName of icons) {
+    const inverse = fileName.includes('!');
+    const icon = await Jimp.read(`static/images/icons/${fileName.split('!')[0]}.png`);
+    icon.resize(scale, scale,  Jimp.RESIZE_NEAREST_NEIGHBOR);
+    if (inverse) {
+      icon.invert();
+    }
+    iconFiles.push(icon);
+  }
+
+
   //create resized image
   try {
     await new Jimp(newWidth, newHeight, async (err, image) => {
@@ -185,14 +200,16 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
 
       for(const pos of iconsPositions) {
         const pixel = image.getPixelColor( pos[0], pos[1]);
-        const paletteColor = getColorFromPalette(rgbToHex(Jimp.intToRGBA(pixel)), palette);
-        const icon = await Jimp.read(`static/images/icons/${paletteColor?.icon}.png`);
-        if (paletteColor?.invertIcon) {
-          icon.invert();
+        const alpha = Jimp.intToRGBA(pixel).a;
+        if (alpha !== 0) {
+          const paletteColor = getColorFromPalette(rgbToHex(Jimp.intToRGBA(pixel)), palette);
+          const iconID = Number(paletteColor?.icon.split('icon')[1]);
+          //console.log(iconID)
+          const icon = iconFiles[iconID+1];
+          image.composite(icon, pos[0], pos[1]);
+          //image.setPixelColor(GRID_COLOR_LIGHT, pos[0], pos[1])
         }
-        icon.resize(scale, scale,  Jimp.RESIZE_NEAREST_NEIGHBOR);
-        image.composite(icon, pos[0], pos[1]);
-        //image.setPixelColor(GRID_COLOR_LIGHT, pos[0], pos[1])
+        
       }
 
       
@@ -206,6 +223,15 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
 function getColorFromPalette(colorHex: string, palette: Array<Palette>): Palette | undefined {
   return palette.find(col => col.colorHex.toLowerCase() === colorHex.toLowerCase()  || col.muline.hex.toLowerCase()  === colorHex.toLowerCase());
 }
+
+function getPaletteIcons(palette: Array<Palette>): Array<string>{
+  const iconsSet = new Set<string>;
+  for(const color of palette) {
+    iconsSet.add(`${color.icon}${color.invertIcon ? '!' : ''}`);
+  }
+  return Array.from(iconsSet);
+}
+
 
 function determineScale(width: number, height: number) {
   if (width <= THRESHOLD_SMALL || height <= THRESHOLD_SMALL) {

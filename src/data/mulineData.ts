@@ -13,8 +13,8 @@ export type Palette = {
     index: number
     colorHex: string;
     muline: MulineData;
-    icon?: string;
-    invertIcon?: boolean;
+    icon: string;
+    invertIcon: boolean;
     count?: number;
 }
 

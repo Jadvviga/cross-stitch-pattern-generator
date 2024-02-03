@@ -11,6 +11,9 @@
         {/if}
         <img id="uploadedImg" src={uploadedImage} alt="avatar"/>
         <p>{imgDimensions}</p>
+        {#if shouldShowWarning}
+            aaa
+        {/if}
        
     </div>
     
@@ -47,7 +50,8 @@
     let imgDimensions: string;
     let paletteNodeHeight: number;
     let height: number;
-    let imagePalette: Array<Palette>
+    let imagePalette: Array<Palette>;
+    let shouldShowWarning = false;
     
 
     export let data;
@@ -70,6 +74,13 @@
         goto(`/pattern/${fileName}`);
     }
 
+    function checkForWarning() {
+        console.log('aaaaaaaaa')
+        const dimensions = imgDimensions.split(' x ');
+        console.log(dimensions[0])
+        shouldShowWarning = true;
+    }
+
 
     onMount(() => {
         loading = true;
@@ -78,6 +89,7 @@
             goto('/');
         }
         imgDimensions = sessionStorage.getItem('imageDimension') || '';
+        checkForWarning();
         height = paletteNodeHeight;
         fileName = data.fileName;
         uploadedImage = `/images/upload/${data.fileName}_preview.png`;
