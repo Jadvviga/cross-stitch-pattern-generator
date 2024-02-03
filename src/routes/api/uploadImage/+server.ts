@@ -12,8 +12,8 @@ export async function POST({ request }) {
     //const fileName = randomUUID();
     const fileName = `img${id}`;
     id++;
-	console.log('saveImg', fileName)
+	//console.log('saveImg', fileName)
     writeFileSync(`static/images/upload/${fileName}.png`, file, 'base64');
-    console.log('SAVED')
+    //console.log('SAVED')
     return json({ "fileName": fileName }, { status: 201 });
 }

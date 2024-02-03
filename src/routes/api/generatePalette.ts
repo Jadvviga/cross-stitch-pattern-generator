@@ -107,12 +107,12 @@ function getColorDifference(colorHex1: string, colorHex2: string): number {
   return color1.deltaE(color2, "ITP");
 }
 
-function isColorDark(colorHex: string) {
+export function isColorDark(colorHex: string, threshold = 4.5) {
   const color1 = new Color(colorHex);
   const color2 = new Color('#000000'); //black - color of icons
 
   const contrast = color1.contrastWCAG21(color2);
-  return contrast < 4.5;
+  return contrast < threshold;
 }
 
 //colorsea
