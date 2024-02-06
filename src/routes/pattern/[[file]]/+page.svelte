@@ -46,7 +46,7 @@
             goto('/');
         }
         fileName = data.fileName;
-        generatedPattern = `/images/upload/${data.fileName}_pattern.png`;
+        generatedPattern = `/images/pattern/${data.fileName}_pattern.png`;
         const loadImage = new Image();
         loadImage.onload = () => {
             loading = false;

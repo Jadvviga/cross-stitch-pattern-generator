@@ -1,19 +1,22 @@
 import Jimp from "jimp";
 import type { Palette } from "../../data/mulineData";
-import { hexToRgb, isColorDark, rgbToHex } from "./generatePalette";
+import { hexToRgb, rgbToHex } from "./generatePalette";
+import PDFDocument from 'pdfkit';
+import fs from 'fs';
+
 
 //A4 ma na 350 dpi 2893 x 4092 px
 
 //test ones
-const SCALE_SMALL = 128;
-const SCALE_MEDIUM = 64;
-const SCALE_BIG = 24;
+// const SCALE_SMALL = 128;
+// const SCALE_MEDIUM = 64;
+// const SCALE_BIG = 24;
 
 //Sizes of squre in pixels and icons depending on size of image (the larger img the less size of square)
 //(these are porper ones)
-// const SCALE_SMALL = 64;
-// const SCALE_MEDIUM = 32;
-// const SCALE_BIG = 16;
+const SCALE_SMALL = 64;
+const SCALE_MEDIUM = 32;
+const SCALE_BIG = 16;
 
 const SCALE_PREVIEW = 10;
 
@@ -35,13 +38,14 @@ const GRID_COUNTER = 10; //how often we have highlighted (thicker) grid
 const THRESHOLD_SMALL = 20;
 const THRESHOLD_BIG = 100;
 
-const path = 'static/images/upload/';
+const PATH_UPLOAD = 'static/images/upload/';
+const PATH_PATTERN = 'static/images/pattern/';
 
 // generating preview (image just scaled only a bit with grid)
 export async function generatePreview(fileName: string): Promise<string> {
-    const fullFileName = `${path}${fileName}.png`;
-    const resizedFileName = `${path}${fileName}_preview.png`;
-    const paletteFileName = `${path}${fileName}_palette.png`;
+    const fullFileName = `${PATH_UPLOAD}${fileName}.png`;
+    const resizedFileName = `${PATH_UPLOAD}${fileName}_preview.png`;
+    const paletteFileName = `${PATH_UPLOAD}${fileName}_palette.png`;
 
     const imagePixelsArray: number[] = [];
     const paletteSet = new Set<number>();
@@ -55,7 +59,6 @@ export async function generatePreview(fileName: string): Promise<string> {
     for (let y = 0; y < ogHeight; y ++) {
       for (let x = 0; x < ogWidth; x ++) {
         const pixel = image.getPixelColor(x, y) //value are in HEX number
-        //if ((y==9 && x==10) || (y==0 && x==0)) console.log(Jimp.intToRGBA(pixel))
         imagePixelsArray.push(pixel); 
         if(Jimp.intToRGBA(pixel).a !== 0) {
           paletteSet.add(pixel);
@@ -75,12 +78,11 @@ export async function generatePreview(fileName: string): Promise<string> {
 
     //create resized image
     try {
-      await new Jimp(newWidth, newHeight, (err, image) => {
+      new Jimp(newWidth, newHeight, (err, image) => {
         if (err) throw err;
         let count = 0;
         for (let y = 0; y < newHeight; y ++) {
           for (let x = 0; x < newWidth; x ++) {
-            //console.log(resizedImagePixelsArray[count])
             if (resizedImagePixelsArray[count]) {
               image.setPixelColor(resizedImagePixelsArray[count], x, y);
             } else {
@@ -101,11 +103,10 @@ export async function generatePreview(fileName: string): Promise<string> {
 
 // generating pattern (image scaled properly with grid, palette and icons)
 export async function generatePattern(fileName: string, palette: Array<Palette>) {
-  const fullFileName = `${path}${fileName}.png`;
-  const resizedFileName = `${path}${fileName}_pattern.png`;
+  const fullFileName = `${PATH_UPLOAD}${fileName}.png`;
+  const patternFileName = `${PATH_PATTERN}${fileName}_pattern.png`;
 
   const imagePixelsArray: number[] = [];
-
   const image = await Jimp.read(fullFileName);
   const ogWidth = image.bitmap.width;
   const ogHeight = image.bitmap.height;
@@ -116,7 +117,6 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
   for (let y = 0; y < ogHeight; y ++) {
     for (let x = 0; x < ogWidth; x ++) {
       let pixel = image.getPixelColor(x, y);
-      console.log(pixel)
       const alpha = Jimp.intToRGBA(pixel).a;
       const paletteColor = getColorFromPalette(rgbToHex(Jimp.intToRGBA(pixel)), palette);
       if (paletteColor && alpha !== 0) { //transparent pixel were not included in palette
@@ -127,8 +127,6 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
       
     }
   }
-  console.log('prepared pixel array')
-  console.log(ogWidth , ogHeight)
   
   // get resized image pixel array
   const newWidth = getResizedDimension(ogWidth, scale, gridSize, GRID_HIGHLIGHT_SIZE);
@@ -154,7 +152,7 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
   }
 
   // Text-counter on borders related
-  const fontToLoad = scale === SCALE_SMALL ? Jimp.FONT_SANS_64_BLACK : scale === SCALE_MEDIUM ? Jimp.FONT_SANS_32_BLACK : Jimp.FONT_SANS_16_BLACK;
+  const fontToLoad = scale === SCALE_SMALL ? Jimp.FONT_SANS_32_BLACK : scale === SCALE_MEDIUM ? Jimp.FONT_SANS_16_BLACK : Jimp.FONT_SANS_8_BLACK;
   const font = await Jimp.loadFont(fontToLoad);
   const txtDist = scale * GRID_COUNTER + gridSize * (GRID_COUNTER - 1) + GRID_HIGHLIGHT_SIZE;
   const addTextToImage = (image: Jimp): Jimp => {
@@ -175,8 +173,7 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
   const resizedHeight = newHeight + scale*2;
   //create resized image
   try {
-    await new Jimp(resizedWidth, resizedHeight, async (err, image) => {
-     
+    new Jimp(resizedWidth, resizedHeight, async (err, image) => {
       let count = 0;
       for (let y = 0; y < resizedHeight; y ++) {
         for (let x = 0; x < resizedWidth; x ++) {
@@ -194,11 +191,21 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
       image = addIconsToImage(image);
       image = addTextToImage(image);
       
-      image.write(resizedFileName);
+      image.write(patternFileName, () => {
+        const doc = new PDFDocument({size: 'A4'});
+        doc.pipe(fs.createWriteStream(`${PATH_PATTERN}${fileName}_pattern.pdf`));
+        console.log(doc.page.width)
+        doc.image(patternFileName, 0, 0, {width: doc.page.width});
+        doc.end();
+      });
     });
+    
   } catch (err) {
     console.error("Something went wrong when generating the pattern: " + err);
-  }
+  } 
+
+ 
+
 }
 
 function printTextToImage(image: Jimp, font: Font, posX: number, posY: number, txt: string, max: number): Jimp {
@@ -217,7 +224,7 @@ function printTextToImage(image: Jimp, font: Font, posX: number, posY: number, t
   return image;
 }
 
-async function loadIconsFromPalette(palette: Array<Palette>, scale: number): Array<Jimp> {
+async function loadIconsFromPalette(palette: Array<Palette>, scale: number): Promise<Jimp[]> {
   const icons = getPaletteIcons(palette);
   const iconFiles: Array<Jimp> = [];
   for(const fileName of icons) {
