@@ -9,7 +9,7 @@
         {#if loadingPattern}
             <Loading/>
         {/if}
-        <img id="uploadedImg" src={uploadedImage} alt="avatar"/>
+        <img id="uploadedImg" src={uploadedImage} alt="preview"/>
         <p>{imgDimensions}</p>
        
     </div>

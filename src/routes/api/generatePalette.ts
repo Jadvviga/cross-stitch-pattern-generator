@@ -102,9 +102,9 @@ function getColorDifference(colorHex1: string, colorHex2: string): number {
   const color1 = new Color(colorHex1);
   const color2 = new Color(colorHex2);
 
-  // CIE2000 is okay but some colors seems weird
-  // ITP seems teh best
-  return color1.deltaE(color2, "ITP");
+  // CIE2000 is okay but gives more saturated colors
+  // ITP seems okay too but give worse greens
+  return color1.deltaE(color2, "2000");
 }
 
 export function isColorDark(colorHex: string, threshold = 4.5) {

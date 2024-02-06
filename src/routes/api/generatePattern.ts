@@ -20,11 +20,12 @@ const SCALE_PREVIEW = 10;
 const GRID_COLOR = 255;
 // const GRID_COLOR_LIGHT = 170; //when next to dark colors
 const GRID_COLOR_LIGHT = 4278244095; //when next to dark colors
+const GRID_MIDDLE_COLOR = 4278190335; //red
 
 
-const GRID_SIZE = 2;
-const GRID_BIG_SIZE = 2;
-const GRID_HIGHLIGHT_SIZE = 5;  //grid size for grid every 10 square
+const GRID_SIZE = 3;
+const GRID_BIG_SIZE = 4;
+const GRID_HIGHLIGHT_SIZE = 8;  //grid size for grid every 10 square
 
 const GRID_SIZE_PREVIEW = 1;
 const GRID_HIGHLIGHT_SIZE_PREVIEW = 3;  //grid size for grid every 10 square
@@ -98,7 +99,7 @@ export async function generatePreview(fileName: string): Promise<string> {
 }
 
 
-// generating pattern (image scaled properly with gri, palette and icons)
+// generating pattern (image scaled properly with grid, palette and icons)
 export async function generatePattern(fileName: string, palette: Array<Palette>) {
   const fullFileName = `${path}${fileName}.png`;
   const resizedFileName = `${path}${fileName}_pattern.png`;
@@ -115,6 +116,7 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
   for (let y = 0; y < ogHeight; y ++) {
     for (let x = 0; x < ogWidth; x ++) {
       let pixel = image.getPixelColor(x, y);
+      console.log(pixel)
       const alpha = Jimp.intToRGBA(pixel).a;
       const paletteColor = getColorFromPalette(rgbToHex(Jimp.intToRGBA(pixel)), palette);
       if (paletteColor && alpha !== 0) { //transparent pixel were not included in palette
@@ -131,23 +133,107 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
   // get resized image pixel array
   const newWidth = getResizedDimension(ogWidth, scale, gridSize, GRID_HIGHLIGHT_SIZE);
   const newHeight = getResizedDimension(ogHeight, scale, gridSize, GRID_HIGHLIGHT_SIZE);
-
-  const iconsPositions: Array<number[]> = [];
   const resizedImagePixelsArray = getPixelsOfGriddedImage(imagePixelsArray, ogWidth, ogHeight, newWidth, newHeight, scale, gridSize, GRID_HIGHLIGHT_SIZE);
   
+  // Icons related
+  const iconsPositions = getIconsPositions(ogWidth, ogHeight, scale, gridSize);
+  const iconFiles = await loadIconsFromPalette(palette, scale)
+  
+  const addIconsToImage = (image: Jimp): Jimp => {
+    for(const pos of iconsPositions) {
+      const pixel = image.getPixelColor( pos[0] + scale, pos[1] + scale);
+      const alpha = Jimp.intToRGBA(pixel).a;
+      if (alpha !== 0) {
+        const paletteColor = getColorFromPalette(rgbToHex(Jimp.intToRGBA(pixel)), palette);
+        const iconID = Number(paletteColor?.icon.split('icon')[1]);
+        const icon = iconFiles[iconID+1];
+        image.composite(icon, pos[0] + scale, pos[1] + scale);
+      }
+    }
+    return image;
+  }
 
-  console.log('got resized pixel array')
-  console.log(newWidth*newHeight)
-  console.log(resizedImagePixelsArray.length)
-  
-  // possible resize algos fro icon
-  // Jimp.RESIZE_NEAREST_NEIGHBOR;
-  // Jimp.RESIZE_BILINEAR;
-  // Jimp.RESIZE_BICUBIC;
-  // Jimp.RESIZE_HERMITE;
-  // Jimp.RESIZE_BEZIER;
-  
-  //positions for icons
+  // Text-counter on borders related
+  const fontToLoad = scale === SCALE_SMALL ? Jimp.FONT_SANS_64_BLACK : scale === SCALE_MEDIUM ? Jimp.FONT_SANS_32_BLACK : Jimp.FONT_SANS_16_BLACK;
+  const font = await Jimp.loadFont(fontToLoad);
+  const txtDist = scale * GRID_COUNTER + gridSize * (GRID_COUNTER - 1) + GRID_HIGHLIGHT_SIZE;
+  const addTextToImage = (image: Jimp): Jimp => {
+    let i = 0;
+      for(let y = scale + GRID_HIGHLIGHT_SIZE; y < resizedHeight; y += txtDist) {
+        image = printTextToImage(image, font, Math.floor(scale/2) - 2, y, `${i*10}`, scale/2);
+        i++;
+      }
+      i = 1;
+      for(let x = scale + GRID_HIGHLIGHT_SIZE + txtDist; x < resizedWidth; x += txtDist) {
+        image = printTextToImage(image, font, x, Math.floor(scale/2), `${i*10}`, scale/2);
+        i++;
+      }
+    return image;
+  }
+
+  const resizedWidth = newWidth + scale*2;
+  const resizedHeight = newHeight + scale*2;
+  //create resized image
+  try {
+    await new Jimp(resizedWidth, resizedHeight, async (err, image) => {
+     
+      let count = 0;
+      for (let y = 0; y < resizedHeight; y ++) {
+        for (let x = 0; x < resizedWidth; x ++) {
+          if (x < scale || y < scale || x >= resizedWidth - scale || y >= resizedHeight - scale) {
+            image.setPixelColor(0, x, y);
+          } else {
+            if (resizedImagePixelsArray[count]) {
+            image.setPixelColor(resizedImagePixelsArray[count], x, y);
+            } 
+            count++;
+          }
+          
+        }
+      }
+      image = addIconsToImage(image);
+      image = addTextToImage(image);
+      
+      image.write(resizedFileName);
+    });
+  } catch (err) {
+    console.error("Something went wrong when generating the pattern: " + err);
+  }
+}
+
+function printTextToImage(image: Jimp, font: Font, posX: number, posY: number, txt: string, max: number): Jimp {
+  image.print(
+    font,
+    posX,  
+    posY,
+    {
+      text: txt,
+      alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT,
+      alignmentY: Jimp.VERTICAL_ALIGN_BOTTOM,
+    },
+    max,
+    max
+  );
+  return image;
+}
+
+async function loadIconsFromPalette(palette: Array<Palette>, scale: number): Array<Jimp> {
+  const icons = getPaletteIcons(palette);
+  const iconFiles: Array<Jimp> = [];
+  for(const fileName of icons) {
+    const inverse = fileName.includes('!');
+    const icon = await Jimp.read(`static/images/icons/${fileName.split('!')[0]}.png`);
+    icon.resize(scale, scale,  Jimp.RESIZE_NEAREST_NEIGHBOR);
+    if (inverse) {
+      icon.invert();
+    }
+    iconFiles.push(icon);
+  }
+  return iconFiles;
+}
+
+function getIconsPositions(ogWidth: number, ogHeight: number, scale: number, gridSize: number): Array<number[]> {
+  const iconsPositions: Array<number[]> = [];
   let iconPosX = GRID_HIGHLIGHT_SIZE;
   let iconPosY = GRID_HIGHLIGHT_SIZE;
   let counterX = 0;
@@ -167,57 +253,7 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
       
     }
   }
-
-  // loading icons
-  const icons = getPaletteIcons(palette);
-  const iconFiles: Array<Jimp> = [];
-  for(const fileName of icons) {
-    const inverse = fileName.includes('!');
-    const icon = await Jimp.read(`static/images/icons/${fileName.split('!')[0]}.png`);
-    icon.resize(scale, scale,  Jimp.RESIZE_NEAREST_NEIGHBOR);
-    if (inverse) {
-      icon.invert();
-    }
-    iconFiles.push(icon);
-  }
-
-
-  //create resized image
-  try {
-    await new Jimp(newWidth, newHeight, async (err, image) => {
-     
-      let count = 0;
-      for (let y = 0; y < newHeight; y ++) {
-        for (let x = 0; x < newWidth; x ++) {
-          if (resizedImagePixelsArray[count]) {
-            image.setPixelColor(resizedImagePixelsArray[count], x, y);
-          } else {
-            image.setPixelColor(0, x, y);
-          }
-          count++;
-        }
-      }
-
-      for(const pos of iconsPositions) {
-        const pixel = image.getPixelColor( pos[0], pos[1]);
-        const alpha = Jimp.intToRGBA(pixel).a;
-        if (alpha !== 0) {
-          const paletteColor = getColorFromPalette(rgbToHex(Jimp.intToRGBA(pixel)), palette);
-          const iconID = Number(paletteColor?.icon.split('icon')[1]);
-          //console.log(iconID)
-          const icon = iconFiles[iconID+1];
-          image.composite(icon, pos[0], pos[1]);
-          //image.setPixelColor(GRID_COLOR_LIGHT, pos[0], pos[1])
-        }
-        
-      }
-
-      
-      image.write(resizedFileName);
-    });
-  } catch (err) {
-    console.error("Something went wrong when generating the pattern: " + err);
-  }
+  return iconsPositions;
 }
 
 function getColorFromPalette(colorHex: string, palette: Array<Palette>): Palette | undefined {
