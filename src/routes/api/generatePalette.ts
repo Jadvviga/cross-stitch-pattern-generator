@@ -82,7 +82,8 @@ export async function loadPalette(fileName: string, mulineType: MULINE_TYPES): P
       colorHex: rgbToHex(color),
       muline: mulineColor,
       icon,
-      invertIcon: isColorDark(mulineColor.hex)
+      invertIcon: isColorDark(mulineColor.hex),
+      count: 0
     });
   })
 

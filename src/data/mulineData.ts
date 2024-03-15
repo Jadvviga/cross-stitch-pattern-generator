@@ -15,6 +15,6 @@ export type Palette = {
     muline: MulineData;
     icon: string;
     invertIcon: boolean;
-    count?: number;
+    count: number;
 }
 

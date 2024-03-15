@@ -8,7 +8,7 @@ export function getPaletteCounts(ogImgNode: HTMLElement, ogPalette: Array<Palett
 
     return domtoimage.toPixelData(ogImgNode)
         .then(function (pixels) {
-            console.log(ogImgNode.scrollHeight*ogImgNode.scrollWidth )
+            console.log(ogImgNode.scrollHeight * ogImgNode.scrollWidth)
             console.log(imagePalette)
             console.log(pixels)
             for (let y = 0; y < ogImgNode.scrollHeight; y++) {
@@ -20,7 +20,7 @@ export function getPaletteCounts(ogImgNode: HTMLElement, ogPalette: Array<Palett
                     if (colorFromPalette) {
                         imagePalette[colorFromPalette.index].count++;
                     }
-                    count ++;
+                    count++;
                 }
             }
             console.log(count)
@@ -35,10 +35,10 @@ function getColorFromPalette(color: Uint8ClampedArray, palette: Array<Palette>):
         const rgbCol = hexToRgb(col.colorHex);
         return color[0] === rgbCol[0] && color[1] === rgbCol[1] && color[2] === rgbCol[2] && color[3] === rgbCol[3];
     });
-  }
+}
 
-  
-export function hexToRgb(hex: string): Arra<number> {
+
+export function hexToRgb(hex: string): Array<number> {
     var result = /^#?([A-Fa-f\d]{2})([A-Fa-f\d]{2})([A-Fa-f\d]{2})$/i.exec(hex);
     if (result) {
         const col = [];
@@ -49,8 +49,9 @@ export function hexToRgb(hex: string): Arra<number> {
         return col;
     }
     return [0, 0, 0, 0];
-   
-  }
+
+}
+
 
 export function getPaletteBlob(node: HTMLElement): Promise<Blob> {
     return domtoimage.toBlob(node)

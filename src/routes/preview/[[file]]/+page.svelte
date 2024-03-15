@@ -16,7 +16,7 @@
                 bind:imagePalette/>
         </div>
     </div>
-    {#if imagePalette}
+    {#if loadingPattern}
         <div transition:fade={{ delay: 200, duration: 100 }} >
             <Palette
                 {fileName}

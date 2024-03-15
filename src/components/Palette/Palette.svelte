@@ -18,26 +18,16 @@
                 {#each imagePalette as color, index}
                 <!-- TODO add second column if there are too much colors -->
                     <div class="rowContainer colorsContainer">
-
-                        <!-- TODO add merging of same colors so this if will not be needed -->
-                        {#if !previousMulineColIsSame(color, index)}
-                            <div
-                            class="colorTile"
-                            style=" --tileColor: {color.muline.hex}">
+                        <div class="colorTile" style=" --tileColor: {color.muline.hex}">
                             <img src="/images/icons/{color.icon}.png" alt="symbol for color {color.muline.hex}" class="icon {color.invertIcon ? 'inverted' : ''}">
-                            </div>
-                            <div
-                            class="colorTile"
-                            style=" --tileColor: rgba(0, 0, 0, 0)">
+                        </div>
+                        <div class="colorTile" style=" --tileColor: rgba(0, 0, 0, 0)">
                             <img src="/images/icons/{color.icon}.png" alt="symbol for color {color.muline.hex}" class="icon">
-                            </div>
-                            <div
-                            class="colorTile"
-                            style=" --tileColor: {color.muline.hex}"/>
-                            <p class="paletteTxt">{color.muline.id}</p>
-                            <p class="paletteTxt smalltxt">x {color.count}</p>
-                            <!-- <p>({color.muline.hex})</p> -->
-                        {/if}
+                        </div>
+                        <div class="colorTile"  style=" --tileColor: {color.muline.hex}"/>
+                        <p class="paletteTxt">{color.muline.id}</p>
+                        <p class="paletteTxt smalltxt">x {color.count}</p>
+                        
                         
                     </div>
                     
@@ -64,11 +54,6 @@
     let paletteNode: HTMLElement;
     let getPaletteImgBtn: HTMLElement;
     let ogImageNode: HTMLElement
-
-
-    $: selectedMulineType = sessionStorage.getItem("mulineType") || MULINE_TYPES.Ariadna;
-    $: numberOfColors = imagePalette?.length;
-    $: numberOfMulineColors = getMulineCount(imagePalette);
         
     const dispatcher = createEventDispatcher();
 
@@ -99,46 +84,39 @@
     };
 
 
-    function compareByMuline(col1: Palette, col2: Palette ) {
-        if ( col1.muline.id < col2.muline.id ){
-            return -1;
-        }
-        if ( col1.muline.id > col2.muline.id ){
-            return 1;
-        }
-        return 0;
-    }
+    function mergeSameColors(imgPalette: Array<Palette>): Array<Palette> {
+        let palette = [...imgPalette];
+        for (let i = 0; i < palette.length; i ++) {
+            const currentColor = palette[i];
+            const found = imgPalette.filter(col => col.muline.id === currentColor.muline.id);
+            if (found.length > 1) {
+                for (const foundColor of found) {
+                    if (foundColor.index !== currentColor.index) {
+                        palette[i].count += foundColor.count;
+                        palette = palette.filter(c => c.index !== foundColor.index);
+                        //palette = temp;
+                        
+                    }
+                }
+            }
 
-    function previousMulineColIsSame(color: Palette, index: number) {
-        if (index === 0) {
-            return false;
         }
-        return color.muline.id === imagePalette[index - 1].muline.id;
-    }
-
-    function getMulineCount(palette: Array<Palette>): number {
-        if (!palette) {
-            return 0;
-        }
-        const colorsSet = new Set<string>;
-        for(const color of palette) {
-            colorsSet.add(color.muline.hex);
-        }
-        return colorsSet.size;
+        return palette;
+        
     }
 
     onMount(async () => {
         imagePalette = [ ...exportedImagePalette]
         setTimeout(async () => {
             imagePalette = await getPaletteCounts(ogImageNode, imagePalette);
-            //imagePalette = mergeSameColors(imagePalette)
-            // imagePalette?.sort(compareByMuline);  // todo with meging mybe wont be necessaey?
+            imagePalette = mergeSameColors(imagePalette)
+             // setTimeout(() => {
+            getPaletteImgBtn.click();
+        // }, 1000);
             
         }, 1000)
         
-        // setTimeout(() => {
-        //     getPaletteImgBtn.click();
-        // }, 1000);
+       
         
     })
     
