@@ -7,7 +7,6 @@ export async function POST({ request }) {
     const palette = data["palette"];
    // console.log('generate pattern', fileName)
     await generatePattern(fileName, palette);
-    const message = 'aaaa'
     
-    return json(message);
+    return json(palette);
 }

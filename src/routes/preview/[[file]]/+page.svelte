@@ -1,31 +1,40 @@
 {#if uploadedImage && !loading} 
-<h1>Preview</h1>
+<h1>Preview {fileName}</h1>
 
 <div transition:fade={{ delay: 250, duration: 300 }} class="container">
     <div class='columnContainer'
          style="height: {height}px">
          <button
-            on:click={requestPatternGeneration}> GENERATE PATTERN</button>
-        {#if loadingPattern}
-            <Loading/>
-        {/if}
+            on:click={() => loadingPattern = true}> GENERATE PATTERN</button>
         <img id="uploadedImg" src={uploadedImage} alt="preview"/>
         <p>{imgDimensions}</p>
        
     </div>
-    
-   
-
     <div bind:offsetHeight={paletteNodeHeight}>
         <PaletteSettings
             {fileName}
             bind:imagePalette/>
     </div>
-    
 </div>
+{#if loadingPattern}
+    <div transition:fade={{ delay: 200, duration: 100 }} >
+        <Palette
+            {fileName}
+            bind:imagePalette
+            on:paletteSaved={requestPatternGeneration}/>
+    </div>
+    {/if}
 {:else}
     <Loading/>
 {/if}
+
+{#if loadingPattern} 
+<div class="blocker" transition:fade={{ delay: 0, duration: 200 }}>
+    <Loading text="generating pattern, please wait"/>
+    
+</div>
+{/if}
+
 
 
 
@@ -36,7 +45,8 @@
     import PaletteSettings from '../../../components/PaletteSettings.svelte';
     import Loading from '../../../components/Loading.svelte';
     import { fade } from 'svelte/transition';
-    import type { Palette } from '../../../data/mulineData';
+    import type { Palette as PaletteType} from '../../../data/mulineData';
+    import Palette from '../../../components/Palette/Palette.svelte';
 
 
  
@@ -47,13 +57,12 @@
     let imgDimensions: string;
     let paletteNodeHeight: number;
     let height: number;
-    let imagePalette: Array<Palette>;
+    let imagePalette: Array<PaletteType>;
     
 
     export let data;
 
     async function requestPatternGeneration() {
-        loadingPattern = true;
         const data: any = {};
         data["fileName"] = fileName;
         data["palette"] = imagePalette;
@@ -65,9 +74,12 @@
             },
             body: JSON.stringify({data})
         });
-        const dimensions =  await response.json();
+        await response.json();
         
-        goto(`/pattern/${fileName}`);
+        setTimeout(() => {
+            goto(`/pattern/${fileName}`);
+        }, 1000)
+       
     }
 
 
@@ -126,6 +138,19 @@
     button {
         position: relative;
         bottom: 60px;
+    }
+
+
+    .blocker {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background-color: white;
+        z-index: 99999;
+        width: 100%;
+        height: 100%;
+        padding: 20px;
+        text-align: center;
     }
 
 </style>

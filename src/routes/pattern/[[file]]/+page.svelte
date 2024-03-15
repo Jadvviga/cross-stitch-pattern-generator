@@ -2,8 +2,12 @@
 <h1>Pattern</h1>
 
 <div transition:fade={{ delay: 250, duration: 300 }} class="columnContainer">
+   <div class="rowContainer">
+        <img class="generatedPattern" src={generatedPattern} alt="generated pattern"/>
+        <img class="generatedPattern" src={generatedPatternBW} alt="generated pattern in black and white"/>
+        <img class="generatedPattern" src={generatedPatternPalette} alt="generated pattern's palette"/>
+   </div>
    
-    <img id="generatedPattern" src={generatedPattern} alt="generated pattern"/>
     <div class="rowContainer">
         <button
             on:click={() => goto(`/preview/${fileName}`)}>
@@ -30,8 +34,9 @@
     import { fade } from 'svelte/transition';
 
 
- 
     let generatedPattern: any;
+    let generatedPatternBW: any;
+    let generatedPatternPalette: any;
     let fileName: string;
     let loading = true;
 
@@ -47,6 +52,10 @@
         }
         fileName = data.fileName;
         generatedPattern = `/images/pattern/${data.fileName}_pattern.png`;
+        generatedPatternBW = `/images/pattern/${data.fileName}_pattern_bw.png`;
+        generatedPatternPalette = `/images/pattern/${data.fileName}_pattern_palette.png`;
+
+        //making sure image is loaded
         const loadImage = new Image();
         loadImage.onload = () => {
             loading = false;
@@ -68,9 +77,9 @@
 
 <style>
 
-    #generatedPattern {
+    .generatedPattern {
         margin-bottom: 10px;
-        max-height: 70vh;
+        max-height: 50vh;
         box-shadow: 2px 2px 4px 2px rgba(0, 0, 0, 0.3);
     }
 

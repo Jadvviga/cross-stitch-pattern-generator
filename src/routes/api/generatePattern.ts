@@ -182,6 +182,11 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
 
   let imagesCount = 0;
   const savePatterPDF = () => {
+     //documnt width is 595.28 points, which is about 793 pixels
+    //heigth is 841.89 pt = 1122 px
+    //margins starnadr is .25inch = 18 points
+    //so max image width should be width - 2 x margin = 559,28 pt = 745 px
+    //max height is hegith - w x margin = 805.89 pt = 1070 px
     imagesCount++;
     if (imagesCount === 2) {
       imagesCount = 0;
@@ -198,7 +203,7 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
   //create resized image
   try {
     //color
-    let colorImg;
+    let colorImg: Jimp;
     await new Jimp(resizedWidth, resizedHeight, async (err, image) => {
       let count = 0;
       for (let y = 0; y < resizedHeight; y++) {
@@ -241,17 +246,8 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
       image.write(patternBWFileName, savePatterPDF);
     });
 
-    //documnt width is 595.28 points, which is about 793 pixels
-    //heigth is 841.89 pt = 1122 px
-    //margins starnadr is .25inch = 18 points
-    //so max image width should be width - 2 x margin = 559,28 pt = 745 px
-    //max height is hegith - w x margin = 805.89 pt = 1070 px
-    // const doc = new PDFDocument({size: 'A4', margin: MARGIN_PT });
-    // doc.pipe(fs.createWriteStream(`${PATH_PATTERN}${fileName}_pattern.pdf`));
-    // // console.log(doc.page.width)
-    // doc.image(patternFileName, {width: PAPER_MAX_WIDTH_PT, align: 'center'});
-    // doc.addPage().image(patternBWFileName, {width: PAPER_MAX_WIDTH_PT, align: 'center'});
-    // doc.end();
+    //TODO PALETTE IMAGE
+    //probably convert something from html?
 
   } catch (err) {
     console.error("Something went wrong when generating the pattern: " + err);

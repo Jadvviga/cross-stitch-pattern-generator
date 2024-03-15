@@ -8,6 +8,14 @@
     <div></div>
     <div></div>
 </div>
+{#if text}
+    <p>{text}</p>
+{/if}
+
+<script lang="ts">
+
+    export let text: string = '';
+</script>
 
 <style>
     .lds-roller {
@@ -93,5 +101,12 @@
         100% {
             transform: rotate(360deg);
         }
+    }
+
+    p {
+        font-family: sans-serif;
+        text-transform: uppercase;
+        font-weight: bold;
+        font-style: italic;
     }
 </style>
