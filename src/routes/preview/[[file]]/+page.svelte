@@ -1,28 +1,28 @@
 {#if uploadedImage && !loading} 
-<h1>Preview {fileName}</h1>
+    <h1>Preview {fileName}</h1>
 
-<div transition:fade={{ delay: 250, duration: 300 }} class="container">
-    <div class='columnContainer'
-         style="height: {height}px">
-         <button
-            on:click={() => loadingPattern = true}> GENERATE PATTERN</button>
-        <img id="uploadedImg" src={uploadedImage} alt="preview"/>
-        <p>{imgDimensions}</p>
-       
+    <div transition:fade={{ delay: 250, duration: 300 }} class="container">
+        <div class='columnContainer'
+            style="height: {height}px">
+            <button
+                on:click={() => loadingPattern = true}> GENERATE PATTERN</button>
+            <img id="uploadedImg" src={uploadedImage} alt="preview"/>
+            <p>{imgDimensions}</p>
+        
+        </div>
+        <div bind:offsetHeight={paletteNodeHeight}>
+            <PaletteSettings
+                {fileName}
+                bind:imagePalette/>
+        </div>
     </div>
-    <div bind:offsetHeight={paletteNodeHeight}>
-        <PaletteSettings
-            {fileName}
-            bind:imagePalette/>
-    </div>
-</div>
-{#if loadingPattern}
-    <div transition:fade={{ delay: 200, duration: 100 }} >
-        <Palette
-            {fileName}
-            bind:imagePalette
-            on:paletteSaved={requestPatternGeneration}/>
-    </div>
+    {#if loadingPattern}
+        <div transition:fade={{ delay: 200, duration: 100 }} >
+            <Palette
+                {fileName}
+                {imagePalette}
+                on:paletteSaved={requestPatternGeneration}/>
+        </div>
     {/if}
 {:else}
     <Loading/>

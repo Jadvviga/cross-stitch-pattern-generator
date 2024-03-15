@@ -5,44 +5,34 @@
 
     <div  bind:this={paletteNode}> 
         {#if imagePalette}
-            <div class="rowContainer paletteHeader">
-                <p>
-                    Pixel color
-                    <span>{numberOfColors} colors</span>
-                </p>
-                <p>
-                    Embroidery floss color
-                    <span>{numberOfMulineColors} colors</span>
-                </p>
-            </div>
-                <div class='palette'>
-                    {#each imagePalette as color, index}
-                        <div class="rowContainer colorsContainer">
+            <div class='palette'>
+                {#each imagePalette as color, index}
+                <!-- TODO add second column if there are too much colors -->
+                    <div class="rowContainer colorsContainer">
+                        {#if !previousMulineColIsSame(color, index)}
                             <div
                             class="colorTile"
-                            style=" --tileColor: {color.colorHex}"/>
-                            <p style="width: 70px">({color.colorHex})</p>
-                            {#if !previousMulineColIsSame(color, index)}
-                                <p>→ </p>
-                                <div
-                                class="colorTile"
-                                style=" --tileColor: {color.muline.hex}"/>
-                                <div
-                                class="colorTile"
-                                style=" --tileColor: {color.muline.hex}">
-                                <img src="/images/icons/{color.icon}.png" alt="symbol for color {color.muline.hex}" class="icon {color.invertIcon ? 'inverted' : ''}">
-                                </div>
-                                <p>{color.muline.id}</p>
-                                <!-- <p>({color.muline.hex})</p> -->
-                            {/if}
-                            
-                        </div>
+                            style=" --tileColor: {color.muline.hex}">
+                            <img src="/images/icons/{color.icon}.png" alt="symbol for color {color.muline.hex}" class="icon {color.invertIcon ? 'inverted' : ''}">
+                            </div>
+                            <div
+                            class="colorTile"
+                            style=" --tileColor: rgba(0, 0, 0, 0)">
+                            <img src="/images/icons/{color.icon}.png" alt="symbol for color {color.muline.hex}" class="icon">
+                            </div>
+                            <div
+                            class="colorTile"
+                            style=" --tileColor: {color.muline.hex}"/>
+                            <p class="paletteTxt">{color.muline.id}</p>
+                            <!-- <p>({color.muline.hex})</p> -->
+                        {/if}
                         
-                    {/each}
-                </div>
-            {:else}
-                <Loading/>
-            {/if}
+                    </div>
+                    
+                {/each}
+            </div>
+            
+        {/if}
     </div>
 </div>
 
@@ -51,8 +41,7 @@
     import { createEventDispatcher, onMount } from "svelte";
     import { MULINE_TYPES } from "../../data/mulineData";
     import type { Palette } from "../../data/mulineData";
-    import Loading from "../Loading.svelte";
-    import { getPaletteImg, getPaletteBlob } from "./paletteUtils";
+    import { getPaletteBlob } from "./paletteUtils";
     
 
     export let fileName: string;
@@ -60,8 +49,6 @@
 
     let paletteNode: HTMLElement;
     let getPaletteImgBtn: HTMLElement;
-
-    //TODO proper palette design for pattern
     
 
     $: selectedMulineType = sessionStorage.getItem("mulineType") || MULINE_TYPES.Ariadna;
@@ -95,6 +82,17 @@
         await response.json();
         dispatcher('paletteSaved');
     };
+
+
+    function compareByMuline(col1: Palette, col2: Palette ) {
+        if ( col1.muline.id < col2.muline.id ){
+            return -1;
+        }
+        if ( col1.muline.id > col2.muline.id ){
+            return 1;
+        }
+        return 0;
+    }
 
     function previousMulineColIsSame(color: Palette, index: number) {
         if (index === 0) {
@@ -134,9 +132,10 @@
 
     onMount(async () => {
         imagePalette = await requestPalette();
+        imagePalette?.sort(compareByMuline);
+        imagePalette = imagePalette;
         setTimeout(() => {
             getPaletteImgBtn.click();
-            console.log('click')
         }, 1000);
         
     })
@@ -145,11 +144,10 @@
 
 <style>
     .colorTile {
-        width: 30px;
-        height: 30px;
+        width: 64px;
+        height: 64px;
         margin: 10px;
-        border: 3px white solid;
-        box-shadow: 2px 2px 4px 2px rgba(0, 0, 0, 0.3);
+        border: 3px black solid;
         background-color: var(--tileColor);
     }
 
@@ -160,42 +158,33 @@
     }
 
     .icon {
-        width: 30px;
-        height: 30px;
+        width: 64px;
+        height: 64px;
     }
 
     .inverted {
         filter: invert(1);
     }
+    
+    .paletteTxt {
+        font-size: 50px;
+        margin: 0;
+        padding: 0;
+    }
 
     .colorsContainer {
         gap: 0;
-        margin: 0;
+        margin: 5px;
         padding: 0;
     }
     .colorsContainer p {
         padding: 2px;
     }
 
-    .paletteHeader {
-        margin: 8px;
-        font-weight: bold;
-        text-transform: uppercase;
-        margin-bottom: 0px;
-    }
-
-    .paletteHeader span {
-        font-size: 14px;
-        font-weight: 500;
-        text-transform: none;
-    }
-    .paletteHeader span::before {
-        content: "\A";
-        white-space: pre;
-    }
-
     .palette {
         margin-top: 0px;
+        padding: 10px;
         border: 1px solid black;
     }
+
 </style>

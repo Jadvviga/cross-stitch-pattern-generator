@@ -195,6 +195,7 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
       // console.log(doc.page.width)
       doc.image(patternFileName, { width: PAPER_MAX_WIDTH_PT, align: 'center' });
       doc.addPage().image(patternBWFileName, { width: PAPER_MAX_WIDTH_PT, align: 'center' });
+      doc.addPage().image(patternPaletteFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT] });
       doc.end();
     }
   }
@@ -245,9 +246,6 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
       image = addTextToImage(image);
       image.write(patternBWFileName, savePatterPDF);
     });
-
-    //TODO PALETTE IMAGE
-    //probably convert something from html?
 
   } catch (err) {
     console.error("Something went wrong when generating the pattern: " + err);
