@@ -16,11 +16,11 @@
                 bind:imagePalette/>
         </div>
     </div>
-    {#if loadingPattern}
+    {#if imagePalette}
         <div transition:fade={{ delay: 200, duration: 100 }} >
             <Palette
                 {fileName}
-                {imagePalette}
+                exportedImagePalette={imagePalette}
                 on:paletteSaved={requestPatternGeneration}/>
         </div>
     {/if}

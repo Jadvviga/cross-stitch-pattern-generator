@@ -117,7 +117,7 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
   const scale = determineScale(ogWidth, ogHeight);
   const gridSize = scale === SCALE_BIG ? GRID_BIG_SIZE : GRID_SIZE;
 
-  //get pixels from og image to array
+  //get pixels from og image to array, and replace og colors with palette ones
   for (let y = 0; y < ogHeight; y++) {
     for (let x = 0; x < ogWidth; x++) {
       let pixel = image.getPixelColor(x, y);

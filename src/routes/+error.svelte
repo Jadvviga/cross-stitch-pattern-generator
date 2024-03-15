@@ -23,8 +23,8 @@
         text-align: center;
     }
     img {
-        width: 90%;
-        height: auto;
+        width: auto;
+        height: 90vh;
     }
 </style>
 
