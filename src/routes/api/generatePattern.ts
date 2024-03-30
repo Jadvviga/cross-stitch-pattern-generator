@@ -162,7 +162,7 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
       }
       
       image = addIconsToImage(image, ogWidth, ogHeight, scale, offset, gridSize, palette, iconFiles);
-      image = addTextToImage(image, resizedWidth, resizedHeight, scale, offset, gridSize, font);
+      image = addTextToImage(image, resizedWidth, resizedHeight, scale, offset, gridSize, font, 0, 0);
       image.write(patternFileName, savePatterPDF);
       colorImg = image;
     });
@@ -184,7 +184,7 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
         }
       }
       image = addIconsToImage(image, ogWidth, ogHeight, scale, offset, gridSize, palette, iconFiles, true, colorImg);
-      image = addTextToImage(image, resizedWidth, resizedHeight, scale, offset, gridSize, font);
+      image = addTextToImage(image, resizedWidth, resizedHeight, scale, offset, gridSize, font, 0, 0);
       image.write(patternBWFileName, savePatterPDF);
     });
 
@@ -221,7 +221,6 @@ function loadImageToPixelsArray(image: Jimp, paletteSet?: Set<number>, palette?:
   return imagePixelsArray;
 }
 
-
 export async function _generatePattern(fileName: string, palette: Array<Palette>) {
   
 }
@@ -256,35 +255,6 @@ function addIconsToImage(
   return image;
 }
 
-function _addIconsToImage(
-  image: Jimp, 
-  width: number,
-  height: number,
-  scale: number,
-  gridSize: number,
-  palette: Array<Palette>,
-  iconFiles: Jimp[],
-  bw = false,
-  colorImg: Jimp | null = null
-  ): Jimp {
-  const iconsPositions = getIconsPositions(width, height, scale, gridSize);
-  const srcImg = colorImg || image;
-  for (const pos of iconsPositions) {
-    const pixel = srcImg.getPixelColor(pos[0] + scale*2, pos[1] + scale*2);
-    const alpha = Jimp.intToRGBA(pixel).a;
-    if (alpha !== 0) {
-      const paletteColor = getColorFromPalette(rgbToHex(Jimp.intToRGBA(pixel)), palette);
-      const iconID = Number(paletteColor?.icon.split('icon')[1]);
-      const icon = iconFiles[iconID + 1];
-      if (bw) {
-        icon.brightness(-1);
-      }
-      image.composite(icon, pos[0] + scale*2, pos[1] + scale*2);
-    }
-  }
-  return image;
-}
-
 function addTextToImage(
   image: Jimp,
   resizedWidth: number,
@@ -292,17 +262,27 @@ function addTextToImage(
   scale: number,
   offset: number,
   gridSize: number,
-  font: Font
+  font: Font,
+  startingNumberX: number,
+  startingNumberY: number
 ): Jimp {
-  const txtDist = scale * GRID_COUNTER + gridSize * (GRID_COUNTER - 1) + GRID_HIGHLIGHT_SIZE;
-  let i = 0;
-  for (let y = offset + GRID_HIGHLIGHT_SIZE; y < resizedHeight; y += txtDist) {
-    image = printTextToImage(image, font, Math.floor(offset/2) - 2, y, `${i * 10}`, offset/2);
+  //const txtDist = scale * GRID_COUNTER + gridSize * (GRID_COUNTER - 1) + GRID_HIGHLIGHT_SIZE;
+  let i = startingNumberY;
+  for (let y = offset + GRID_HIGHLIGHT_SIZE; y < resizedHeight; y += scale) {
+    const isOnTenth =  i % 10 === 0 && i !== 0;
+    y += isOnTenth ? GRID_HIGHLIGHT_SIZE: gridSize;
+    if (isOnTenth) {
+      image = printTextToImage(image, font, Math.floor(offset/2) - 2, y, `${i}`, offset/2);
+    }
     i++;
   }
-  i = 1;
-  for (let x = offset + GRID_HIGHLIGHT_SIZE + txtDist; x < resizedWidth; x += txtDist) {
-    image = printTextToImage(image, font, x, Math.floor(offset/2), `${i * 10}`, offset/2);
+  i = startingNumberX;
+  for (let x = offset + GRID_HIGHLIGHT_SIZE; x < resizedWidth; x += scale) {
+    const isOnTenth =  i % 10 === 0 && i !== 0;
+    x += isOnTenth ? GRID_HIGHLIGHT_SIZE : gridSize;
+    if (isOnTenth) {
+      image = printTextToImage(image, font, x, Math.floor(offset/2), `${i}`, offset/2);
+    }
     i++;
   }
   return image;
@@ -513,8 +493,6 @@ function getPixelsOfGriddedImage( //generic func
 
   return resizedImagePixelsArray;
 }
-
-
 
 function _getPixelsOfGriddedImage( //generic func
   ogImagePixelsArray: number[],
