@@ -138,7 +138,7 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
     }
   }
 
-  const offset = scale*2;
+  const offset = scale * 2;
   const resizedWidth = newWidth + offset * 2;
   const resizedHeight = newHeight + offset * 2;
   //create resized image
@@ -160,6 +160,7 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
 
         }
       }
+
       
       image = addIconsToImage(image, ogWidth, ogHeight, scale, offset, gridSize, palette, iconFiles);
       image = addTextToImage(image, resizedWidth, resizedHeight, scale, offset, gridSize, font, 0, 0);
@@ -222,13 +223,14 @@ function loadImageToPixelsArray(image: Jimp, paletteSet?: Set<number>, palette?:
 }
 
 export async function _generatePattern(fileName: string, palette: Array<Palette>) {
-  
+
 }
 
+
 function addIconsToImage(
-  image: Jimp, 
-  width: number,
-  height: number,
+  image: Jimp,
+  ogWidth: number,
+  ogHeight: number,
   scale: number,
   offset: number,
   gridSize: number,
@@ -236,21 +238,31 @@ function addIconsToImage(
   iconFiles: Jimp[],
   bw = false,
   colorImg: Jimp | null = null
-  ): Jimp {
-  const iconsPositions = getIconsPositions(width, height, scale, gridSize);
+): Jimp {
   const srcImg = colorImg || image;
-  for (const pos of iconsPositions) {
-    const pixel = srcImg.getPixelColor(pos[0] + offset, pos[1] + offset);
-    const alpha = Jimp.intToRGBA(pixel).a;
-    if (alpha !== 0) {
-      const paletteColor = getColorFromPalette(rgbToHex(Jimp.intToRGBA(pixel)), palette);
-      const iconID = Number(paletteColor?.icon.split('icon')[1]);
-      const icon = iconFiles[iconID + 1];
-      if (bw) {
-        icon.brightness(-1);
+  let iY = 0, iX = 0;
+  for (let y = offset; iY < ogHeight; y += scale) {
+    y += iY % 10 === 0 ? GRID_HIGHLIGHT_SIZE : gridSize;
+    for (let x = offset; iX < ogWidth; x += scale) {
+      x += iX % 10 === 0 ? GRID_HIGHLIGHT_SIZE : gridSize;
+      const pixel = srcImg.getPixelColor(x, y);
+      const alpha = Jimp.intToRGBA(pixel).a;
+      if (alpha !== 0) {
+        const paletteColor = getColorFromPalette(rgbToHex(Jimp.intToRGBA(pixel)), palette);
+        if (paletteColor) {
+          const iconID = Number(paletteColor?.icon.split('icon')[1]);
+          const icon = iconFiles[iconID + 1];
+          if (bw) {
+            icon.brightness(-1);
+          }
+          image.composite(icon, x, y);
+        }
+       
       }
-      image.composite(icon, pos[0] + offset, pos[1] + offset);
+      iX++;
     }
+    iX = 0;
+    iY++;
   }
   return image;
 }
@@ -266,22 +278,21 @@ function addTextToImage(
   startingNumberX: number,
   startingNumberY: number
 ): Jimp {
-  //const txtDist = scale * GRID_COUNTER + gridSize * (GRID_COUNTER - 1) + GRID_HIGHLIGHT_SIZE;
   let i = startingNumberY;
-  for (let y = offset + GRID_HIGHLIGHT_SIZE; y < resizedHeight; y += scale) {
-    const isOnTenth =  i % 10 === 0 && i !== 0;
-    y += isOnTenth ? GRID_HIGHLIGHT_SIZE: gridSize;
+  for (let y = offset; y < resizedHeight; y += scale) {
+    const isOnTenth = i % 10 === 0;
+    y += isOnTenth ? GRID_HIGHLIGHT_SIZE : gridSize;
     if (isOnTenth) {
-      image = printTextToImage(image, font, Math.floor(offset/2) - 2, y, `${i}`, offset/2);
+      image = printTextToImage(image, font, Math.floor(offset / 2) - 2, y, `${i}`, offset / 2);
     }
     i++;
   }
   i = startingNumberX;
-  for (let x = offset + GRID_HIGHLIGHT_SIZE; x < resizedWidth; x += scale) {
-    const isOnTenth =  i % 10 === 0 && i !== 0;
+  for (let x = offset; x < resizedWidth; x += scale) {
+    const isOnTenth = i % 10 === 0;
     x += isOnTenth ? GRID_HIGHLIGHT_SIZE : gridSize;
     if (isOnTenth) {
-      image = printTextToImage(image, font, x, Math.floor(offset/2), `${i}`, offset/2);
+      image = printTextToImage(image, font, x, Math.floor(offset / 2), `${i}`, offset / 2);
     }
     i++;
   }
@@ -295,7 +306,7 @@ function splitImage(imagePixelsArray: Array<number>, ogWidth: number, ogHeight: 
 
   const getMidTen = (dim: number): number => {
     let mid = dim / 2;
-    while (mid%10 !== 0) {
+    while (mid % 10 !== 0) {
       mid++;
     }
     return mid;
@@ -357,6 +368,7 @@ async function loadIconsFromPalette(palette: Array<Palette>, scale: number): Pro
     if (inverse) {
       icon.invert();
     }
+   // console.log(fileName, icon)
     iconFiles.push(icon);
   }
   return iconFiles;
