@@ -1,8 +1,8 @@
 import Jimp from "jimp";
 import type { Palette } from "../../data/mulineData";
-import { hexToRgb, rgbToHex } from "./generatePalette";
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
+import { addIconsToImage, addTextToImage, generatePaletteImage, loadIconsFromPalette, loadImageToPixelsArray } from "./generationUtils";
 
 
 //A4 ma na 350 dpi 2893 x 4092 px
@@ -90,7 +90,7 @@ export async function generatePreview(fileName: string): Promise<string> {
 }
 
 // generating pattern (image scaled properly with grid, palette and icons)
-export async function generatePattern(fileName: string, palette: Array<Palette>) {
+export async function _generatePattern(fileName: string, palette: Array<Palette>) {
   const fullFileName = `${PATH_UPLOAD}${fileName}.png`;
   const patternFileName = `${PATH_PATTERN}${fileName}_pattern.png`;
   const patternBWFileName = `${PATH_PATTERN}${fileName}_pattern_bw.png`;
@@ -131,8 +131,8 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
       const doc = new PDFDocument({ size: 'A4', margin: MARGIN_PT });
       doc.pipe(fs.createWriteStream(`${PATH_PATTERN}${fileName}_pattern.pdf`));
       // console.log(doc.page.width)
-      doc.image(patternFileName, { width: PAPER_MAX_WIDTH_PT, align: 'center' });
-      doc.addPage().image(patternBWFileName, { width: PAPER_MAX_WIDTH_PT, align: 'center' });
+      doc.image(patternFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
+      doc.addPage().image(patternBWFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
       doc.addPage().image(patternPaletteFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT] });
       doc.end();
     }
@@ -162,8 +162,8 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
       }
 
       
-      image = addIconsToImage(image, ogWidth, ogHeight, scale, offset, gridSize, palette, iconFiles);
-      image = addTextToImage(image, resizedWidth, resizedHeight, scale, offset, gridSize, font, 0, 0);
+      image = addIconsToImage(image, ogWidth, ogHeight, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, palette, iconFiles);
+      image = addTextToImage(image, resizedWidth, resizedHeight, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, font, 0, 0);
       image.write(patternFileName, savePatterPDF);
       colorImg = image;
     });
@@ -184,8 +184,8 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
 
         }
       }
-      image = addIconsToImage(image, ogWidth, ogHeight, scale, offset, gridSize, palette, iconFiles, true, colorImg);
-      image = addTextToImage(image, resizedWidth, resizedHeight, scale, offset, gridSize, font, 0, 0);
+      image = addIconsToImage(image, ogWidth, ogHeight, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, palette, iconFiles, true, colorImg);
+      image = addTextToImage(image, resizedWidth, resizedHeight, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, font, 0, 0);
       image.write(patternBWFileName, savePatterPDF);
     });
 
@@ -195,117 +195,235 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
 
 }
 
-function loadImageToPixelsArray(image: Jimp, paletteSet?: Set<number>, palette?: Array<Palette>): Array<number> {
+
+
+export async function generatePattern(fileName: string, palette: Array<Palette>) {
+  const fullFileName = `${PATH_UPLOAD}${fileName}.png`;
+  const patternFileName = `${PATH_PATTERN}${fileName}_pattern.png`;
+  const patternBWFileName = `${PATH_PATTERN}${fileName}_pattern_bw.png`;
+  const patternPaletteFileName = `${PATH_PATTERN}${fileName}_pattern_palette.png`;
+
+  const image = await Jimp.read(fullFileName);
   const ogWidth = image.bitmap.width;
   const ogHeight = image.bitmap.height;
-  const imagePixelsArray: number[] = [];
-  //get pixels from og image to array
-  for (let y = 0; y < ogHeight; y++) {
-    for (let x = 0; x < ogWidth; x++) {
-      let pixel = image.getPixelColor(x, y);
-      if (paletteSet) { // for preview - add pixel to palette
-        if (Jimp.intToRGBA(pixel).a !== 0) {
-          paletteSet.add(pixel);
-        }
-      }
-      if (palette) { // for pattern replace og colors with palette ones
-        const alpha = Jimp.intToRGBA(pixel).a;
-        const paletteColor = getColorFromPalette(rgbToHex(Jimp.intToRGBA(pixel)), palette);
-        if (paletteColor && alpha !== 0) { //transparent pixel were not included in palette
-          const rgb = hexToRgb(paletteColor.muline.hex);
-          pixel = Jimp.rgbaToInt(rgb.r, rgb.g, rgb.b, rgb.a);
-        }
-      }
-      imagePixelsArray.push(pixel);  // value are in HEX number
-    }
+  const scale = determineScale(ogWidth, ogHeight);
+  const gridSize = scale === SCALE_BIG ? GRID_BIG_SIZE : GRID_SIZE;
+
+
+  // Icons related
+  const iconFiles = await loadIconsFromPalette(palette, scale)
+
+  // Text - counter on borders related
+  const fontToLoad = scale === SCALE_SMALL ? Jimp.FONT_SANS_64_BLACK : scale === SCALE_MEDIUM ? Jimp.FONT_SANS_32_BLACK : Jimp.FONT_SANS_12_BLACK;
+  //const fontToLoad = scale === SCALE_SMALL ? Jimp.FONT_SANS_32_BLACK : scale === SCALE_MEDIUM ? Jimp.FONT_SANS_16_BLACK : Jimp.FONT_SANS_8_BLACK;
+  const font = await Jimp.loadFont(fontToLoad);
+
+  const firstImagePixelsArray = loadImageToPixelsArray(image, undefined, palette);
+  const splitImagesArrays = splitImage(firstImagePixelsArray, ogWidth, ogHeight);
+
+  const expectedImagesNumber = splitImagesArrays.length * 2; //times 2 cuz we count color + BW
+  const imagesForPDFCol: Array<string> = [];
+  const imagesForPDFBW: Array<string> = [];
+  const areSplit = splitImagesArrays.length !== 1;
+  console.log(areSplit, splitImagesArrays)
+  for (const [index, imagePixelsArray] of splitImagesArrays.entries()) {
+    await generateImagePattern(imagePixelsArray.array, imagePixelsArray.width, imagePixelsArray.height, index+1, imagesForPDFCol, imagesForPDFBW, expectedImagesNumber, areSplit, scale, iconFiles, font, fileName, palette);
+
   }
-  return imagePixelsArray;
-}
-
-export async function _generatePattern(fileName: string, palette: Array<Palette>) {
-
-}
-
-
-function addIconsToImage(
-  image: Jimp,
-  ogWidth: number,
-  ogHeight: number,
-  scale: number,
-  offset: number,
-  gridSize: number,
-  palette: Array<Palette>,
-  iconFiles: Jimp[],
-  bw = false,
-  colorImg: Jimp | null = null
-): Jimp {
-  const srcImg = colorImg || image;
-  let iY = 0, iX = 0;
-  for (let y = offset; iY < ogHeight; y += scale) {
-    y += iY % 10 === 0 ? GRID_HIGHLIGHT_SIZE : gridSize;
-    for (let x = offset; iX < ogWidth; x += scale) {
-      x += iX % 10 === 0 ? GRID_HIGHLIGHT_SIZE : gridSize;
-      const pixel = srcImg.getPixelColor(x, y);
-      const alpha = Jimp.intToRGBA(pixel).a;
-      if (alpha !== 0) {
-        const paletteColor = getColorFromPalette(rgbToHex(Jimp.intToRGBA(pixel)), palette);
-        if (paletteColor) {
-          const iconID = Number(paletteColor?.icon.split('icon')[1]);
-          const icon = iconFiles[iconID + 1];
-          if (bw) {
-            icon.brightness(-1);
+   // get resized image pixel array
+   const newWidth = getResizedDimension(ogWidth, scale, gridSize, GRID_HIGHLIGHT_SIZE);
+   const newHeight = getResizedDimension(ogHeight, scale, gridSize, GRID_HIGHLIGHT_SIZE);
+   const resizedImagePixelsArray = getPixelsOfGriddedImage(firstImagePixelsArray, ogWidth, ogHeight, newWidth, newHeight, scale, gridSize, GRID_HIGHLIGHT_SIZE);
+   const resizedImageBWPixelsArray = getPixelsOfGriddedImage(firstImagePixelsArray, ogWidth, ogHeight, newWidth, newHeight, scale, gridSize, GRID_HIGHLIGHT_SIZE, true);
+ 
+    
+  const offset = scale * 2;
+  const resizedWidth = newWidth + offset * 2;
+  const resizedHeight = newHeight + offset * 2;
+  console.log('generate extar image for display')
+  try {
+    //color
+    let colorImg: Jimp;
+    await new Jimp(resizedWidth, resizedHeight, async (err, image) => {
+      let count = 0;
+      for (let y = 0; y < resizedHeight; y++) {
+        for (let x = 0; x < resizedWidth; x++) {
+          if (x < offset || y < offset || x >= resizedWidth - offset || y >= resizedHeight - offset) {
+            image.setPixelColor(0, x, y);
+          } else {
+            if (resizedImagePixelsArray[count]) {
+              image.setPixelColor(resizedImagePixelsArray[count], x, y);
+            }
+            count++;
           }
-          image.composite(icon, x, y);
+
         }
-       
       }
-      iX++;
-    }
-    iX = 0;
-    iY++;
+
+      image = addIconsToImage(image, ogWidth, ogHeight, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, palette, iconFiles);
+      image = addTextToImage(image, resizedWidth, resizedHeight, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, font, 0, 0);
+     
+      image.write(patternFileName);
+      colorImg = image;
+    });
+    // BW
+    new Jimp(resizedWidth, resizedHeight, async (err, image) => {
+      let count = 0;
+      for (let y = 0; y < resizedHeight; y++) {
+        for (let x = 0; x < resizedWidth; x++) {
+          image.setPixelColor(0, x, y);
+          if (x < offset || y < offset || x >= resizedWidth - offset || y >= resizedHeight - offset) {
+            image.setPixelColor(0, x, y);
+          } else {
+            if (resizedImageBWPixelsArray[count]) {
+              image.setPixelColor(resizedImageBWPixelsArray[count], x, y);
+            }
+            count++;
+          }
+
+        }
+      }
+      
+      image = addIconsToImage(image, ogWidth, ogHeight, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, palette, iconFiles, true, colorImg);
+      image = addTextToImage(image, resizedWidth, resizedHeight, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, font, 0, 0);
+     
+      image.write(patternBWFileName);
+    });
+
+  } catch (err) {
+    console.error("Something went wrong when generating the pattern: " + err);
   }
-  return image;
+
 }
 
-function addTextToImage(
-  image: Jimp,
-  resizedWidth: number,
-  resizedHeight: number,
+async function generateImagePattern(
+  imagePixelsArray: Array<number>,
+  width: number,
+  height: number,
+  index: number,
+  imagesForPDFCol: Array<string>,
+  imagesForPDFBW: Array<string>,
+  expectedImagesNumber: number,
+  areSplit: boolean,
   scale: number,
-  offset: number,
-  gridSize: number,
+  iconFiles: Array<Jimp>,
   font: Font,
-  startingNumberX: number,
-  startingNumberY: number
-): Jimp {
-  let i = startingNumberY;
-  for (let y = offset; y < resizedHeight; y += scale) {
-    const isOnTenth = i % 10 === 0;
-    y += isOnTenth ? GRID_HIGHLIGHT_SIZE : gridSize;
-    if (isOnTenth) {
-      image = printTextToImage(image, font, Math.floor(offset / 2) - 2, y, `${i}`, offset / 2);
+  fileName: string,
+  palette: Array<Palette>) {
+
+  const previewFileName = `${PATH_UPLOAD}${fileName}_preview.png`;
+  const patternPaletteFileName = `${PATH_PATTERN}${fileName}_pattern_palette.png`;
+
+  const patternBWFileName = `${PATH_PATTERN}${fileName}_pattern_bw${areSplit ? index : ''}.png`;
+  const patternFileName = `${PATH_PATTERN}${fileName}_pattern${areSplit ? index : ''}.png`;
+     
+  const gridSize = scale === SCALE_BIG ? GRID_BIG_SIZE : GRID_SIZE;
+
+   // get resized image pixel array
+   const newWidth = getResizedDimension(width, scale, gridSize, GRID_HIGHLIGHT_SIZE);
+   const newHeight = getResizedDimension(height, scale, gridSize, GRID_HIGHLIGHT_SIZE);
+   const resizedImagePixelsArray = getPixelsOfGriddedImage(imagePixelsArray, width, height, newWidth, newHeight, scale, gridSize, GRID_HIGHLIGHT_SIZE);
+   const resizedImageBWPixelsArray = getPixelsOfGriddedImage(imagePixelsArray, width, height, newWidth, newHeight, scale, gridSize, GRID_HIGHLIGHT_SIZE, true);
+ 
+   console.log('generate image')
+   const savePatterPDF = (imageFileName: string) => {
+    console.log('savePDF')
+    if (imageFileName.includes('bw')) {
+      imagesForPDFBW.push(imageFileName);
+    } else {
+      imagesForPDFCol.push(imageFileName)
     }
-    i++;
-  }
-  i = startingNumberX;
-  for (let x = offset; x < resizedWidth; x += scale) {
-    const isOnTenth = i % 10 === 0;
-    x += isOnTenth ? GRID_HIGHLIGHT_SIZE : gridSize;
-    if (isOnTenth) {
-      image = printTextToImage(image, font, x, Math.floor(offset / 2), `${i}`, offset / 2);
+    //documnt width is 595.28 points, which is about 793 pixels
+    //heigth is 841.89 pt = 1122 px
+    //margins starnadr is .25inch = 18 points
+    //so max image width should be width - 2 x margin = 559,28 pt = 745 px
+    //max height is hegith - w x margin = 805.89 pt = 1070 px
+
+    //TODO add try catch
+    if (imagesForPDFCol.length + imagesForPDFBW.length === expectedImagesNumber) {
+      console.log('actually save PDF')
+      const doc = new PDFDocument({ size: 'A4', margin: MARGIN_PT });
+      doc.pipe(fs.createWriteStream(`${PATH_PATTERN}${fileName}_pattern.pdf`));
+      doc.image(previewFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
+      // console.log(doc.page.width)
+      console.log(imagesForPDFCol.concat(imagesForPDFBW))
+      for (const image of imagesForPDFCol.concat(imagesForPDFBW)) {
+        doc.addPage().image(image, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
+      }
+      doc.addPage().image(patternPaletteFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT] });
+      doc.end();
+      console.log('PDF saved')
     }
-    i++;
   }
-  return image;
+    
+  const offset = scale * 2;
+  const resizedWidth = newWidth + offset * 2;
+  const resizedHeight = newHeight + offset * 2;
+  try {
+    //color
+    let colorImg: Jimp;
+    await new Jimp(resizedWidth, resizedHeight, async (err, image) => {
+      let count = 0;
+      for (let y = 0; y < resizedHeight; y++) {
+        for (let x = 0; x < resizedWidth; x++) {
+          if (x < offset || y < offset || x >= resizedWidth - offset || y >= resizedHeight - offset) {
+            image.setPixelColor(0, x, y);
+          } else {
+            if (resizedImagePixelsArray[count]) {
+              image.setPixelColor(resizedImagePixelsArray[count], x, y);
+            }
+            count++;
+          }
+
+        }
+      }
+
+      image = addIconsToImage(image, width, height, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, palette, iconFiles);
+      image = addTextToImage(image, resizedWidth, resizedHeight, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, font, 0, 0);
+      image.write(patternFileName, () => {savePatterPDF(patternFileName)});
+      colorImg = image;
+    });
+    // BW
+    new Jimp(resizedWidth, resizedHeight, async (err, image) => {
+      let count = 0;
+      for (let y = 0; y < resizedHeight; y++) {
+        for (let x = 0; x < resizedWidth; x++) {
+          image.setPixelColor(0, x, y);
+          if (x < offset || y < offset || x >= resizedWidth - offset || y >= resizedHeight - offset) {
+            image.setPixelColor(0, x, y);
+          } else {
+            if (resizedImageBWPixelsArray[count]) {
+              image.setPixelColor(resizedImageBWPixelsArray[count], x, y);
+            }
+            count++;
+          }
+
+        }
+      }
+      
+      image = addIconsToImage(image, width, height, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, palette, iconFiles, true, colorImg);
+      image = addTextToImage(image, resizedWidth, resizedHeight, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, font, 0, 0);
+    
+      image.write(patternBWFileName, () => {savePatterPDF(patternBWFileName)});
+    });
+
+  } catch (err) {
+    console.error("Something went wrong when generating the pattern: " + err);
+  }
+  
+
 }
 
-function splitImage(imagePixelsArray: Array<number>, ogWidth: number, ogHeight: number): Array<number> | Array<Array<number>> {
+
+function splitImage(imagePixelsArray: Array<number>, ogWidth: number, ogHeight: number): Array<{array: Array<number>, width: number, height: number}> {
   if (ogWidth < THRESHOLD_BIG && ogHeight < THRESHOLD_BIG) {
-    return imagePixelsArray;
+    return [{array: imagePixelsArray, width: ogWidth, height: ogHeight, index: 0}];
   }
+  console.log('split image')
 
   const getMidTen = (dim: number): number => {
-    let mid = dim / 2;
+    console.log('mid')
+    let mid = Math.floor(dim / 2);
     while (mid % 10 !== 0) {
       mid++;
     }
@@ -319,18 +437,19 @@ function splitImage(imagePixelsArray: Array<number>, ogWidth: number, ogHeight: 
   const imagePixels2: Array<number> = [];
   const imagePixels3: Array<number> = [];
   const imagePixels4: Array<number> = [];
+  console.log('hello?')
 
   for (let y = 0; y < ogHeight; y++) {
     for (let x = 0; x < ogWidth; x++) {
       let pos = y * ogWidth + x;
-      if (x <= midX) {
-        if (y <= midY) {
+      if (x < midX) {
+        if (y < midY) {
           imagePixels1.push(imagePixelsArray[pos]);
         } else {
           imagePixels3.push(imagePixelsArray[pos]);
         }
       } else {
-        if (y <= midY) {
+        if (y < midY) {
           imagePixels2.push(imagePixelsArray[pos]);
         } else {
           imagePixels4.push(imagePixelsArray[pos]);
@@ -339,77 +458,14 @@ function splitImage(imagePixelsArray: Array<number>, ogWidth: number, ogHeight: 
     }
   }
 
-  return [imagePixels1, imagePixels2, imagePixels3, imagePixels4];
+  return [
+    {array: imagePixels1, width: midX, height: midY}, 
+    {array: imagePixels2, width: ogWidth - midX, height: midY},
+    {array: imagePixels3, width: midX, height: ogHeight - midY},
+    {array: imagePixels4, width: ogWidth - midX, height: ogHeight - midY}
+  ];
 }
 
-function printTextToImage(image: Jimp, font: Font, posX: number, posY: number, txt: string, max: number): Jimp {
-  image.print(
-    font,
-    posX,
-    posY,
-    {
-      text: txt,
-      alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT,
-      alignmentY: Jimp.VERTICAL_ALIGN_BOTTOM,
-    },
-    max,
-    max
-  );
-  return image;
-}
-
-async function loadIconsFromPalette(palette: Array<Palette>, scale: number): Promise<Jimp[]> {
-  const icons = getPaletteIcons(palette);
-  const iconFiles: Array<Jimp> = [];
-  for (const fileName of icons) {
-    const inverse = fileName.includes('!');
-    const icon = await Jimp.read(`static/images/icons/${fileName.split('!')[0]}.png`);
-    icon.resize(scale, scale, Jimp.RESIZE_NEAREST_NEIGHBOR);
-    if (inverse) {
-      icon.invert();
-    }
-   // console.log(fileName, icon)
-    iconFiles.push(icon);
-  }
-  return iconFiles;
-}
-
-//Icons position without offset
-function getIconsPositions(ogWidth: number, ogHeight: number, scale: number, gridSize: number): Array<number[]> {
-  const iconsPositions: Array<number[]> = [];
-  let iconPosX = GRID_HIGHLIGHT_SIZE;
-  let iconPosY = GRID_HIGHLIGHT_SIZE;
-  let counterX = 0;
-  let counterY = 0;
-
-  for (let i = 0; i < ogWidth * ogHeight; i++) {
-    iconsPositions.push([iconPosX, iconPosY])
-    counterX++;
-    iconPosX += scale + (counterX % GRID_COUNTER === 0 ? GRID_HIGHLIGHT_SIZE : gridSize);
-
-    if ((i + 1) % ogWidth === 0) {
-      iconPosX = GRID_HIGHLIGHT_SIZE;
-      counterX = 0;
-
-      counterY++;
-      iconPosY += scale + (counterY % GRID_COUNTER === 0 ? GRID_HIGHLIGHT_SIZE : gridSize);
-
-    }
-  }
-  return iconsPositions;
-}
-
-function getColorFromPalette(colorHex: string, palette: Array<Palette>): Palette | undefined {
-  return palette.find(col => col.colorHex.toLowerCase() === colorHex.toLowerCase() || col.muline.hex.toLowerCase() === colorHex.toLowerCase());
-}
-
-function getPaletteIcons(palette: Array<Palette>): Array<string> {
-  const iconsSet = new Set<string>;
-  for (const color of palette) {
-    iconsSet.add(`${color.icon}${color.invertIcon ? '!' : ''}`);
-  }
-  return Array.from(iconsSet);
-}
 
 function determineScale(width: number, height: number): number {
   if (width <= THRESHOLD_SMALL || height <= THRESHOLD_SMALL) {
@@ -672,21 +728,3 @@ function _getPixelsOfGriddedImage( //generic func
 }
 
 
-async function generatePaletteImage(path: string, paletteSet: Set<number>) {
-  try {
-    await new Jimp(paletteSet.size, 1, (err, image) => {
-      if (err) {
-        throw err;
-      }
-      const iterator = paletteSet.values()
-      for (let i = 0; i < paletteSet.size; i++) {
-        image.setPixelColor(iterator.next().value, i, 0)
-      }
-      image.write(path);
-    });
-  } catch (err) {
-    console.error("Something went wrong when generating the color palette: " + err);
-  }
-
-
-}
