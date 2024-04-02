@@ -1,27 +1,27 @@
 {#if generatedPattern && !loading} 
-<h1>Pattern</h1>
+    <h1>Pattern</h1>
 
-<div transition:fade={{ delay: 250, duration: 300 }} class="columnContainer">
-   <div class="rowContainer">
-        <img class="generatedPattern" src={generatedPattern} alt="generated pattern"/>
-        <img class="generatedPattern" src={generatedPatternBW} alt="generated pattern in black and white"/>
-        <img class="generatedPattern" src={generatedPatternPalette} alt="generated pattern's palette"/>
-   </div>
-   
+    <div transition:fade={{ delay: 250, duration: 300 }} class="columnContainer">
     <div class="rowContainer">
-        <button
-            on:click={() => goto(`/preview/${fileName}`)}>
-            Go back to settings</button>
-        <button
-            on:click={() => goto('/')}>
-            Pick new image</button>
-        
+            <img class="generatedPattern" src={generatedPattern} alt="generated pattern"/>
+            <img class="generatedPattern" src={generatedPatternBW} alt="generated pattern in black and white"/>
+            <img class="generatedPattern" src={generatedPatternPalette} alt="generated pattern's palette"/>
     </div>
     
-    
-</div>
+        <div class="rowContainer">
+            <button
+                on:click={() => goto(`/preview/${fileName}`)}>
+                Go back to settings</button>
+            <button
+                on:click={() => goto('/')}>
+                Pick new image</button>
+            
+        </div>
+        
+        
+    </div>
 {:else}
-    <Loading/>
+    <Loading text="generating pattern, please wait"/>
 {/if}
 
 
@@ -50,6 +50,8 @@
         if (!storageFileName || storageFileName !== data.fileName) {
             goto('/');
         }
+
+        //TODO addd download
         fileName = data.fileName;
         generatedPattern = `/images/pattern/${data.fileName}_pattern.png`;
         generatedPatternBW = `/images/pattern/${data.fileName}_pattern_bw.png`;

@@ -4,8 +4,23 @@
     <div transition:fade={{ delay: 250, duration: 300 }} class="container">
         <div class='columnContainer'
             style="height: {height}px">
-            <button
-                on:click={() => loadingPattern = true}> GENERATE PATTERN</button>
+            <div class="rowContainer buttons">
+                <span class="btn">
+                    <button class="back"
+                    on:click={() => goto('/') }>GO BACK</button>
+                </span>
+                <span class="btn">
+                    <button 
+                    on:click={() => loadingPattern = true}> GENERATE PATTERN</button>
+                </span>
+                <span class="btn">
+                    <button style="visibility: hidden;"></button>
+                </span>
+            </div>
+           
+            {#if imageWillBeSplit }
+                <span class="note"> NOTE: Due to image's size, pattern will be split into parts for better printing</span>
+            {/if}
             <img id="uploadedImg" src={uploadedImage} alt="preview"/>
             <p>{imgDimensions}</p>
         
@@ -29,15 +44,11 @@
 {/if}
 
 {#if loadingPattern} 
-<div class="blocker" transition:fade={{ delay: 0, duration: 200 }}>
-    <Loading text="generating pattern, please wait"/>
-    
-</div>
+    <div class="blocker" transition:fade={{ delay: 0, duration: 200 }}>
+        <Loading text="generating pattern, please wait"/>
+        
+    </div>
 {/if}
-
-
-
-
 
 <script lang="ts">
     import { goto } from '$app/navigation';
@@ -49,7 +60,6 @@
     import Palette from '../../../components/Palette/Palette.svelte';
 
 
- 
     let uploadedImage: any;
     let fileName: string;
     let loading = true;
@@ -58,6 +68,17 @@
     let paletteNodeHeight: number;
     let height: number;
     let imagePalette: Array<PaletteType>;
+
+    $: imageWillBeSplit = checkForSplit(imgDimensions);
+
+    function checkForSplit(imgDimensions: string): boolean {
+        if (!imgDimensions) {
+            return false;
+        }
+        const width = Number(imgDimensions.split(' x ')[0]);
+        const height = Number(imgDimensions.split(' x ')[1]);
+        return width >= 100 || height >= 100;
+    }
     
 
     export let data;
@@ -135,11 +156,19 @@
         max-height: 70vh;
     }
 
-    button {
-        position: relative;
-        bottom: 60px;
+    .buttons {
+        margin: 0;
+        align-items: center;
+        justify-content: space-between;
     }
 
+    .btn {
+        width: 128px;
+    }
+
+    .back {
+        width: 70px;
+    }
 
     .blocker {
         position: absolute;
@@ -151,6 +180,10 @@
         height: 100%;
         padding: 20px;
         text-align: center;
+    }
+
+    .note {
+        margin-top: 10px;
     }
 
 </style>
