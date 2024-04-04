@@ -27,6 +27,7 @@ const GRID_COLOR = 255;
 // const GRID_COLOR_LIGHT = 170; //when next to dark colors
 const GRID_COLOR_LIGHT = 4278244095; //when next to dark colors
 const GRID_MIDDLE_COLOR = 4278190335; //red
+const WHITE = 4294967295;
 
 
 const GRID_SIZE = 3;
@@ -227,71 +228,8 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
   const areSplit = splitImagesArrays.length !== 1;
   console.log(areSplit, splitImagesArrays)
   for (const [index, imagePixelsArray] of splitImagesArrays.entries()) {
-    await generateImagePattern(imagePixelsArray.array, imagePixelsArray.width, imagePixelsArray.height, index+1, imagesForPDFCol, imagesForPDFBW, expectedImagesNumber, areSplit, scale, iconFiles, font, fileName, palette);
+    await generateImagePattern(imagePixelsArray.array, imagePixelsArray.width, imagePixelsArray.height, index, imagesForPDFCol, imagesForPDFBW, expectedImagesNumber, scale, iconFiles, font, fileName, palette);
 
-  }
-   // get resized image pixel array
-   const newWidth = getResizedDimension(ogWidth, scale, gridSize, GRID_HIGHLIGHT_SIZE);
-   const newHeight = getResizedDimension(ogHeight, scale, gridSize, GRID_HIGHLIGHT_SIZE);
-   const resizedImagePixelsArray = getPixelsOfGriddedImage(firstImagePixelsArray, ogWidth, ogHeight, newWidth, newHeight, scale, gridSize, GRID_HIGHLIGHT_SIZE);
-   const resizedImageBWPixelsArray = getPixelsOfGriddedImage(firstImagePixelsArray, ogWidth, ogHeight, newWidth, newHeight, scale, gridSize, GRID_HIGHLIGHT_SIZE, true);
- 
-    
-  const offset = scale * 2;
-  const resizedWidth = newWidth + offset * 2;
-  const resizedHeight = newHeight + offset * 2;
-  console.log('generate extar image for display')
-  try {
-    //color
-    let colorImg: Jimp;
-    await new Jimp(resizedWidth, resizedHeight, async (err, image) => {
-      let count = 0;
-      for (let y = 0; y < resizedHeight; y++) {
-        for (let x = 0; x < resizedWidth; x++) {
-          if (x < offset || y < offset || x >= resizedWidth - offset || y >= resizedHeight - offset) {
-            image.setPixelColor(0, x, y);
-          } else {
-            if (resizedImagePixelsArray[count]) {
-              image.setPixelColor(resizedImagePixelsArray[count], x, y);
-            }
-            count++;
-          }
-
-        }
-      }
-
-      image = addIconsToImage(image, ogWidth, ogHeight, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, palette, iconFiles);
-      image = addTextToImage(image, resizedWidth, resizedHeight, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, font, 0, 0);
-     
-      image.write(patternFileName);
-      colorImg = image;
-    });
-    // BW
-    new Jimp(resizedWidth, resizedHeight, async (err, image) => {
-      let count = 0;
-      for (let y = 0; y < resizedHeight; y++) {
-        for (let x = 0; x < resizedWidth; x++) {
-          image.setPixelColor(0, x, y);
-          if (x < offset || y < offset || x >= resizedWidth - offset || y >= resizedHeight - offset) {
-            image.setPixelColor(0, x, y);
-          } else {
-            if (resizedImageBWPixelsArray[count]) {
-              image.setPixelColor(resizedImageBWPixelsArray[count], x, y);
-            }
-            count++;
-          }
-
-        }
-      }
-      
-      image = addIconsToImage(image, ogWidth, ogHeight, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, palette, iconFiles, true, colorImg);
-      image = addTextToImage(image, resizedWidth, resizedHeight, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, font, 0, 0);
-     
-      image.write(patternBWFileName);
-    });
-
-  } catch (err) {
-    console.error("Something went wrong when generating the pattern: " + err);
   }
 
 }
@@ -304,7 +242,6 @@ async function generateImagePattern(
   imagesForPDFCol: Array<string>,
   imagesForPDFBW: Array<string>,
   expectedImagesNumber: number,
-  areSplit: boolean,
   scale: number,
   iconFiles: Array<Jimp>,
   font: Font,
@@ -314,8 +251,8 @@ async function generateImagePattern(
   const previewFileName = `${PATH_UPLOAD}${fileName}_preview.png`;
   const patternPaletteFileName = `${PATH_PATTERN}${fileName}_pattern_palette.png`;
 
-  const patternBWFileName = `${PATH_PATTERN}${fileName}_pattern_bw${areSplit ? index : ''}.png`;
-  const patternFileName = `${PATH_PATTERN}${fileName}_pattern${areSplit ? index : ''}.png`;
+  const patternBWFileName = `${PATH_PATTERN}${fileName}_pattern_bw_${index}.png`;
+  const patternFileName = `${PATH_PATTERN}${fileName}_pattern_${index}.png`;
      
   const gridSize = scale === SCALE_BIG ? GRID_BIG_SIZE : GRID_SIZE;
 
@@ -367,7 +304,7 @@ async function generateImagePattern(
       for (let y = 0; y < resizedHeight; y++) {
         for (let x = 0; x < resizedWidth; x++) {
           if (x < offset || y < offset || x >= resizedWidth - offset || y >= resizedHeight - offset) {
-            image.setPixelColor(0, x, y);
+            image.setPixelColor(WHITE, x, y);
           } else {
             if (resizedImagePixelsArray[count]) {
               image.setPixelColor(resizedImagePixelsArray[count], x, y);
@@ -417,7 +354,7 @@ async function generateImagePattern(
 
 function splitImage(imagePixelsArray: Array<number>, ogWidth: number, ogHeight: number): Array<{array: Array<number>, width: number, height: number}> {
   if (ogWidth < THRESHOLD_BIG && ogHeight < THRESHOLD_BIG) {
-    return [{array: imagePixelsArray, width: ogWidth, height: ogHeight, index: 0}];
+    return [{array: imagePixelsArray, width: ogWidth, height: ogHeight}];
   }
   console.log('split image')
 
@@ -459,6 +396,7 @@ function splitImage(imagePixelsArray: Array<number>, ogWidth: number, ogHeight: 
   }
 
   return [
+    {array: imagePixelsArray, width: ogWidth, height: ogHeight},
     {array: imagePixels1, width: midX, height: midY}, 
     {array: imagePixels2, width: ogWidth - midX, height: midY},
     {array: imagePixels3, width: midX, height: ogHeight - midY},
@@ -534,7 +472,7 @@ function getPixelsOfGriddedImage( //generic func
 
   for (const pixel of ogImagePixelsArray) {
     for (let i = 0; i < scale; i++) { //add pixel color * scale (new width of one square)
-      row.push(bw ? 4294967295 : pixel);
+      row.push(bw ? WHITE : pixel);
     }
     pxColCount++;
     const shouldBeHighlightCol = pxColCount % GRID_COUNTER === 0 || pxColCount === ogWidth;

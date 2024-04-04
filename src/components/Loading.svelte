@@ -108,5 +108,6 @@
         text-transform: uppercase;
         font-weight: bold;
         font-style: italic;
+        text-align: center;
     }
 </style>

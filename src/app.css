@@ -25,6 +25,7 @@ button {
     font-weight: bold;
     border: none;
     margin: 10px;
+    cursor: pointer;
 }
 
 button:hover {

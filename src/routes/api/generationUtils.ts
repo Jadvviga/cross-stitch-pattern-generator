@@ -13,9 +13,14 @@ export function loadImageToPixelsArray(image: Jimp, paletteSet?: Set<number>, pa
         for (let x = 0; x < ogWidth; x++) {
             let pixel = image.getPixelColor(x, y);
             if (paletteSet) { // for preview - add pixel to palette
+                //TODO handle alpah correctly
+                // if there is element with alpha - alpha color gets icon-1.png
+                // if not - the first detected colors gets icon-1.png
+
+                //otherwise on BW most commone color icon will not be visible
                 if (Jimp.intToRGBA(pixel).a !== 0) {
                     paletteSet.add(pixel);
-                }
+                } 
             }
             if (palette) { // for pattern replace og colors with palette ones
                 const alpha = Jimp.intToRGBA(pixel).a;
