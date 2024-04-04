@@ -46,7 +46,7 @@ export async function loadPalette(fileName: string, mulineType: MULINE_TYPES): P
   const paletteFileName = `${path}${fileName}_palette.png`;
   const mulinePalette = getMulinePalette(mulineType);
   const paletteImage = await Jimp.read(paletteFileName);
-  const colors = [];
+  const colors: Array<RGBA> = [];
   const palette: Array<Palette> = [];
   const mulineColorSet = new Set<string>;
 
@@ -54,14 +54,15 @@ export async function loadPalette(fileName: string, mulineType: MULINE_TYPES): P
     colors.push(Jimp.intToRGBA(paletteImage.getPixelColor(i, 0)));
   }
 
-  let iconID = -1;
+  //if there is alpha - remove it from palette and start icons from indx 0 instead of -1
+  // icon-1.png is empty image - used when we have most common color when we don't have alpha
+  let iconID =  hasAlpha(colors) ? 0 : -1;
   colors.forEach((color, index) => {
     const colorDistances: number[] = [];
     mulinePalette.forEach(mulineColor => {
       colorDistances.push(getColorDifference(mulineColor.hex, rgbToHex(color)))
     });
     const minDist = Math.min(...colorDistances);
-    //console.log(minDist)
     const minIndex = colorDistances.indexOf(minDist);
 
     let icon = `icon${iconID}`;
@@ -114,6 +115,17 @@ export function isColorDark(colorHex: string, threshold = 4.5) {
 
   const contrast = color1.contrastWCAG21(color2);
   return contrast < threshold;
+}
+
+
+function hasAlpha(colorsArray: Array<RGBA>) {
+  const foundIndex = colorsArray.findIndex(color => color.a === 0);
+  if (foundIndex !== -1) {
+    colorsArray.splice(foundIndex, 1)
+    return true;
+  }
+  return false;
+  
 }
 
 //colorsea

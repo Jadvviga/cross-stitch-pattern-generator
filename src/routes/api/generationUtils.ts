@@ -18,14 +18,14 @@ export function loadImageToPixelsArray(image: Jimp, paletteSet?: Set<number>, pa
                 // if not - the first detected colors gets icon-1.png
 
                 //otherwise on BW most commone color icon will not be visible
-                if (Jimp.intToRGBA(pixel).a !== 0) {
+                //if (Jimp.intToRGBA(pixel).a !== 0) {
                     paletteSet.add(pixel);
-                } 
+                //} 
             }
             if (palette) { // for pattern replace og colors with palette ones
                 const alpha = Jimp.intToRGBA(pixel).a;
                 const paletteColor = getColorFromPalette(rgbToHex(Jimp.intToRGBA(pixel)), palette);
-                if (paletteColor && alpha !== 0) { //transparent pixel were not included in palette
+                if (paletteColor && alpha !== 0) { //do not replace transparent pixels
                     const rgb = hexToRgb(paletteColor.muline.hex);
                     pixel = Jimp.rgbaToInt(rgb.r, rgb.g, rgb.b, rgb.a);
                 }
@@ -65,7 +65,7 @@ export function addIconsToImage(
                 const paletteColor = getColorFromPalette(rgbToHex(Jimp.intToRGBA(pixel)), palette);
                 if (paletteColor) {
                     const iconID = Number(paletteColor?.icon.split('icon')[1]);
-                    const icon = iconFiles[iconID + 1].clone();
+                    const icon = iconFiles[iconID + 1].clone(); //+1 cuz icons start at -1
                     if (bw) {
                         icon.brightness(-1);
                     }
@@ -135,6 +135,10 @@ function printTextToImage(image: Jimp, font: Font, posX: number, posY: number, t
 export async function loadIconsFromPalette(palette: Array<Palette>, scale: number): Promise<Jimp[]> {
     const icons = getPaletteIcons(palette);
     const iconFiles: Array<Jimp> = [];
+    const found = icons.find(icon => icon.includes('-1'));
+    if (found == undefined) { //if icon-1 is not included (aka there is alpha), add it still for proper calculations
+        iconFiles.push(await Jimp.read(`static/images/icons/icon-1.png`));
+    }
     for (const fileName of icons) {
         const inverse = fileName.includes('!');
         const icon = await Jimp.read(`static/images/icons/${fileName.split('!')[0]}.png`);
