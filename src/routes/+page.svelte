@@ -34,7 +34,7 @@
             generate pattern
         </button>
     {:else}
-    <p class="note">note: your image MUST be CLEAR PIXEL ART (1 square on image = 1 pixel)</p>
+    <p class="note">note: Your image MUST be CLEAR PIXEL ART (1 square on image = 1 pixel).<br>Otherwise a proper output is not guaranteed.</p>
     {/if}
     
     {#if loading}
@@ -142,5 +142,7 @@
         margin: 0;
         padding: 0;
         font-size: 14px;
+        font-weight: bold;
+        text-align: center;
     }
 </style>

@@ -2,6 +2,7 @@ import domtoimage from 'dom-to-image'
 import type { Palette } from '../../data/mulineData';
 
 export function getPaletteCounts(ogImgNode: HTMLElement, ogPalette: Array<Palette>): Promise<Palette[]> {
+    //TODO on stardew valley image count is 0
     const imagePalette = [...ogPalette];
     imagePalette.forEach(color => color.count = 0);
     let count = 0;

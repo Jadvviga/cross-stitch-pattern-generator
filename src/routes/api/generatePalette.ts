@@ -46,7 +46,7 @@ export async function loadPalette(fileName: string, mulineType: MULINE_TYPES): P
   const paletteFileName = `${path}${fileName}_palette.png`;
   const mulinePalette = getMulinePalette(mulineType);
   const paletteImage = await Jimp.read(paletteFileName);
-  const colors: Array<RGBA> = [];
+  let colors: Array<RGBA> = [];
   const palette: Array<Palette> = [];
   const mulineColorSet = new Set<string>;
 
@@ -56,7 +56,11 @@ export async function loadPalette(fileName: string, mulineType: MULINE_TYPES): P
 
   //if there is alpha - remove it from palette and start icons from indx 0 instead of -1
   // icon-1.png is empty image - used when we have most common color when we don't have alpha
-  let iconID =  hasAlpha(colors) ? 0 : -1;
+  let iconID = -1;
+  if (hasAlpha(colors)) {
+    iconID = 0;
+    colors = colors.filter(color => color.a !== 0);
+  }
   colors.forEach((color, index) => {
     const colorDistances: number[] = [];
     mulinePalette.forEach(mulineColor => {
@@ -119,12 +123,7 @@ export function isColorDark(colorHex: string, threshold = 4.5) {
 
 
 function hasAlpha(colorsArray: Array<RGBA>) {
-  const foundIndex = colorsArray.findIndex(color => color.a === 0);
-  if (foundIndex !== -1) {
-    colorsArray.splice(foundIndex, 1)
-    return true;
-  }
-  return false;
+  return colorsArray.findIndex(color => color.a === 0) !== -1
   
 }
 

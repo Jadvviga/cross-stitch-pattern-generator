@@ -184,6 +184,9 @@
 
     .note {
         margin-top: 10px;
+        margin-bottom: 5px;
+        border: 3px solid red;
+        padding: 5px;
     }
 
 </style>

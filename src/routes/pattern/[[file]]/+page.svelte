@@ -31,8 +31,8 @@
         
         
         <div class="rowContainer" style="margin: 0;">
-            <div class="columnContainer scrollable" bind:clientWidth={imagesScrollableBoxWidth}>
-                {#if generatedPatterns.length && generatedPatternBW.length}
+            <div class="columnContainer {hasSplitImages ? 'scrollable' : ''}" bind:clientWidth={imagesScrollableBoxWidth}>
+                {#if hasSplitImages}
                     <span style="width: {imagesScrollableBoxWidth}px; text-align: center;">(scroll for split images)</span>
                 {/if}
                 <!-- Base images -->
@@ -41,7 +41,7 @@
                     <img class="generatedPattern" src={generatedPatternBW} alt="generated pattern in black and white" title="Click to download"/>
                 </div>
                 <!-- Split -->
-                {#if generatedPatterns.length && generatedPatternBW.length}
+                {#if hasSplitImages}
                     <div class="rowContainer">
                         <div class="splitGallery">
                             <div>
@@ -112,9 +112,7 @@
 
     export let data;
 
-    $: console.log(imagesScrollableBoxWidth)
-
-    $: scrollCaptionWidth = imagesScrollableBoxWidth;
+    $: hasSplitImages = generatedPatterns.length && generatedPatternBW.length;
 
     function checkForSplit(imgDimensions: string): boolean {
         if (!imgDimensions) {
@@ -210,7 +208,7 @@
         cursor: pointer;
     }
 
-    img:hover {
+    .generatedPattern:hover {
         transform: scale(1.075);
         
     }

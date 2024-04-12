@@ -6,35 +6,35 @@
 
     <div  bind:this={paletteNode}>
         {#key imagePalette} 
-        {#if imagePalette}
-            <div class='palette'>
-                <div class="rowContainer colorsContainer legend">
-                <div class="colorTile legend"  style="visibility: hidden"/>
-                <div class="colorTile legend"  style="visibility: hidden"/>
-                <div class="colorTile legend"  style="visibility: hidden"/>
-                <p class="paletteTxt smalltxt legend">Color  </p>
-                <p class="paletteTxt smalltxt legend">Number of crosses</p>
-            </div>
-                {#each imagePalette as color, index}
-                <!-- TODO add second column if there are too much colors -->
-                    <div class="rowContainer colorsContainer">
-                        <div class="colorTile" style=" --tileColor: {color.muline.hex}">
-                            <img src="/images/icons/{color.icon}.png" alt="symbol for color {color.muline.hex}" class="icon {color.invertIcon ? 'inverted' : ''}">
+            {#if imagePalette}
+                <div class='palette'>
+                    <div class="rowContainer colorsContainer legend">
+                    <div class="colorTile legend"  style="visibility: hidden"/>
+                    <div class="colorTile legend"  style="visibility: hidden"/>
+                    <div class="colorTile legend"  style="visibility: hidden"/>
+                    <p class="paletteTxt smalltxt legend">Color  </p>
+                    <p class="paletteTxt smalltxt legend">Number of crosses</p>
+                </div>
+                    {#each imagePalette as color, index}
+                    <!-- TODO add second column if there are too much colors -->
+                        <div class="rowContainer colorsContainer">
+                            <div class="colorTile" style=" --tileColor: {color.muline.hex}">
+                                <img src="/images/icons/{color.icon}.png" alt="symbol for color {color.muline.hex}" class="icon {color.invertIcon ? 'inverted' : ''}">
+                            </div>
+                            <div class="colorTile" style=" --tileColor: rgba(0, 0, 0, 0)">
+                                <img src="/images/icons/{color.icon}.png" alt="symbol for color {color.muline.hex}" class="icon">
+                            </div>
+                            <div class="colorTile"  style=" --tileColor: {color.muline.hex}"/>
+                            <p class="paletteTxt">{color.muline.id}</p>
+                            <p class="paletteTxt smalltxt">x {color.count}</p>
+                            
+                            
                         </div>
-                        <div class="colorTile" style=" --tileColor: rgba(0, 0, 0, 0)">
-                            <img src="/images/icons/{color.icon}.png" alt="symbol for color {color.muline.hex}" class="icon">
-                        </div>
-                        <div class="colorTile"  style=" --tileColor: {color.muline.hex}"/>
-                        <p class="paletteTxt">{color.muline.id}</p>
-                        <p class="paletteTxt smalltxt">x {color.count}</p>
                         
-                        
-                    </div>
-                    
-                {/each}
-            </div>
-            
-        {/if}
+                    {/each}
+                </div>
+                
+            {/if}
         {/key}
     </div>
 </div>
@@ -42,7 +42,6 @@
 
 <script lang="ts">
     import { createEventDispatcher, onMount } from "svelte";
-    import { MULINE_TYPES } from "../../data/mulineData";
     import type { Palette } from "../../data/mulineData";
     import { getPaletteBlob, getPaletteCounts } from "./paletteUtils";
     
@@ -94,7 +93,6 @@
                     if (foundColor.index !== currentColor.index) {
                         palette[i].count += foundColor.count;
                         palette = palette.filter(c => c.index !== foundColor.index);
-                        //palette = temp;
                         
                     }
                 }
