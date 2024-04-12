@@ -3,53 +3,76 @@
     <h2>Click on images to download them individually, or...</h2>
 
     <div transition:fade={{ delay: 250, duration: 300 }} class="columnContainer">
-        <div class="rowContainer" style="margin: 0;">
-            <div class="rowContainer">
-                <img class="generatedPattern" src={generatedPattern} alt="generated pattern" title="Click to download"/>
-                {#if generatedPatterns.length}
-                    <div class="gallery">
-                        {#each generatedPatterns as pattern}
-                            <img class="generatedPattern" src={pattern} alt="generated pattern" title="Click to download"/>
-                        {/each}
-                    </div>
-                {/if}
-              
-                <img class="generatedPattern" src={generatedPatternBW} alt="generated pattern in black and white" title="Click to download"/>
-                {#if generatedPatternsBW.length}
-                    <div class="gallery">
-                        {#each generatedPatternsBW as pattern}
-                            <img class="generatedPattern" src={pattern} alt="generated pattern" title="Click to download"/>
-                        {/each}
-                    </div>
-                {/if}
-                <img class="generatedPattern" src={generatedPatternPalette} alt="generated pattern's palette" title="Click to download"/>
-            </div>
-            <div class="columnContainer">
-                <a href={generatedPattern} download="generatedPattern">
-                    <button class="downloadBtn">
-                        <img class="icon" src={downloadSrc} alt="download icon">
-                        <span>Download PDF</span>
-                    </button>
-                </a>
-                
-                <a href={generatedPattern} download="generatedPattern">
-                    <button class="downloadBtn">
-                        <img class="icon" src={downloadSrc} alt="download icon">
-                        <span>Download all images (in zip)</span>
-                    </button>
-                </a>
-                
-                
-                <a href={generatedPattern} download="generatedPattern">
-                    <button class="downloadBtn">
-                        <img class="icon" src={downloadSrc} alt="download icon">
-                        <span>Download All (in zip)</span>
-                    </button>
-                </a>
-                
+        <div class="rowContainer">
+            <a href={generatedPattern} download="generatedPattern">
+                <button class="downloadBtn">
+                    <img class="icon" src={downloadSrc} alt="download icon">
+                    <span>Download PDF</span>
+                </button>
+            </a>
+            
+            <a href={generatedPattern} download="generatedPattern">
+                <button class="downloadBtn">
+                    <img class="icon" src={downloadSrc} alt="download icon">
+                    <span>Download all images (in zip)</span>
+                </button>
+            </a>
+            
+            
+            <a href={generatedPattern} download="generatedPattern">
+                <button class="downloadBtn">
+                    <img class="icon" src={downloadSrc} alt="download icon">
+                    <span>Download All (in zip)</span>
+                </button>
+            </a>
+            
 
-            </div>
         </div>
+        
+        
+        <div class="rowContainer" style="margin: 0;">
+            <div class="columnContainer scrollable" bind:clientWidth={imagesScrollableBoxWidth}>
+                {#if generatedPatterns.length && generatedPatternBW.length}
+                    <span style="width: {imagesScrollableBoxWidth}px; text-align: center;">(scroll for split images)</span>
+                {/if}
+                <!-- Base images -->
+                <div class="rowContainer">
+                    <img class="generatedPattern" src={generatedPattern} alt="generated pattern" title="Click to download"/>
+                    <img class="generatedPattern" src={generatedPatternBW} alt="generated pattern in black and white" title="Click to download"/>
+                </div>
+                <!-- Split -->
+                {#if generatedPatterns.length && generatedPatternBW.length}
+                    <div class="rowContainer">
+                        <div class="splitGallery">
+                            <div>
+                                <img class="generatedPattern splitPattern" src={generatedPatterns[0]} alt="generated pattern" title="Click to download"/>
+                                <img class="generatedPattern splitPattern" src={generatedPatterns[1]} alt="generated pattern" title="Click to download"/>
+                            </div>
+                            <div>
+                                <img class="generatedPattern splitPattern" src={generatedPatterns[2]} alt="generated pattern" title="Click to download"/>
+                                <img class="generatedPattern splitPattern" src={generatedPatterns[3]} alt="generated pattern" title="Click to download"/>
+                            </div>
+                        </div>
+
+                        <div class="splitGallery">
+                            <div>
+                                <img class="generatedPattern splitPattern" src={generatedPatternsBW[0]} alt="generated pattern" title="Click to download"/>
+                                <img class="generatedPattern splitPattern" src={generatedPatternsBW[1]} alt="generated pattern" title="Click to download"/>
+                            </div>
+                            <div>
+                                <img class="generatedPattern splitPattern" src={generatedPatternsBW[2]} alt="generated pattern" title="Click to download"/>
+                                <img class="generatedPattern splitPattern" src={generatedPatternsBW[3]} alt="generated pattern" title="Click to download"/>
+                            </div>
+                        </div>
+                    </div>
+                {/if}
+            </div>
+        
+            
+            
+            <img class="generatedPattern" src={generatedPatternPalette} alt="generated pattern's palette" title="Click to download"/>
+        </div>
+         
         
     
         <div class="rowContainer">
@@ -83,10 +106,15 @@
     let generatedPatternPalette: string;
     let fileName: string;
     let loading = true;
+    let imagesScrollableBoxWidth: number;
 
     let downloadSrc = '/download.png';
 
     export let data;
+
+    $: console.log(imagesScrollableBoxWidth)
+
+    $: scrollCaptionWidth = imagesScrollableBoxWidth;
 
     function checkForSplit(imgDimensions: string): boolean {
         if (!imgDimensions) {
@@ -146,19 +174,32 @@
     .generatedPattern {
         margin-bottom: 10px;
         max-height: 50vh;
+        padding: 10px;
         box-shadow: 2px 2px 4px 2px rgba(0, 0, 0, 0.3);
     }
 
-    
-    .gallery {
-        --imageWidth: 25px;
-        --gridGap: 5px;
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        grid-gap: var(--gridGap);
-        justify-items: center;
-        width: calc((2 * var(--imageWidth)) + (2 * var(--gridGap)));
-        margin: 0 auto;
+    .splitPattern {
+        max-height: 25vh;
+        margin: 0;
+        padding: 0;
+    }
+
+
+    .splitGallery {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .splitGallery img {
+        margin: 0 3px 3px 0;
+    }
+
+    .scrollable {
+        overflow: scroll;
+        max-height: 60vh;
+        box-shadow: inset gray 0px 0px 20px -12px
     }
 
     h2 {
@@ -170,7 +211,7 @@
     }
 
     img:hover {
-        transform: scale(1.1);
+        transform: scale(1.075);
         
     }
 
@@ -180,14 +221,23 @@
         filter: invert(100%);
     }
     .downloadBtn {
-        width: 150px;
-        height: auto;
+        width: auto;
+        height: 50px;
         display: flex;
         flex-direction: row;
         align-items: center;
-        padding: 10px;
+        padding: 15px;
         
     }
+
+    .downloadBtn .icon {
+        padding: 10px;
+    }
+    .downloadBtn span {
+        padding: 10px;
+    }
+
+
     .downloadBtn:hover .icon {
         filter: invert(0);
     }
