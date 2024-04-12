@@ -1,4 +1,4 @@
-<div transition:fade={{ delay: 100, duration: 300 }}>
+<div in:fade={{ delay: 100, duration: 300 }}>
     <h1>Pixel Art to Cross Stitch Pattern generator</h1>
     <h2>Click button below to upload pixel art image.</h2>
     

@@ -4,24 +4,19 @@
 
     <div transition:fade={{ delay: 250, duration: 300 }} class="columnContainer">
         <div class="rowContainer">
-            <Download type="button" downloadText="Download PDF" href={generatedPattern} downloadFileName="generatedPattern" />
-            <Download type="button" downloadText="Download all images (in zip)" href={generatedPattern} downloadFileName="generatedPattern" />
-            <Download type="button" downloadText="Download All (in zip)" href={generatedPattern} downloadFileName="generatedPattern" />
+            <Download type="button" downloadText="Download PDF" href={generatedPatternPDF} downloadFileName="generatedPattern" />
+            <Download type="button" downloadText="Download all images (in zip)" href={generatedPatternZipImgs} downloadFileName="generatedPattern" />
+            <Download type="button" downloadText="Download All (in zip)" href={generatedPatternZip} downloadFileName="generatedPattern" />
         </div>
         
         
         <div class="rowContainer" style="margin: 0;">
             <div class="columnContainer {hasSplitImages ? 'scrollable' : ''}" bind:clientWidth={imagesScrollableBoxWidth}>
                 {#if hasSplitImages}
-                    <span style="width: {imagesScrollableBoxWidth}px; text-align: center;">(scroll for split images)</span>
+                    <span style="width: {imagesScrollableBoxWidth}px; text-align: center;">(scroll for not split images)</span>
                 {/if}
-                <!-- Base images -->
-                <div class="rowContainer">
-                    <Download type="image" imgSrc={generatedPattern} href={generatedPattern} downloadFileName="generatedPattern" imgAlt="generated pattern in color" />
-                    <Download type="image" imgSrc={generatedPatternBW} href={generatedPatternBW} downloadFileName="generatedPatternBW" imgAlt="generated pattern in black and white" />
-                </div>
-                <!-- Split -->
-                {#if hasSplitImages}
+                 <!-- Split Images-->
+                 {#if hasSplitImages}
                     <div class="rowContainer">
                         <div class="splitGallery">
                             <div>
@@ -31,7 +26,7 @@
                             <div>
                                 <Download type="image" imgSrc={generatedPatterns[2]} href={generatedPatterns[2]} downloadFileName="generatedPattern_3" imgAlt="generated pattern in color split in 4 - part 3" isSplitImg={true} />
                                 <Download type="image" imgSrc={generatedPatterns[3]} href={generatedPatterns[3]} downloadFileName="generatedPattern_4" imgAlt="generated pattern in color split in 4 - part 4"  isSplitImg={true} />
-                              
+                            
                             </div>
                         </div>
 
@@ -47,6 +42,12 @@
                         </div>
                     </div>
                 {/if}
+                <!-- Base images -->
+                <div class="rowContainer">
+                    <Download type="image" imgSrc={generatedPattern} href={generatedPattern} downloadFileName="generatedPattern" imgAlt="generated pattern in color" />
+                    <Download type="image" imgSrc={generatedPatternBW} href={generatedPatternBW} downloadFileName="generatedPatternBW" imgAlt="generated pattern in black and white" />
+                </div>
+               
             </div>
         
             
@@ -86,11 +87,15 @@
     let generatedPatternBW: string;
     let generatedPatternsBW: Array<string> = [];
     let generatedPatternPalette: string;
+    let generatedPatternPDF: string;
+    let generatedPatternZipImgs: string;
+    let generatedPatternZip: string;
+
+
     let fileName: string;
     let loading = true;
     let imagesScrollableBoxWidth: number;
 
-    
 
     export let data;
 
@@ -128,6 +133,9 @@
         generatedPattern = `/images/pattern/${data.fileName}_pattern_0.png`;
         generatedPatternBW = `/images/pattern/${data.fileName}_pattern_bw_0.png`;
         generatedPatternPalette = `/images/pattern/${data.fileName}_pattern_palette.png`;
+        generatedPatternPDF = `/images/pattern/${data.fileName}_pattern.pdf`;
+        generatedPatternZip = `/images/pattern/${data.fileName}_pattern_all.zip`;
+        generatedPatternZipImgs = `/images/pattern/${data.fileName}_pattern_images.zip`;
 
         //making sure image is loaded
         const loadImage = new Image();
@@ -158,22 +166,11 @@
         box-shadow: 2px 2px 4px 2px rgba(0, 0, 0, 0.3);
     }
 
-    .splitPattern {
-        max-height: 25vh;
-        margin: 0;
-        padding: 0;
-    }
-
-
     .splitGallery {
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
-    }
-
-    .splitGallery img {
-        margin: 0 3px 3px 0;
     }
 
     .scrollable {
@@ -194,39 +191,5 @@
         transform: scale(1.075);
         
     }
-
-    .icon {
-        width: 32px;
-        height: 32px;
-        filter: invert(100%);
-    }
-    .downloadBtn {
-        width: auto;
-        height: 50px;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        padding: 15px;
-        
-    }
-
-    .downloadBtn .icon {
-        padding: 10px;
-    }
-    .downloadBtn span {
-        padding: 10px;
-    }
-
-
-    .downloadBtn:hover .icon {
-        filter: invert(0);
-    }
-
-    a {
-        text-decoration: none;
-    }
-
-
-
 
 </style>

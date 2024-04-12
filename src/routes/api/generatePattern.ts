@@ -3,6 +3,8 @@ import type { Palette } from "../../data/mulineData";
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import { addIconsToImage, addTextToImage, generatePaletteImage, loadIconsFromPalette, loadImageToPixelsArray } from "./generationUtils";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 
 
 //A4 ma na 350 dpi 2893 x 4092 px
@@ -157,9 +159,13 @@ async function generateImagePattern(
     //max height is hegith - w x margin = 805.89 pt = 1070 px
 
     //TODO add try catch
+    //TODO clean up
+    //TODO test printing
+    // TODO chaeck for img width/height - ifwidth is longer, rotate images to better fit on page
     if (imagesForPDFCol.length + imagesForPDFBW.length === expectedImagesNumber) {
       const doc = new PDFDocument({ size: 'A4', margin: MARGIN_PT });
-      doc.pipe(fs.createWriteStream(`${PATH_PATTERN}${fileName}_pattern.pdf`));
+      const pdfWriteStream = fs.createWriteStream(`${PATH_PATTERN}${fileName}_pattern.pdf`)
+      doc.pipe(pdfWriteStream);
       doc.image(previewFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
       if (expectedImagesNumber > 2) { //image is split
         for (const image of imagesForPDFCol.concat(imagesForPDFBW)) {
@@ -174,7 +180,47 @@ async function generateImagePattern(
       
       doc.addPage().image(patternPaletteFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT] });
       doc.end();
+
+      pdfWriteStream.on('finish', () => {
+        let zip = new JSZip();         
+      
+      for (const image of imagesForPDFCol.concat(imagesForPDFBW)) {
+        let fileContent = fs.readFileSync(image);
+        zip.file(image.replace(PATH_PATTERN, ''), fileContent); 
+      }
+      let fileContent = fs.readFileSync(`${PATH_PATTERN}${fileName}_pattern_0.png`);
+      zip.file(`${fileName}_pattern_0.png`, fileContent)
+
+      fileContent = fs.readFileSync(`${PATH_PATTERN}${fileName}_pattern_bw_0.png`);
+      zip.file(`${fileName}_pattern_bw_0.png`, fileContent)
+
+      fileContent = fs.readFileSync(previewFileName);
+      zip.file(previewFileName.replace(PATH_UPLOAD, ''), fileContent)
+
+      fileContent = fs.readFileSync(patternPaletteFileName);
+      zip.file(patternPaletteFileName.replace(PATH_PATTERN, ''), fileContent)
+
+
+      zip.generateAsync({ type: "nodebuffer" })
+        .then((content) => {
+          fs.writeFileSync(`${PATH_PATTERN}${fileName}_pattern_images.zip`, content);
+          fileContent = fs.readFileSync(`${PATH_PATTERN}${fileName}_pattern.pdf`);
+          zip.file(`${fileName}_pattern.pdf`, fileContent);
+          zip.generateAsync({ type: "nodebuffer" })
+            .then((content) => {
+              fs.writeFileSync(`${PATH_PATTERN}${fileName}_pattern_all.zip`, content);
+            })
+            .catch((error) => console.log(error));
+        })
+        .catch((error) => console.log(error));
+      
+      
+      })
+
+      
     }
+      
+     
   }
     
   const offset = scale * 2;

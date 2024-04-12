@@ -19,7 +19,7 @@
             </div>
            
             {#if imageWillBeSplit }
-                <span class="note"> NOTE: Due to image's size, pattern will be split into parts for better printing</span>
+                <span class="note"> NOTE: Due to image's size, in PDF pattern will be split into parts for better printing</span>
             {/if}
             <img id="uploadedImg" src={uploadedImage} alt="preview"/>
             <p>{imgDimensions}</p>
