@@ -6,7 +6,22 @@
         <div class="rowContainer" style="margin: 0;">
             <div class="rowContainer">
                 <img class="generatedPattern" src={generatedPattern} alt="generated pattern" title="Click to download"/>
+                {#if generatedPatterns.length}
+                    <div class="gallery">
+                        {#each generatedPatterns as pattern}
+                            <img class="generatedPattern" src={pattern} alt="generated pattern" title="Click to download"/>
+                        {/each}
+                    </div>
+                {/if}
+              
                 <img class="generatedPattern" src={generatedPatternBW} alt="generated pattern in black and white" title="Click to download"/>
+                {#if generatedPatternsBW.length}
+                    <div class="gallery">
+                        {#each generatedPatternsBW as pattern}
+                            <img class="generatedPattern" src={pattern} alt="generated pattern" title="Click to download"/>
+                        {/each}
+                    </div>
+                {/if}
                 <img class="generatedPattern" src={generatedPatternPalette} alt="generated pattern's palette" title="Click to download"/>
             </div>
             <div class="columnContainer">
@@ -61,9 +76,11 @@
     import { fade } from 'svelte/transition';
 
 
-    let generatedPattern: any;
-    let generatedPatternBW: any;
-    let generatedPatternPalette: any;
+    let generatedPattern: string;
+    let generatedPatterns: Array<string> = [];
+    let generatedPatternBW: string;
+    let generatedPatternsBW: Array<string> = [];
+    let generatedPatternPalette: string;
     let fileName: string;
     let loading = true;
 
@@ -71,18 +88,35 @@
 
     export let data;
 
+    function checkForSplit(imgDimensions: string): boolean {
+        if (!imgDimensions) {
+            return false;
+        }
+        const width = Number(imgDimensions.split(' x ')[0]);
+        const height = Number(imgDimensions.split(' x ')[1]);
+        return width >= 100 || height >= 100;
+    }
+
 
 
     onMount(() => {
         loading = true;
         const storageFileName = sessionStorage.getItem('fileName');
+        
         if (!storageFileName || storageFileName !== data.fileName) {
             goto('/');
         }
-
-
-        //TODO addd download
         fileName = data.fileName;
+
+        const imgDimensions = sessionStorage.getItem('imageDimension') || '';
+        if (checkForSplit(imgDimensions)) {
+            for(let i=1;i<=4;i++) {
+                generatedPatterns.push(`/images/pattern/${data.fileName}_pattern_${i}.png`);
+                generatedPatternsBW.push(`/images/pattern/${data.fileName}_pattern_bw_${i}.png`);
+            }
+        }
+
+        
         generatedPattern = `/images/pattern/${data.fileName}_pattern_0.png`;
         generatedPatternBW = `/images/pattern/${data.fileName}_pattern_bw_0.png`;
         generatedPatternPalette = `/images/pattern/${data.fileName}_pattern_palette.png`;
@@ -113,6 +147,18 @@
         margin-bottom: 10px;
         max-height: 50vh;
         box-shadow: 2px 2px 4px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    
+    .gallery {
+        --imageWidth: 25px;
+        --gridGap: 5px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        grid-gap: var(--gridGap);
+        justify-items: center;
+        width: calc((2 * var(--imageWidth)) + (2 * var(--gridGap)));
+        margin: 0 auto;
     }
 
     h2 {
@@ -149,6 +195,8 @@
     a {
         text-decoration: none;
     }
+
+
 
 
 </style>

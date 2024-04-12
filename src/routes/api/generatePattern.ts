@@ -161,9 +161,17 @@ async function generateImagePattern(
       const doc = new PDFDocument({ size: 'A4', margin: MARGIN_PT });
       doc.pipe(fs.createWriteStream(`${PATH_PATTERN}${fileName}_pattern.pdf`));
       doc.image(previewFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
-      for (const image of imagesForPDFCol.concat(imagesForPDFBW)) {
-        doc.addPage().image(image, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
+      if (expectedImagesNumber > 2) { //image is split
+        for (const image of imagesForPDFCol.concat(imagesForPDFBW)) {
+          if (!image.includes('_0')) {
+            doc.addPage().image(image, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
+          }
+        }
+      } else {
+        doc.addPage().image(`${PATH_PATTERN}${fileName}_pattern_0.png`, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
+        doc.addPage().image(`${PATH_PATTERN}${fileName}_pattern_bw_0.png`, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
       }
+      
       doc.addPage().image(patternPaletteFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT] });
       doc.end();
     }
@@ -180,7 +188,7 @@ async function generateImagePattern(
       for (let y = 0; y < resizedHeight; y++) {
         for (let x = 0; x < resizedWidth; x++) {
           if (x < offset || y < offset || x >= resizedWidth - offset || y >= resizedHeight - offset) {
-            image.setPixelColor(WHITE, x, y);
+            image.setPixelColor(0, x, y);
           } else {
             if (resizedImagePixelsArray[count]) {
               image.setPixelColor(resizedImagePixelsArray[count], x, y);
