@@ -4,29 +4,9 @@
 
     <div transition:fade={{ delay: 250, duration: 300 }} class="columnContainer">
         <div class="rowContainer">
-            <a href={generatedPattern} download="generatedPattern">
-                <button class="downloadBtn">
-                    <img class="icon" src={downloadSrc} alt="download icon">
-                    <span>Download PDF</span>
-                </button>
-            </a>
-            
-            <a href={generatedPattern} download="generatedPattern">
-                <button class="downloadBtn">
-                    <img class="icon" src={downloadSrc} alt="download icon">
-                    <span>Download all images (in zip)</span>
-                </button>
-            </a>
-            
-            
-            <a href={generatedPattern} download="generatedPattern">
-                <button class="downloadBtn">
-                    <img class="icon" src={downloadSrc} alt="download icon">
-                    <span>Download All (in zip)</span>
-                </button>
-            </a>
-            
-
+            <Download type="button" downloadText="Download PDF" href={generatedPattern} downloadFileName="generatedPattern" />
+            <Download type="button" downloadText="Download all images (in zip)" href={generatedPattern} downloadFileName="generatedPattern" />
+            <Download type="button" downloadText="Download All (in zip)" href={generatedPattern} downloadFileName="generatedPattern" />
         </div>
         
         
@@ -37,31 +17,32 @@
                 {/if}
                 <!-- Base images -->
                 <div class="rowContainer">
-                    <img class="generatedPattern" src={generatedPattern} alt="generated pattern" title="Click to download"/>
-                    <img class="generatedPattern" src={generatedPatternBW} alt="generated pattern in black and white" title="Click to download"/>
+                    <Download type="image" imgSrc={generatedPattern} href={generatedPattern} downloadFileName="generatedPattern" imgAlt="generated pattern in color" />
+                    <Download type="image" imgSrc={generatedPatternBW} href={generatedPatternBW} downloadFileName="generatedPatternBW" imgAlt="generated pattern in black and white" />
                 </div>
                 <!-- Split -->
                 {#if hasSplitImages}
                     <div class="rowContainer">
                         <div class="splitGallery">
                             <div>
-                                <img class="generatedPattern splitPattern" src={generatedPatterns[0]} alt="generated pattern" title="Click to download"/>
-                                <img class="generatedPattern splitPattern" src={generatedPatterns[1]} alt="generated pattern" title="Click to download"/>
+                                <Download type="image" imgSrc={generatedPatterns[0]} href={generatedPatterns[0]} downloadFileName="generatedPattern_1" imgAlt="generated pattern in color split in 4 - part 1" isSplitImg={true} />
+                                <Download type="image" imgSrc={generatedPatterns[1]} href={generatedPatterns[1]} downloadFileName="generatedPattern_2" imgAlt="generated pattern in color split in 4 - part 2" isSplitImg={true} />
                             </div>
                             <div>
-                                <img class="generatedPattern splitPattern" src={generatedPatterns[2]} alt="generated pattern" title="Click to download"/>
-                                <img class="generatedPattern splitPattern" src={generatedPatterns[3]} alt="generated pattern" title="Click to download"/>
+                                <Download type="image" imgSrc={generatedPatterns[2]} href={generatedPatterns[2]} downloadFileName="generatedPattern_3" imgAlt="generated pattern in color split in 4 - part 3" isSplitImg={true} />
+                                <Download type="image" imgSrc={generatedPatterns[3]} href={generatedPatterns[3]} downloadFileName="generatedPattern_4" imgAlt="generated pattern in color split in 4 - part 4"  isSplitImg={true} />
+                              
                             </div>
                         </div>
 
                         <div class="splitGallery">
                             <div>
-                                <img class="generatedPattern splitPattern" src={generatedPatternsBW[0]} alt="generated pattern" title="Click to download"/>
-                                <img class="generatedPattern splitPattern" src={generatedPatternsBW[1]} alt="generated pattern" title="Click to download"/>
+                                <Download type="image" imgSrc={generatedPatternsBW[0]} href={generatedPatternsBW[0]} downloadFileName="generatedPatternBW_1" imgAlt="generated pattern in black and white split in 4 - part 1"  isSplitImg={true} />
+                                <Download type="image" imgSrc={generatedPatternsBW[1]} href={generatedPatternsBW[1]} downloadFileName="generatedPatternBW_2" imgAlt="generated pattern in black and white split in 4 - part 2"  isSplitImg={true} />
                             </div>
                             <div>
-                                <img class="generatedPattern splitPattern" src={generatedPatternsBW[2]} alt="generated pattern" title="Click to download"/>
-                                <img class="generatedPattern splitPattern" src={generatedPatternsBW[3]} alt="generated pattern" title="Click to download"/>
+                                <Download type="image" imgSrc={generatedPatternsBW[2]} href={generatedPatternsBW[2]} downloadFileName="generatedPatternBW_3" imgAlt="generated pattern in black and white split in 4 - part 3"  isSplitImg={true} />
+                                <Download type="image" imgSrc={generatedPatternsBW[3]} href={generatedPatternsBW[3]} downloadFileName="generatedPatternBW_4" imgAlt="generated pattern in black and white split in 4 - part 4"  isSplitImg={true} />
                             </div>
                         </div>
                     </div>
@@ -96,6 +77,7 @@
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
     import Loading from '../../../components/Loading.svelte';
+    import Download from '../../../components/Download.svelte';
     import { fade } from 'svelte/transition';
 
 
@@ -108,7 +90,7 @@
     let loading = true;
     let imagesScrollableBoxWidth: number;
 
-    let downloadSrc = '/download.png';
+    
 
     export let data;
 

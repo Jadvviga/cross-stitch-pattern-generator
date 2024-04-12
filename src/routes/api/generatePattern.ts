@@ -28,7 +28,7 @@ const GRID_COLOR = 255;
 const GRID_COLOR_LIGHT = 4278244095; //when next to dark colors
 const GRID_MIDDLE_COLOR = 4278190335; //red
 const WHITE = 4294967295;
-
+// TODO consider filling in all aplha with white
 
 const GRID_SIZE = 3;
 const GRID_BIG_SIZE = 4;

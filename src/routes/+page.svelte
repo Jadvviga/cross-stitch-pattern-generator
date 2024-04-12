@@ -1,48 +1,48 @@
-<h1>Pixel Art to Cross Stitch Pattern generator</h1>
-<h2>Click button below to upload pixel art image.</h2>
-
-<div class="columnContainer">
-    <input
-        class="hidden"
-        id="file-to-upload"
-        type="file"
-        accept=".png,.jpg"
-        bind:files
-        bind:this={fileInput}
-        on:change={() => getBase64(files[0])}/>
-    <button
-        on:click={ () => fileInput.click() }>
-        Upload image
-    </button>
-
-    {#if uploadedImage && uploadedFileGeneratedName}
+<div transition:fade={{ delay: 100, duration: 300 }}>
+    <h1>Pixel Art to Cross Stitch Pattern generator</h1>
+    <h2>Click button below to upload pixel art image.</h2>
     
-        <div transition:fade={{ delay: 250, duration: 300 }}  class="rowContainer">
-            <img id="uploadedImg" src={uploadedImage} alt="uploaded by user"/>
-            <div class="columnContainer">
-                {uploadedFileName}
-                <MulineTypeSelector
-                    label={"Select embroidery thread producer"}
-                    bind:selectedMulineType/>
-                
-            </div>
-        
-        </div>
-        
-        <button transition:fade={{ delay: 250, duration: 300 }}
-            on:click={requestGeneration}>
-            generate pattern
+    <div class="columnContainer">
+        <input
+            class="hidden"
+            id="file-to-upload"
+            type="file"
+            accept=".png,.jpg"
+            bind:files
+            bind:this={fileInput}
+            on:change={() => getBase64(files[0])}/>
+        <button
+            on:click={ () => fileInput.click() }>
+            Upload image
         </button>
-    {:else}
-    <p class="note">note: Your image MUST be CLEAR PIXEL ART (1 square on image = 1 pixel).<br>Otherwise a proper output is not guaranteed.</p>
-    {/if}
     
-    {#if loading}
-        <Loading/>
-    {/if}
-
-    
+        {#if uploadedImage && uploadedFileGeneratedName}
+        
+            <div transition:fade={{ delay: 250, duration: 300 }}  class="rowContainer">
+                <img id="uploadedImg" src={uploadedImage} alt="uploaded by user"/>
+                <div class="columnContainer">
+                    {uploadedFileName}
+                    <MulineTypeSelector
+                        label={"Select embroidery thread producer"}
+                        bind:selectedMulineType/>
+                </div>
+            
+            </div>
+            
+            <button transition:fade={{ delay: 250, duration: 300 }}
+                on:click={requestGeneration}>
+                generate pattern
+            </button>
+        {:else}
+        <p class="note">note: Your image MUST be CLEAR PIXEL ART (1 square on image = 1 pixel).<br>Otherwise a proper output is not guaranteed.</p>
+        {/if}
+        
+        {#if loading}
+            <Loading/>
+        {/if}
+    </div>
 </div>
+
 
 
 <script lang="ts">
