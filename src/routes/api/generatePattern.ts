@@ -137,92 +137,27 @@ async function generateImagePattern(
   const patternPaletteFileName = `${PATH_PATTERN}${fileName}_pattern_palette.png`;
   const patternBWFileName = `${PATH_PATTERN}${fileName}_pattern_bw_${index}.png`;
   const patternFileName = `${PATH_PATTERN}${fileName}_pattern_${index}.png`;
-     
+
   const gridSize = scale === SCALE_BIG ? GRID_BIG_SIZE : GRID_SIZE;
 
-   // get resized image pixel array
-   const newWidth = getResizedDimension(width, scale, gridSize, GRID_HIGHLIGHT_SIZE);
-   const newHeight = getResizedDimension(height, scale, gridSize, GRID_HIGHLIGHT_SIZE);
-   const resizedImagePixelsArray = getPixelsOfGriddedImage(imagePixelsArray, width, height, newWidth, newHeight, scale, gridSize, GRID_HIGHLIGHT_SIZE);
-   const resizedImageBWPixelsArray = getPixelsOfGriddedImage(imagePixelsArray, width, height, newWidth, newHeight, scale, gridSize, GRID_HIGHLIGHT_SIZE, true);
- 
-   const savePatterPDF = (imageFileName: string) => {
+  // get resized image pixel array
+  const newWidth = getResizedDimension(width, scale, gridSize, GRID_HIGHLIGHT_SIZE);
+  const newHeight = getResizedDimension(height, scale, gridSize, GRID_HIGHLIGHT_SIZE);
+  const resizedImagePixelsArray = getPixelsOfGriddedImage(imagePixelsArray, width, height, newWidth, newHeight, scale, gridSize, GRID_HIGHLIGHT_SIZE);
+  const resizedImageBWPixelsArray = getPixelsOfGriddedImage(imagePixelsArray, width, height, newWidth, newHeight, scale, gridSize, GRID_HIGHLIGHT_SIZE, true);
+
+  const savePatterPDF = (imageFileName: string) => {
     if (imageFileName.includes('bw')) {
       imagesForPDFBW.push(imageFileName);
     } else {
       imagesForPDFCol.push(imageFileName)
     }
-    //documnt width is 595.28 points, which is about 793 pixels
-    //heigth is 841.89 pt = 1122 px
-    //margins starnadr is .25inch = 18 points
-    //so max image width should be width - 2 x margin = 559,28 pt = 745 px
-    //max height is hegith - w x margin = 805.89 pt = 1070 px
 
-    //TODO add try catch
-    //TODO clean up
-    //TODO test printing
-    // TODO chaeck for img width/height - ifwidth is longer, rotate images to better fit on page
     if (imagesForPDFCol.length + imagesForPDFBW.length === expectedImagesNumber) {
-      const doc = new PDFDocument({ size: 'A4', margin: MARGIN_PT });
-      const pdfWriteStream = fs.createWriteStream(`${PATH_PATTERN}${fileName}_pattern.pdf`)
-      doc.pipe(pdfWriteStream);
-      doc.image(previewFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
-      if (expectedImagesNumber > 2) { //image is split
-        for (const image of imagesForPDFCol.concat(imagesForPDFBW)) {
-          if (!image.includes('_0')) {
-            doc.addPage().image(image, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
-          }
-        }
-      } else {
-        doc.addPage().image(`${PATH_PATTERN}${fileName}_pattern_0.png`, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
-        doc.addPage().image(`${PATH_PATTERN}${fileName}_pattern_bw_0.png`, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
-      }
-      
-      doc.addPage().image(patternPaletteFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT] });
-      doc.end();
-
-      pdfWriteStream.on('finish', () => {
-        let zip = new JSZip();         
-      
-      for (const image of imagesForPDFCol.concat(imagesForPDFBW)) {
-        let fileContent = fs.readFileSync(image);
-        zip.file(image.replace(PATH_PATTERN, ''), fileContent); 
-      }
-      let fileContent = fs.readFileSync(`${PATH_PATTERN}${fileName}_pattern_0.png`);
-      zip.file(`${fileName}_pattern_0.png`, fileContent)
-
-      fileContent = fs.readFileSync(`${PATH_PATTERN}${fileName}_pattern_bw_0.png`);
-      zip.file(`${fileName}_pattern_bw_0.png`, fileContent)
-
-      fileContent = fs.readFileSync(previewFileName);
-      zip.file(previewFileName.replace(PATH_UPLOAD, ''), fileContent)
-
-      fileContent = fs.readFileSync(patternPaletteFileName);
-      zip.file(patternPaletteFileName.replace(PATH_PATTERN, ''), fileContent)
-
-
-      zip.generateAsync({ type: "nodebuffer" })
-        .then((content) => {
-          fs.writeFileSync(`${PATH_PATTERN}${fileName}_pattern_images.zip`, content);
-          fileContent = fs.readFileSync(`${PATH_PATTERN}${fileName}_pattern.pdf`);
-          zip.file(`${fileName}_pattern.pdf`, fileContent);
-          zip.generateAsync({ type: "nodebuffer" })
-            .then((content) => {
-              fs.writeFileSync(`${PATH_PATTERN}${fileName}_pattern_all.zip`, content);
-            })
-            .catch((error) => console.log(error));
-        })
-        .catch((error) => console.log(error));
-      
-      
-      })
-
-      
+      generatePDF(fileName, expectedImagesNumber, imagesForPDFCol.concat(imagesForPDFBW));
     }
-      
-     
   }
-    
+
   const offset = scale * 2;
   const resizedWidth = newWidth + offset * 2;
   const resizedHeight = newHeight + offset * 2;
@@ -247,7 +182,7 @@ async function generateImagePattern(
 
       image = addIconsToImage(image, width, height, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, palette, iconFiles);
       image = addTextToImage(image, resizedWidth, resizedHeight, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, font, 0, 0);
-      image.write(patternFileName, () => {savePatterPDF(patternFileName)});
+      image.write(patternFileName, () => { savePatterPDF(patternFileName) });
       colorImg = image;
     });
     // BW
@@ -267,24 +202,114 @@ async function generateImagePattern(
 
         }
       }
-      
+
       image = addIconsToImage(image, width, height, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, palette, iconFiles, true, colorImg);
       image = addTextToImage(image, resizedWidth, resizedHeight, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, font, 0, 0);
-    
-      image.write(patternBWFileName, () => {savePatterPDF(patternBWFileName)});
+
+      image.write(patternBWFileName, () => { savePatterPDF(patternBWFileName) });
     });
 
   } catch (err) {
     console.error("Something went wrong when generating the pattern: " + err);
   }
-  
+
 
 }
 
+function generatePDF(
+  fileName: string,
+  expectedImagesNumber: number,
+  imagesForPDF: Array<string>
+) {
+  //documnt width is 595.28 points, which is about 793 pixels
+  //heigth is 841.89 pt = 1122 px
+  //margins starnadr is .25inch = 18 points
+  //so max image width should be width - 2 x margin = 559,28 pt = 745 px
+  //max height is hegith - w x margin = 805.89 pt = 1070 px
 
-function splitImage(imagePixelsArray: Array<number>, ogWidth: number, ogHeight: number): Array<{array: Array<number>, width: number, height: number}> {
+  const previewFileName = `${PATH_UPLOAD}${fileName}_preview.png`;
+  const patternPaletteFileName = `${PATH_PATTERN}${fileName}_pattern_palette.png`;
+  const patternBaseFileName = `${PATH_PATTERN}${fileName}_pattern_0.png`;
+  const patternBaseBWFileName = `${PATH_PATTERN}${fileName}_pattern_bw_0.png`;
+  const patternPDFFileName = `${PATH_PATTERN}${fileName}_pattern.pdf`;
+
+
+  //TODO add try catch
+  //TODO test printing
+  // TODO chaeck for img width/height - ifwidth is longer, rotate images to better fit on page
+    
+  try {
+    const doc = new PDFDocument({ size: 'A4', margin: MARGIN_PT });
+    const pdfWriteStream = fs.createWriteStream(patternPDFFileName)
+    doc.pipe(pdfWriteStream);
+    doc.image(previewFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
+    if (expectedImagesNumber > 2) { //image is split
+      for (const image of imagesForPDF) {
+        if (!image.includes('_0')) {
+          doc.addPage().image(image, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
+        }
+      }
+    } else {
+      doc.addPage().image(patternBaseFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
+      doc.addPage().image(patternBaseBWFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
+    }
+
+    doc.addPage().image(patternPaletteFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT] });
+    doc.end();
+
+    pdfWriteStream.on('finish', () => {
+      generateZip(fileName, imagesForPDF);
+    })
+  } catch (err) {
+    console.error("Something went wrong when generating PDF: " + err);
+  }
+
+}
+
+function generateZip(
+  fileName: string,
+  imagesForPDF: Array<string>
+) {
+  const previewFileName = `${PATH_UPLOAD}${fileName}_preview.png`;
+  const patternPaletteFileName = `${PATH_PATTERN}${fileName}_pattern_palette.png`;
+  const patternBaseFileName = `${PATH_PATTERN}${fileName}_pattern_0.png`;
+  const patternBaseBWFileName = `${PATH_PATTERN}${fileName}_pattern_bw_0.png`;
+  const patternPDFFileName = `${PATH_PATTERN}${fileName}_pattern.pdf`;
+  const patternZipFileName = `${PATH_PATTERN}${fileName}_pattern_images.zip`;
+  const patternZipAllFileName = `${PATH_PATTERN}${fileName}_pattern_all.zip`;
+
+  try {
+    let zip = new JSZip();
+    const allImages = [... imagesForPDF];
+    allImages.push(patternBaseFileName);
+    allImages.push(patternBaseBWFileName);
+    allImages.push(previewFileName);
+    allImages.push(patternPaletteFileName);
+
+    for (const image of allImages) {
+      let fileContent = fs.readFileSync(image);
+      let imageFileName = image.replace(PATH_PATTERN, '').replace(PATH_UPLOAD, '');
+      zip.file(imageFileName, fileContent);
+    }
+    zip.generateAsync({ type: "nodebuffer" }).then((content) => {
+      fs.writeFileSync(patternZipFileName, content);
+    });
+
+    let fileContent = fs.readFileSync(patternPDFFileName);
+    zip.file(`${fileName}_pattern.pdf`, fileContent);
+    zip.generateAsync({ type: "nodebuffer" }).then((content) => {
+      fs.writeFileSync(patternZipAllFileName, content);
+    });
+  } catch (err) {
+    console.error("Something went wrong when generating ZIP: " + err);
+  }
+  
+}
+
+
+function splitImage(imagePixelsArray: Array<number>, ogWidth: number, ogHeight: number): Array<{ array: Array<number>, width: number, height: number }> {
   if (ogWidth < THRESHOLD_BIG && ogHeight < THRESHOLD_BIG) {
-    return [{array: imagePixelsArray, width: ogWidth, height: ogHeight}];
+    return [{ array: imagePixelsArray, width: ogWidth, height: ogHeight }];
   }
 
   const getMidTen = (dim: number): number => {
@@ -323,11 +348,11 @@ function splitImage(imagePixelsArray: Array<number>, ogWidth: number, ogHeight: 
   }
 
   return [
-    {array: imagePixelsArray, width: ogWidth, height: ogHeight},
-    {array: imagePixels1, width: midX, height: midY}, 
-    {array: imagePixels2, width: ogWidth - midX, height: midY},
-    {array: imagePixels3, width: midX, height: ogHeight - midY},
-    {array: imagePixels4, width: ogWidth - midX, height: ogHeight - midY}
+    { array: imagePixelsArray, width: ogWidth, height: ogHeight },
+    { array: imagePixels1, width: midX, height: midY },
+    { array: imagePixels2, width: ogWidth - midX, height: midY },
+    { array: imagePixels3, width: midX, height: ogHeight - midY },
+    { array: imagePixels4, width: ogWidth - midX, height: ogHeight - midY }
   ];
 }
 
