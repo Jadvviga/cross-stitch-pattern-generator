@@ -1,10 +1,9 @@
 import Jimp from "jimp";
 import type { Palette } from "../../data/mulineData";
-import PDFDocument from 'pdfkit';
+import PDFDocument, { addPage } from 'pdfkit';
 import fs from 'fs';
 import { addIconsToImage, addTextToImage, generatePaletteImage, loadIconsFromPalette, loadImageToPixelsArray } from "./generationUtils";
 import JSZip from "jszip";
-import { saveAs } from "file-saver";
 
 
 //A4 ma na 350 dpi 2893 x 4092 px
@@ -113,8 +112,9 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
   const expectedImagesNumber = splitImagesArrays.length * 2; //times 2 cuz we count color + BW
   const imagesForPDFCol: Array<string> = [];
   const imagesForPDFBW: Array<string> = [];
+  const shouldRotateForPrinting =ogWidth > ogHeight;
   for (const [index, imagePixelsArray] of splitImagesArrays.entries()) {
-    await generateImagePattern(imagePixelsArray.array, imagePixelsArray.width, imagePixelsArray.height, index, imagesForPDFCol, imagesForPDFBW, expectedImagesNumber, scale, iconFiles, font, fileName, palette);
+    await generateImagePattern(imagePixelsArray.array, imagePixelsArray.width, imagePixelsArray.height, index, imagesForPDFCol, imagesForPDFBW, expectedImagesNumber, scale, iconFiles, font, fileName, palette, shouldRotateForPrinting);
   }
 
 }
@@ -131,10 +131,10 @@ async function generateImagePattern(
   iconFiles: Array<Jimp>,
   font: Font,
   fileName: string,
-  palette: Array<Palette>) {
+  palette: Array<Palette>,
+  shouldRotateForPrinting: boolean
+) {
 
-  const previewFileName = `${PATH_UPLOAD}${fileName}_preview.png`;
-  const patternPaletteFileName = `${PATH_PATTERN}${fileName}_pattern_palette.png`;
   const patternBWFileName = `${PATH_PATTERN}${fileName}_pattern_bw_${index}.png`;
   const patternFileName = `${PATH_PATTERN}${fileName}_pattern_${index}.png`;
 
@@ -154,7 +154,7 @@ async function generateImagePattern(
     }
 
     if (imagesForPDFCol.length + imagesForPDFBW.length === expectedImagesNumber) {
-      generatePDF(fileName, expectedImagesNumber, imagesForPDFCol.concat(imagesForPDFBW));
+      generatePDF(fileName, expectedImagesNumber, imagesForPDFCol.concat(imagesForPDFBW), shouldRotateForPrinting);
     }
   }
 
@@ -216,10 +216,15 @@ async function generateImagePattern(
 
 }
 
+function toPostscriptPoint(mm: number) {
+  return mm * 2.8346456693;
+}
+
 function generatePDF(
   fileName: string,
   expectedImagesNumber: number,
-  imagesForPDF: Array<string>
+  imagesForPDF: Array<string>,
+  shouldRotate: boolean
 ) {
   //documnt width is 595.28 points, which is about 793 pixels
   //heigth is 841.89 pt = 1122 px
@@ -237,7 +242,24 @@ function generatePDF(
   //TODO add try catch
   //TODO test printing
   // TODO chaeck for img width/height - ifwidth is longer, rotate images to better fit on page
+  
+  
+  const addRotatedImage = (doc: PDFKit.PDFDocument, image: string) => {
+    doc.addPage();
+    doc.rotate(90, {origin : [0, 0]});
+    doc.image(image, 0, -PAPER_MAX_WIDTH_PT * 0.8,  { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_HEIGHT_PT] });
+    doc.restore();
+  }
+
+  const addImage = (doc: PDFKit.PDFDocument, image: string) => {
+    if (shouldRotate) {
+      addRotatedImage(doc, image);
+    } else {
+      doc.addPage().image(image, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
+    }
     
+  }
+
   try {
     const doc = new PDFDocument({ size: 'A4', margin: MARGIN_PT });
     const pdfWriteStream = fs.createWriteStream(patternPDFFileName)
@@ -246,12 +268,24 @@ function generatePDF(
     if (expectedImagesNumber > 2) { //image is split
       for (const image of imagesForPDF) {
         if (!image.includes('_0')) {
-          doc.addPage().image(image, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
+            addImage(doc, image);
+          // doc.addPage();
+          // doc.rotate(shouldRotate ? 90 : 0, {origin : [0, 0]});
+          // doc.image(image, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
+          // doc.restore();
         }
       }
     } else {
-      doc.addPage().image(patternBaseFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
-      doc.addPage().image(patternBaseBWFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
+      addImage(doc, patternBaseFileName);
+      addImage(doc, patternBaseBWFileName);
+      // doc.addPage();
+      // doc.rotate(shouldRotate ? 90 : 0, {origin : [0, 0]});
+      // doc.image(patternBaseFileName,  { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
+      // doc.restore();
+      // doc.addPage();
+      // doc.rotate(shouldRotate ? 90 : 0, {origin : [0, 0]});
+      // doc.image(patternBaseBWFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
+      // doc.restore();
     }
 
     doc.addPage().image(patternPaletteFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT] });
