@@ -243,38 +243,43 @@ function generatePDF(
   
   
   const addRotatedImage = (doc: PDFKit.PDFDocument, image: string) => {
-    doc.addPage();
     doc.rotate(90, {origin : [0, 0]});
-    doc.image(image, 0, -PAPER_MAX_WIDTH_PT,  { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_HEIGHT_PT] });
+    doc.image(image, 0, -PAPER_MAX_WIDTH_PT,  { fit: [PAPER_MAX_HEIGHT_PT, PAPER_MAX_WIDTH_PT] });
     doc.restore();
   }
 
-  const addImage = (doc: PDFKit.PDFDocument, image: string) => {
+  const addPageWithImage = (doc: PDFKit.PDFDocument, image: string) => {
+    doc.addPage();
     if (shouldRotate) {
       addRotatedImage(doc, image);
     } else {
-      doc.addPage().image(image, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
+      doc.image(image, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_HEIGHT_PT] });
     }
-    
+    doc.text('Pixel to Pattern', doc.page.width/2 - 50, doc.page.height - 15, {
+      lineBreak: false,
+    });
   }
 
   try {
     const doc = new PDFDocument({ size: 'A4', margin: MARGIN_PT });
     const pdfWriteStream = fs.createWriteStream(patternPDFFileName)
     doc.pipe(pdfWriteStream);
-    doc.image(previewFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
+    doc.image(previewFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_HEIGHT_PT/2] });
+    doc.image(patternPaletteFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_HEIGHT_PT/2] } );
+    doc.text('Pixel to Pattern', doc.page.width/2 - 50, doc.page.height - 15, {
+      lineBreak: false,
+    });
     if (expectedImagesNumber > 2) { //image is split
       for (const image of imagesForPDF) {
         if (!image.includes('_0')) {
-            addImage(doc, image);
+            addPageWithImage(doc, image);
         }
       }
     } else {
-      addImage(doc, patternBaseFileName);
-      addImage(doc, patternBaseBWFileName);
+      addPageWithImage(doc, patternBaseFileName);
+      addPageWithImage(doc, patternBaseBWFileName);
     }
 
-    doc.addPage().image(patternPaletteFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT] });
     doc.end();
 
     pdfWriteStream.on('finish', () => {

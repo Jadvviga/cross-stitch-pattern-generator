@@ -211,8 +211,8 @@
         padding: 10px;
     }
 
-    td, th {
-        padding: 0 15px;
+    td {
+        padding: 0 30px;
     }
 
 </style>

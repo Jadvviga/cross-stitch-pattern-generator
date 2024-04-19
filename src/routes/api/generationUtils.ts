@@ -96,12 +96,13 @@ export function addTextToImage(
     for (let y = offset; iY < height; y += scale) {
         const isOnTenth = i % 10 === 0;
         y += isOnTenth ? gridHighlightSize : gridSize;
-        if (isOnTenth) {
-            image = printTextToImage(image, font, Math.floor(offset / 2) - 2, y, `${i}`, offset / 2);
-        }
         if (i === middle && middleYIcon) {
             image.composite(middleYIcon, Math.floor(offset / 2) - 2, y);
         }
+        if (isOnTenth) {
+            image = printTextToImage(image, font, Math.floor(offset / 2) - 2, y, `${i}`, offset / 2);
+        }
+       
         i++;
         iY++;
     }
@@ -111,11 +112,11 @@ export function addTextToImage(
     for (let x = offset; iX < width; x += scale) {
         const isOnTenth = i % 10 === 0;
         x += isOnTenth ? gridHighlightSize : gridSize;
-        if (isOnTenth && i !== 0) {
-            image = printTextToImage(image, font, x, Math.floor(offset / 2), `${i}`, offset / 2);
-        }
         if (i === middle && middleXIcon) {
             image.composite(middleXIcon, x, Math.floor(offset / 2) );
+        }
+        if (isOnTenth && i !== 0) {
+            image = printTextToImage(image, font, x, Math.floor(offset / 2), `${i}`, offset / 2);
         }
         i++;
         iX++;
