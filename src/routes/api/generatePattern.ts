@@ -255,9 +255,7 @@ function generatePDF(
     } else {
       doc.image(image, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_HEIGHT_PT] });
     }
-    doc.text('Pixel to Pattern', doc.page.width/2 - 50, doc.page.height - 15, {
-      lineBreak: false,
-    });
+    doc.text('Pixel to Pattern', doc.page.width/2 - 50, doc.page.height - 15, { lineBreak: false });
   }
 
   try {
@@ -266,9 +264,7 @@ function generatePDF(
     doc.pipe(pdfWriteStream);
     doc.image(previewFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_HEIGHT_PT/2] });
     doc.image(patternPaletteFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_HEIGHT_PT/2] } );
-    doc.text('Pixel to Pattern', doc.page.width/2 - 50, doc.page.height - 15, {
-      lineBreak: false,
-    });
+    doc.text('Pixel to Pattern', doc.page.width/2 - 50, doc.page.height - 15, {lineBreak: false});
     if (expectedImagesNumber > 2) { //image is split
       for (const image of imagesForPDF) {
         if (!image.includes('_0')) {

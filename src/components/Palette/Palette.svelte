@@ -10,15 +10,15 @@
                         <th class="colorTile legend" style="visibility: hidden"></th>
                         <th class="colorTile legend" style="visibility: hidden"></th>
                         <th class="colorTile legend" style="visibility: hidden"></th>
-                        <th class="paletteTxt smalltxt legend">Color</th>
-                        <th class="paletteTxt smalltxt legend">Number of crosses</th>
+                        <th class="paletteTxt legend">Color</th>
+                        <th class="paletteTxt legend">Number of crosses</th>
                         {#if paletteIsBig}
                         <!-- twice of header if the palette is more then 10 colors -->
                         <th class="colorTile legend" style="visibility: hidden"></th>
                         <th class="colorTile legend" style="visibility: hidden"></th>
                         <th class="colorTile legend" style="visibility: hidden"></th>
-                        <th class="paletteTxt smalltxt legend">Color</th>
-                        <th class="paletteTxt smalltxt legend">Number of crosses</th>
+                        <th class="paletteTxt legend">Color</th>
+                        <th class="paletteTxt legend">Number of crosses</th>
                         {/if}
                     </tr>
                     {#each paletteToProcess as color, index}
@@ -157,7 +157,7 @@
     .colorTile {
         width: 64px;
         height: 64px;
-        margin: 10px;
+        margin: 5px;
         border: 3px black solid;
         background-color: var(--tileColor);
     }
@@ -186,15 +186,11 @@
     }
     
     .paletteTxt {
-        font-size: 50px;
+        font-size: 15px;
         margin: 0;
         padding: 0;
         text-align: center;
-    }
-
-    .smalltxt {
-        font-size: 25px;
-        margin-left: 10px;
+        max-width: 64px;
     }
 
     .colorsContainer {
@@ -202,9 +198,7 @@
         margin: 5px;
         padding: 0;
     }
-    .colorsContainer p {
-        padding: 2px;
-    }
+
 
     .palette {
         margin-top: 0px;
@@ -212,7 +206,11 @@
     }
 
     td {
-        padding: 0 30px;
+        padding: 0 10px;
+    }
+
+    td p {
+        font-size: 25px;
     }
 
 </style>

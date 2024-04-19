@@ -49,7 +49,10 @@
                 </div>
                
             </div>  
-            <Download type="image" imgSrc={generatedPatternPalette} href={generatedPatternPalette} downloadFileName="generatedPatternPalette" imgAlt="generated pattern's palette" />
+            <div class="paletteImage">
+                <Download type="image" imgSrc={generatedPatternPalette} href={generatedPatternPalette} downloadFileName="generatedPatternPalette" imgAlt="generated pattern's palette" />
+            </div>
+           
         </div>
          
         
@@ -92,6 +95,8 @@
     let fileName: string;
     let loading = true;
     let imagesScrollableBoxWidth: number;
+
+    let paletteWidth: number;
 
 
     export let data;
@@ -155,14 +160,6 @@
 
 
 <style>
-
-    .generatedPattern {
-        margin-bottom: 10px;
-        max-height: 50vh;
-        padding: 10px;
-        box-shadow: 2px 2px 4px 2px rgba(0, 0, 0, 0.3);
-    }
-
     .splitGallery {
         display: flex;
         flex-direction: column;
@@ -173,20 +170,17 @@
     .scrollable {
         overflow: scroll;
         max-height: 60vh;
-        box-shadow: inset gray 0px 0px 20px -12px
+        box-shadow: inset gray 0px 0px 20px -12px;
     }
 
     h2 {
         margin: 0;
     }
 
-    img {
-        cursor: pointer;
-    }
-
-    .generatedPattern:hover {
-        transform: scale(1.075);
-        
+    .paletteImage {
+        max-width: 30vw;
+        overflow: scroll;
+        padding: 10px;
     }
 
 </style>
