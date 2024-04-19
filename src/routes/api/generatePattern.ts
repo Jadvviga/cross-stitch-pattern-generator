@@ -239,15 +239,13 @@ function generatePDF(
   const patternPDFFileName = `${PATH_PATTERN}${fileName}_pattern.pdf`;
 
 
-  //TODO add try catch
   //TODO test printing
-  // TODO chaeck for img width/height - ifwidth is longer, rotate images to better fit on page
   
   
   const addRotatedImage = (doc: PDFKit.PDFDocument, image: string) => {
     doc.addPage();
     doc.rotate(90, {origin : [0, 0]});
-    doc.image(image, 0, -PAPER_MAX_WIDTH_PT * 0.8,  { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_HEIGHT_PT] });
+    doc.image(image, 0, -PAPER_MAX_WIDTH_PT,  { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_HEIGHT_PT] });
     doc.restore();
   }
 
