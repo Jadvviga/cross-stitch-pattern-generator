@@ -1,6 +1,6 @@
 import Jimp from "jimp";
 import type { Palette } from "../../data/mulineData";
-import PDFDocument, { addPage } from 'pdfkit';
+import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import { addIconsToImage, addTextToImage, generatePaletteImage, loadIconsFromPalette, loadImageToPixelsArray } from "./generationUtils";
 import JSZip from "jszip";
@@ -92,6 +92,23 @@ export async function generatePreview(fileName: string): Promise<string> {
 }
 
 export async function generatePattern(fileName: string, palette: Array<Palette>) {
+  const patternDir = `${PATH_PATTERN}${fileName}`;
+
+  if (!fs.existsSync(patternDir)){
+      fs.mkdirSync(patternDir);
+  }
+  //TODO create folder and add all related files there (palette, pdf, images)
+  //THEN try making splitting more clear - instead of curretn process, try:
+  // split image -> reapeat same process for each image (generating images)
+  //in reapeat, inlcude another split if possible 
+
+  //OR
+  //add additional process of splitting image itself, and recommend it to user if the image is above 200 pixels
+
+  //OR
+  //split the image afetr the pixels are generated, and just make sure that the single image for page does not cross 60?
+
+
   const fullFileName = `${PATH_UPLOAD}${fileName}.png`;
   const image = await Jimp.read(fullFileName);
   const ogWidth = image.bitmap.width;
