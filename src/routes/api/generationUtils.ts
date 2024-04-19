@@ -1,8 +1,6 @@
 import Jimp from "jimp";
 import type { Palette } from "../../data/mulineData";
 import { hexToRgb, rgbToHex } from "./generatePalette";
-import PDFDocument from 'pdfkit';
-import fs from 'fs';
 
 export function loadImageToPixelsArray(image: Jimp, paletteSet?: Set<number>, palette?: Array<Palette>): Array<number> {
     const ogWidth = image.bitmap.width;
@@ -83,8 +81,8 @@ export function addIconsToImage(
 
 export function addTextToImage(
     image: Jimp,
-    resizedWidth: number,
-    resizedHeight: number,
+    ogWidth: number,
+    ogHeight: number,
     scale: number,
     offset: number,
     gridSize: number,
@@ -94,24 +92,26 @@ export function addTextToImage(
     startingNumberY: number
 ): Jimp {
     let i = startingNumberY;
-
+    let iY = 0, iX = 0;
     //todo change it analogically to addIcons so that end condition depends on ogSize rather then resied
-    for (let y = offset; y < resizedHeight; y += scale) {
+    for (let y = offset; iY < ogHeight; y += scale) {
         const isOnTenth = i % 10 === 0;
         y += isOnTenth ? gridHighlightSize : gridSize;
         if (isOnTenth) {
             image = printTextToImage(image, font, Math.floor(offset / 2) - 2, y, `${i}`, offset / 2);
         }
         i++;
+        iY++;
     }
     i = startingNumberX;
-    for (let x = offset; x < resizedWidth; x += scale) {
+    for (let x = offset; iX < ogWidth; x += scale) {
         const isOnTenth = i % 10 === 0;
         x += isOnTenth ? gridHighlightSize : gridSize;
-        if (isOnTenth) {
+        if (isOnTenth && i !== 0) {
             image = printTextToImage(image, font, x, Math.floor(offset / 2), `${i}`, offset / 2);
         }
         i++;
+        iX++;
     }
     return image;
 }

@@ -114,7 +114,7 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
   const imagesForPDFBW: Array<string> = [];
   const shouldRotateForPrinting =ogWidth > ogHeight;
   for (const [index, imagePixelsArray] of splitImagesArrays.entries()) {
-    await generateImagePattern(imagePixelsArray.array, imagePixelsArray.width, imagePixelsArray.height, index, imagesForPDFCol, imagesForPDFBW, expectedImagesNumber, scale, iconFiles, font, fileName, palette, shouldRotateForPrinting);
+    await generateImagePattern(imagePixelsArray.array, imagePixelsArray.width, imagePixelsArray.height, imagePixelsArray.startX, imagePixelsArray.startY, index, imagesForPDFCol, imagesForPDFBW, expectedImagesNumber, scale, iconFiles, font, fileName, palette, shouldRotateForPrinting);
   }
 
 }
@@ -123,6 +123,8 @@ async function generateImagePattern(
   imagePixelsArray: Array<number>,
   width: number,
   height: number,
+  startingNumberX: number,
+  startingNumberY: number,
   index: number,
   imagesForPDFCol: Array<string>,
   imagesForPDFBW: Array<string>,
@@ -168,8 +170,9 @@ async function generateImagePattern(
       let count = 0;
       for (let y = 0; y < resizedHeight; y++) {
         for (let x = 0; x < resizedWidth; x++) {
+          image.setPixelColor(WHITE, x, y);
           if (x < offset || y < offset || x >= resizedWidth - offset || y >= resizedHeight - offset) {
-            image.setPixelColor(0, x, y);
+            image.setPixelColor(WHITE, x, y);
           } else {
             if (resizedImagePixelsArray[count]) {
               image.setPixelColor(resizedImagePixelsArray[count], x, y);
@@ -181,7 +184,7 @@ async function generateImagePattern(
       }
 
       image = addIconsToImage(image, width, height, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, palette, iconFiles);
-      image = addTextToImage(image, resizedWidth, resizedHeight, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, font, 0, 0);
+      image = addTextToImage(image, width, height, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, font, startingNumberX, startingNumberY);
       image.write(patternFileName, () => { savePatterPDF(patternFileName) });
       colorImg = image;
     });
@@ -190,9 +193,9 @@ async function generateImagePattern(
       let count = 0;
       for (let y = 0; y < resizedHeight; y++) {
         for (let x = 0; x < resizedWidth; x++) {
-          image.setPixelColor(0, x, y);
+          image.setPixelColor(WHITE, x, y);
           if (x < offset || y < offset || x >= resizedWidth - offset || y >= resizedHeight - offset) {
-            image.setPixelColor(0, x, y);
+            image.setPixelColor(WHITE, x, y);
           } else {
             if (resizedImageBWPixelsArray[count]) {
               image.setPixelColor(resizedImageBWPixelsArray[count], x, y);
@@ -204,7 +207,7 @@ async function generateImagePattern(
       }
 
       image = addIconsToImage(image, width, height, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, palette, iconFiles, true, colorImg);
-      image = addTextToImage(image, resizedWidth, resizedHeight, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, font, 0, 0);
+      image = addTextToImage(image, width, height, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, font, startingNumberX, startingNumberY);
 
       image.write(patternBWFileName, () => { savePatterPDF(patternBWFileName) });
     });
@@ -216,9 +219,6 @@ async function generateImagePattern(
 
 }
 
-function toPostscriptPoint(mm: number) {
-  return mm * 2.8346456693;
-}
 
 function generatePDF(
   fileName: string,
@@ -267,23 +267,11 @@ function generatePDF(
       for (const image of imagesForPDF) {
         if (!image.includes('_0')) {
             addImage(doc, image);
-          // doc.addPage();
-          // doc.rotate(shouldRotate ? 90 : 0, {origin : [0, 0]});
-          // doc.image(image, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
-          // doc.restore();
         }
       }
     } else {
       addImage(doc, patternBaseFileName);
       addImage(doc, patternBaseBWFileName);
-      // doc.addPage();
-      // doc.rotate(shouldRotate ? 90 : 0, {origin : [0, 0]});
-      // doc.image(patternBaseFileName,  { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
-      // doc.restore();
-      // doc.addPage();
-      // doc.rotate(shouldRotate ? 90 : 0, {origin : [0, 0]});
-      // doc.image(patternBaseBWFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT], align: 'center' });
-      // doc.restore();
     }
 
     doc.addPage().image(patternPaletteFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_WIDTH_PT] });
@@ -339,9 +327,9 @@ function generateZip(
 }
 
 
-function splitImage(imagePixelsArray: Array<number>, ogWidth: number, ogHeight: number): Array<{ array: Array<number>, width: number, height: number }> {
+function splitImage(imagePixelsArray: Array<number>, ogWidth: number, ogHeight: number): Array<{ array: Array<number>, width: number, height: number, startX: number, startY: number }> {
   if (ogWidth < THRESHOLD_BIG && ogHeight < THRESHOLD_BIG) {
-    return [{ array: imagePixelsArray, width: ogWidth, height: ogHeight }];
+    return [{ array: imagePixelsArray, width: ogWidth, height: ogHeight, startX: 0, startY: 0 }];
   }
 
   const getMidTen = (dim: number): number => {
@@ -380,11 +368,11 @@ function splitImage(imagePixelsArray: Array<number>, ogWidth: number, ogHeight: 
   }
 
   return [
-    { array: imagePixelsArray, width: ogWidth, height: ogHeight },
-    { array: imagePixels1, width: midX, height: midY },
-    { array: imagePixels2, width: ogWidth - midX, height: midY },
-    { array: imagePixels3, width: midX, height: ogHeight - midY },
-    { array: imagePixels4, width: ogWidth - midX, height: ogHeight - midY }
+    { array: imagePixelsArray, width: ogWidth, height: ogHeight, startX: 0, startY: 0  },
+    { array: imagePixels1, width: midX, height: midY, startX: 0, startY: 0  },
+    { array: imagePixels2, width: ogWidth - midX, height: midY, startX: midX, startY: 0  },
+    { array: imagePixels3, width: midX, height: ogHeight - midY, startX: 0, startY: midY  },
+    { array: imagePixels4, width: ogWidth - midX, height: ogHeight - midY, startX: midX, startY: midY  }
   ];
 }
 

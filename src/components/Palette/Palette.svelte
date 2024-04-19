@@ -1,10 +1,8 @@
-
-
 <div class='paletteNode'>
     <button on:click={createPaletteImg} style="display: hidden" bind:this={getPaletteImgBtn}> preview</button>
     <img bind:this={ogImageNode} src="/images/upload/{fileName}.png" alt=''>
 
-    <div  bind:this={paletteNode}>
+    <div  bind:this={paletteNode} style="background-color: white;">
         {#key imagePalette} 
             {#if imagePalette}
                 <div class='palette'>
@@ -107,10 +105,8 @@
         imagePalette = [ ...exportedImagePalette]
         setTimeout(async () => {
             imagePalette = await getPaletteCounts(ogImageNode, imagePalette);
-            imagePalette = mergeSameColors(imagePalette)
-             // setTimeout(() => {
+            imagePalette = mergeSameColors(imagePalette);
             getPaletteImgBtn.click();
-        // }, 1000);
             
         }, 1000)
         

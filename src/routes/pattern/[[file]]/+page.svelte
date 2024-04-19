@@ -48,11 +48,8 @@
                     <Download type="image" imgSrc={generatedPatternBW} href={generatedPatternBW} downloadFileName="generatedPatternBW" imgAlt="generated pattern in black and white" />
                 </div>
                
-            </div>
-        
-            
-            
-            <img class="generatedPattern" src={generatedPatternPalette} alt="generated pattern's palette" title="Click to download"/>
+            </div>  
+            <Download type="image" imgSrc={generatedPatternPalette} href={generatedPatternPalette} downloadFileName="generatedPatternPalette" imgAlt="generated pattern's palette" />
         </div>
          
         
