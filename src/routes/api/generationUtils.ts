@@ -2,6 +2,10 @@ import Jimp from "jimp";
 import type { Palette } from "../../data/mulineData";
 import { hexToRgb, rgbToHex } from "./generatePalette";
 
+
+let middleYIcon: Jimp, middleXIcon: Jimp;
+
+
 export function loadImageToPixelsArray(image: Jimp, paletteSet?: Set<number>, palette?: Array<Palette>): Array<number> {
     const ogWidth = image.bitmap.width;
     const ogHeight = image.bitmap.height;
@@ -33,6 +37,7 @@ export function loadImageToPixelsArray(image: Jimp, paletteSet?: Set<number>, pa
     }
     return imagePixelsArray;
 }
+
 
 function getColorFromPalette(colorHex: string, palette: Array<Palette>): Palette | undefined {
     return palette.find(col => col.colorHex.toLowerCase() === colorHex.toLowerCase() || col.muline.hex.toLowerCase() === colorHex.toLowerCase());
@@ -81,8 +86,8 @@ export function addIconsToImage(
 
 export function addTextToImage(
     image: Jimp,
-    ogWidth: number,
-    ogHeight: number,
+    width: number,
+    height: number,
     scale: number,
     offset: number,
     gridSize: number,
@@ -91,24 +96,33 @@ export function addTextToImage(
     startingNumberX: number,
     startingNumberY: number
 ): Jimp {
-    let i = startingNumberY;
     let iY = 0, iX = 0;
-    //todo change it analogically to addIcons so that end condition depends on ogSize rather then resied
-    for (let y = offset; iY < ogHeight; y += scale) {
+    let i = startingNumberY;
+    let middle = Math.floor(height / 2);
+    
+    for (let y = offset; iY < height; y += scale) {
         const isOnTenth = i % 10 === 0;
         y += isOnTenth ? gridHighlightSize : gridSize;
         if (isOnTenth) {
             image = printTextToImage(image, font, Math.floor(offset / 2) - 2, y, `${i}`, offset / 2);
         }
+        if (i === middle && middleYIcon) {
+            image.composite(middleYIcon, Math.floor(offset / 2) - 2, y);
+        }
         i++;
         iY++;
     }
+
     i = startingNumberX;
-    for (let x = offset; iX < ogWidth; x += scale) {
+    middle = Math.floor(width / 2);
+    for (let x = offset; iX < width; x += scale) {
         const isOnTenth = i % 10 === 0;
         x += isOnTenth ? gridHighlightSize : gridSize;
         if (isOnTenth && i !== 0) {
             image = printTextToImage(image, font, x, Math.floor(offset / 2), `${i}`, offset / 2);
+        }
+        if (i === middle && middleXIcon) {
+            image.composite(middleXIcon, x, Math.floor(offset / 2) );
         }
         i++;
         iX++;
@@ -133,6 +147,10 @@ function printTextToImage(image: Jimp, font: Font, posX: number, posY: number, t
 }
 
 export async function loadIconsFromPalette(palette: Array<Palette>, scale: number): Promise<Jimp[]> {
+    middleYIcon =  await Jimp.read(`static/images/icons/middle_left.png`);
+    middleYIcon.resize(scale, scale, Jimp.RESIZE_NEAREST_NEIGHBOR);
+    middleXIcon =  await Jimp.read(`static/images/icons/middle_top.png`);
+    middleXIcon.resize(scale, scale, Jimp.RESIZE_NEAREST_NEIGHBOR);
     const icons = getPaletteIcons(palette);
     const iconFiles: Array<Jimp> = [];
     const found = icons.find(icon => icon.includes('-1'));
