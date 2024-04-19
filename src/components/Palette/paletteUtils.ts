@@ -9,9 +9,9 @@ export function getPaletteCounts(ogImgNode: HTMLElement, ogPalette: Array<Palett
 
     return domtoimage.toPixelData(ogImgNode)
         .then(function (pixels) {
-            console.log(ogImgNode.scrollHeight * ogImgNode.scrollWidth)
-            console.log(imagePalette)
-            console.log(pixels)
+            // console.log(ogImgNode.scrollHeight * ogImgNode.scrollWidth)
+            // console.log(imagePalette)
+            // console.log(pixels)
             for (let y = 0; y < ogImgNode.scrollHeight; y++) {
                 for (let x = 0; x < ogImgNode.scrollWidth; x++) {
                     let pixelAtXYOffset = (4 * y * ogImgNode.scrollHeight) + (4 * x);
@@ -24,8 +24,8 @@ export function getPaletteCounts(ogImgNode: HTMLElement, ogPalette: Array<Palett
                     count++;
                 }
             }
-            console.log(count)
-            console.log(imagePalette)
+            // console.log(count)
+            // console.log(imagePalette)
             return imagePalette;
         });
 }

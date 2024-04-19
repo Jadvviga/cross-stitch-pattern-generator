@@ -5,33 +5,65 @@
     <div  bind:this={paletteNode} style="background-color: white;">
         {#key imagePalette} 
             {#if imagePalette}
-                <div class='palette'>
-                    <div class="rowContainer colorsContainer legend">
-                    <div class="colorTile legend"  style="visibility: hidden"/>
-                    <div class="colorTile legend"  style="visibility: hidden"/>
-                    <div class="colorTile legend"  style="visibility: hidden"/>
-                    <p class="paletteTxt smalltxt legend">Color  </p>
-                    <p class="paletteTxt smalltxt legend">Number of crosses</p>
-                </div>
-                    {#each imagePalette as color, index}
-                    <!-- TODO add second column if there are too much colors -->
-                        <div class="rowContainer colorsContainer">
+                <table class='palette'>
+                    <tr class="colorsContainer legend">
+                        <th class="colorTile legend" style="visibility: hidden"></th>
+                        <th class="colorTile legend" style="visibility: hidden"></th>
+                        <th class="colorTile legend" style="visibility: hidden"></th>
+                        <th class="paletteTxt smalltxt legend">Color</th>
+                        <th class="paletteTxt smalltxt legend">Number of crosses</th>
+                        {#if paletteIsBig}
+                        <!-- twice of header if the palette is more then 10 colors -->
+                        <th class="colorTile legend" style="visibility: hidden"></th>
+                        <th class="colorTile legend" style="visibility: hidden"></th>
+                        <th class="colorTile legend" style="visibility: hidden"></th>
+                        <th class="paletteTxt smalltxt legend">Color</th>
+                        <th class="paletteTxt smalltxt legend">Number of crosses</th>
+                        {/if}
+                    </tr>
+                    {#each paletteToProcess as color, index}
+                    <tr>
+                        <td>
                             <div class="colorTile" style=" --tileColor: {color.muline.hex}">
                                 <img src="/images/icons/{color.icon}.png" alt="symbol for color {color.muline.hex}" class="icon {color.invertIcon ? 'inverted' : ''}">
                             </div>
+                        </td>
+                        <td>
                             <div class="colorTile" style=" --tileColor: rgba(0, 0, 0, 0)">
                                 <img src="/images/icons/{color.icon}.png" alt="symbol for color {color.muline.hex}" class="icon">
                             </div>
-                            <div class="colorTile"  style=" --tileColor: {color.muline.hex}"/>
-                            <p class="paletteTxt">{color.muline.id}</p>
-                            <p class="paletteTxt smalltxt">x {color.count}</p>
-                            
-                            
-                        </div>
-                        
+                        </td>
+                        <td> 
+                            <div class="colorTile"  style=" --tileColor: {color.muline.hex}"/></td>
+                        <td> 
+                            <p>{color.muline.id}</p>
+                        </td>
+                        <td> 
+                            <p >x {color.count}</p>
+                        </td>
+                        {#if secondHalfOfPalette && secondHalfOfPalette[index]}
+                            <td>
+                                <div class="colorTile" style=" --tileColor: {secondHalfOfPalette[index].muline.hex}">
+                                    <img src="/images/icons/{secondHalfOfPalette[index].icon}.png" alt="symbol for color {secondHalfOfPalette[index].muline.hex}" class="icon {secondHalfOfPalette[index].invertIcon ? 'inverted' : ''}">
+                                </div>
+                            </td>
+                            <td>
+                                <div class="colorTile" style=" --tileColor: rgba(0, 0, 0, 0)">
+                                    <img src="/images/icons/{secondHalfOfPalette[index].icon}.png" alt="symbol for color {secondHalfOfPalette[index].muline.hex}" class="icon">
+                                </div>
+                            </td>
+                            <td> 
+                                <div class="colorTile"  style=" --tileColor: {secondHalfOfPalette[index].muline.hex}"/></td>
+                            <td> 
+                                <p>{secondHalfOfPalette[index].muline.id}</p>
+                            </td>
+                            <td> 
+                                <p >x {secondHalfOfPalette[index].count}</p>
+                            </td>
+                        {/if}
+                    </tr>
                     {/each}
-                </div>
-                
+                </table> 
             {/if}
         {/key}
     </div>
@@ -53,6 +85,10 @@
     let ogImageNode: HTMLElement
         
     const dispatcher = createEventDispatcher();
+
+    let paletteIsBig = false
+    $: paletteToProcess = paletteIsBig ? imagePalette?.slice(0, imagePalette.length/2 + 1) : imagePalette;
+    $: secondHalfOfPalette = paletteIsBig ? imagePalette?.slice(imagePalette.length/2 + 1, imagePalette.length) : undefined;
 
     async function createPaletteImg() {
         let blob = await getPaletteBlob(paletteNode);
@@ -106,6 +142,7 @@
         setTimeout(async () => {
             imagePalette = await getPaletteCounts(ogImageNode, imagePalette);
             imagePalette = mergeSameColors(imagePalette);
+            paletteIsBig = imagePalette.length > 10;
             getPaletteImgBtn.click();
             
         }, 1000)
@@ -125,7 +162,7 @@
         background-color: var(--tileColor);
     }
     .legend {
-        font-size: 20px;
+        font-size: 15px;
         height: 25px;
         margin-top: 0;
         margin-bottom: 0;
@@ -172,6 +209,10 @@
     .palette {
         margin-top: 0px;
         padding: 10px;
+    }
+
+    td, th {
+        padding: 0 15px;
     }
 
 </style>
