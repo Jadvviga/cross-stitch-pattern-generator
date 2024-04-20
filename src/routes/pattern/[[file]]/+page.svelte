@@ -58,12 +58,15 @@
         
     
         <div class="rowContainer">
-            <button
-                on:click={() => goto(`/preview/${fileName}`)}>
-                Go back to settings</button>
-            <button
-                on:click={() => goto('/')}>
-                Pick new image</button>
+            {#if !skipPreview} 
+                <button on:click={() => goto(`/preview/${fileName}`)}>
+                    Go back to settings
+                </button>
+            {/if}
+           
+            <button on:click={() => goto('/')}>
+                Pick new image
+            </button>
             
         </div>
         
@@ -96,7 +99,7 @@
     let loading = true;
     let imagesScrollableBoxWidth: number;
 
-    let paletteWidth: number;
+    let skipPreview: boolean;
 
 
     export let data;
@@ -117,6 +120,7 @@
     onMount(() => {
         loading = true;
         const storageFileName = sessionStorage.getItem('fileName');
+        skipPreview = sessionStorage.getItem('skipPreview') === "true";
         
         if (!storageFileName || storageFileName !== data.fileName) {
             goto('/');

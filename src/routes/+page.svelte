@@ -22,9 +22,20 @@
                 <img id="uploadedImg" src={uploadedImage} alt="uploaded by user"/>
                 <div class="columnContainer">
                     {uploadedFileName}
+                    <label class="checkboxLabel">
+                        <input type="checkbox" bind:checked={skipPreview}>
+                        Skip settings and customization
+                        <p>just generate the pattern</p>
+                    </label>
+                    <p>Settings</p>
                     <MulineTypeSelector
                         label={"Select embroidery thread producer"}
+                        disabled={skipPreview}
                         bind:selectedMulineType/>
+                    <label class="checkboxLabel {skipPreview ? 'disabled': ''}">
+                        <input type="checkbox" bind:checked={useLeastColors} disabled={skipPreview}>
+                        Use as least colors as possible
+                    </label>
                 </div>
             
             </div>
@@ -34,7 +45,7 @@
                 generate pattern
             </button>
         {:else}
-        <p class="note">note: Your image MUST be CLEAR PIXEL ART (1 square on image = 1 pixel).<br>Otherwise a proper output is not guaranteed.</p>
+            <p class="note">note: Your image MUST be CLEAR PIXEL ART (1 square on image = 1 pixel).<br>Otherwise a proper output is not guaranteed.</p>
         {/if}
         
         {#if loading}
@@ -66,6 +77,8 @@
 
     let selectedMulineType: MULINE_TYPES;
 
+    let skipPreview = false;
+    let useLeastColors = false;
 
     function getBase64(image: File) {
         loading = true;
@@ -103,6 +116,8 @@
     async function requestGeneration() {
         loading = true;
         sessionStorage.setItem('mulineType', selectedMulineType);
+        sessionStorage.setItem('skipPreview', `${skipPreview}`);
+        sessionStorage.setItem('useLeastColors', `${useLeastColors}`);
         const data: any = {};
         data["fileName"] = uploadedFileGeneratedName;
         const response = await fetch('/api/generatePreview', {
@@ -158,5 +173,18 @@
         font-size: 14px;
         font-weight: bold;
         text-align: center;
+    }
+
+    .checkboxLabel {
+        font-size: 16px;
+        text-align: center;
+    }
+
+    .checkboxLabel p {
+        font-size: 14px;
+        margin-top: 0;
+    }
+    .checkboxLabel.disabled {
+        color: grey;
     }
 </style>

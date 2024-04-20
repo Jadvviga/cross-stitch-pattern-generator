@@ -10,7 +10,8 @@
                     on:click={() => goto('/') }>GO BACK</button>
                 </span>
                 <span class="btn">
-                    <button 
+                    <button
+                    bind:this={generatePatternButton} 
                     on:click={() => loadingPattern = true}> GENERATE PATTERN</button>
                 </span>
                 <span class="btn">
@@ -43,7 +44,7 @@
     <Loading/>
 {/if}
 
-{#if loadingPattern} 
+{#if loadingPattern || skipPreview} 
     <div class="blocker" transition:fade={{ delay: 0, duration: 200 }}>
         <Loading text="generating pattern, please wait"/>
         
@@ -69,7 +70,15 @@
     let height: number;
     let imagePalette: Array<PaletteType>;
 
+    let skipPreview: boolean;
+    let generatePatternButton: HTMLElement;
+
     $: imageWillBeSplit = checkForSplit(imgDimensions);
+
+
+    $: if (generatePatternButton && imagePalette && skipPreview) {
+        generatePatternButton.click();
+    }
 
     function checkForSplit(imgDimensions: string): boolean {
         if (!imgDimensions) {
@@ -112,6 +121,7 @@
             goto('/');
         }
         imgDimensions = sessionStorage.getItem('imageDimension') || '';
+        skipPreview = sessionStorage.getItem('skipPreview') === "true";
         height = paletteNodeHeight;
         fileName = data.fileName;
         uploadedImage = `/images/upload/${data.fileName}/preview.png`;

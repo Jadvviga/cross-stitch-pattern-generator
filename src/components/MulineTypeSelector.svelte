@@ -1,7 +1,7 @@
 
 <label>
-    {label}
-    <select>
+    <span class={disabled ? 'disabled' : ''}>{label}</span>
+    <select {disabled}>
         {#each Object.values(MULINE_TYPES) as type}
             <option
                 selected={selectedMulineType === type}
@@ -17,6 +17,7 @@
 
     export let selectedMulineType: MULINE_TYPES | string = MULINE_TYPES.Ariadna;
     export let label = "Select muline producer:";
+    export let disabled: boolean;
 
     const dispatcher = createEventDispatcher();
 
@@ -26,3 +27,9 @@
     }
 
 </script>
+
+<style> 
+    .disabled {
+        color: grey;
+    }
+</style>
