@@ -1,6 +1,6 @@
 <div class='paletteNode'>
     <button on:click={createPaletteImg} style="display: hidden" bind:this={getPaletteImgBtn}> preview</button>
-    <img bind:this={ogImageNode} src="/images/upload/{fileName}.png" alt=''>
+    <img bind:this={ogImageNode} src="/images/upload/{fileName}/{fileName}.png" alt=''>
 
     <div  bind:this={paletteNode} style="background-color: white;">
         {#key imagePalette} 

@@ -4,6 +4,7 @@ import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import { addIconsToImage, addTextToImage, generatePaletteImage, loadIconsFromPalette, loadImageToPixelsArray } from "./generationUtils";
 import JSZip from "jszip";
+import path from 'node:path';
 
 
 //A4 ma na 350 dpi 2893 x 4092 px
@@ -48,9 +49,13 @@ const PATH_PATTERN = 'static/images/pattern/';
 
 // generating preview (image just scaled only a bit with grid)
 export async function generatePreview(fileName: string): Promise<string> {
-  const fullFileName = `${PATH_UPLOAD}${fileName}.png`;
-  const resizedFileName = `${PATH_UPLOAD}${fileName}_preview.png`;
-  const paletteFileName = `${PATH_UPLOAD}${fileName}_palette.png`;
+  const uploadDir = `static/images/upload/${fileName}`;
+    if (!fs.existsSync(uploadDir)){
+        fs.mkdirSync(uploadDir);
+    }
+  const fullFileName = `${uploadDir}/${fileName}.png`;
+  const resizedFileName = `${uploadDir}/preview.png`;
+  const paletteFileName = `${uploadDir}/palette.png`;
 
   const image = await Jimp.read(fullFileName);
   const ogWidth = image.bitmap.width;
@@ -93,10 +98,10 @@ export async function generatePreview(fileName: string): Promise<string> {
 
 export async function generatePattern(fileName: string, palette: Array<Palette>) {
   const patternDir = `${PATH_PATTERN}${fileName}`;
-
   if (!fs.existsSync(patternDir)){
       fs.mkdirSync(patternDir);
   }
+  fs.copyFileSync(`${PATH_UPLOAD}${fileName}/preview.png`, `${patternDir}/preview.png`);
   //TODO create folder and add all related files there (palette, pdf, images)
   //THEN try making splitting more clear - instead of curretn process, try:
   // split image -> reapeat same process for each image (generating images)
@@ -106,10 +111,10 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
   //add additional process of splitting image itself, and recommend it to user if the image is above 200 pixels
 
   //OR
-  //split the image afetr the pixels are generated, and just make sure that the single image for page does not cross 60?
+  //just make sure that the single image for page does not cross 60 in splitting process
 
 
-  const fullFileName = `${PATH_UPLOAD}${fileName}.png`;
+  const fullFileName = `${PATH_UPLOAD}${fileName}/${fileName}.png`;
   const image = await Jimp.read(fullFileName);
   const ogWidth = image.bitmap.width;
   const ogHeight = image.bitmap.height;
@@ -131,12 +136,13 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
   const imagesForPDFBW: Array<string> = [];
   const shouldRotateForPrinting =ogWidth > ogHeight;
   for (const [index, imagePixelsArray] of splitImagesArrays.entries()) {
-    await generateImagePattern(imagePixelsArray.array, imagePixelsArray.width, imagePixelsArray.height, imagePixelsArray.startX, imagePixelsArray.startY, index, imagesForPDFCol, imagesForPDFBW, expectedImagesNumber, scale, iconFiles, font, fileName, palette, shouldRotateForPrinting);
+    await generateImagePattern(patternDir, imagePixelsArray.array, imagePixelsArray.width, imagePixelsArray.height, imagePixelsArray.startX, imagePixelsArray.startY, index, imagesForPDFCol, imagesForPDFBW, expectedImagesNumber, scale, iconFiles, font, palette, shouldRotateForPrinting);
   }
 
 }
 
 async function generateImagePattern(
+  patternDir: string,
   imagePixelsArray: Array<number>,
   width: number,
   height: number,
@@ -149,13 +155,12 @@ async function generateImagePattern(
   scale: number,
   iconFiles: Array<Jimp>,
   font: Font,
-  fileName: string,
   palette: Array<Palette>,
   shouldRotateForPrinting: boolean
 ) {
 
-  const patternBWFileName = `${PATH_PATTERN}${fileName}_pattern_bw_${index}.png`;
-  const patternFileName = `${PATH_PATTERN}${fileName}_pattern_${index}.png`;
+  const patternBWFileName = `${patternDir}/pattern_bw_${index}.png`;
+  const patternFileName = `${patternDir}/pattern_${index}.png`;
 
   const gridSize = scale === SCALE_BIG ? GRID_BIG_SIZE : GRID_SIZE;
 
@@ -173,7 +178,7 @@ async function generateImagePattern(
     }
 
     if (imagesForPDFCol.length + imagesForPDFBW.length === expectedImagesNumber) {
-      generatePDF(fileName, expectedImagesNumber, imagesForPDFCol.concat(imagesForPDFBW), shouldRotateForPrinting);
+      generatePDF(patternDir, expectedImagesNumber, imagesForPDFCol.concat(imagesForPDFBW), shouldRotateForPrinting);
     }
   }
 
@@ -238,7 +243,7 @@ async function generateImagePattern(
 
 
 function generatePDF(
-  fileName: string,
+  patternDir: string,
   expectedImagesNumber: number,
   imagesForPDF: Array<string>,
   shouldRotate: boolean
@@ -249,11 +254,12 @@ function generatePDF(
   //so max image width should be width - 2 x margin = 559,28 pt = 745 px
   //max height is hegith - w x margin = 805.89 pt = 1070 px
 
-  const previewFileName = `${PATH_UPLOAD}${fileName}_preview.png`;
-  const patternPaletteFileName = `${PATH_PATTERN}${fileName}_pattern_palette.png`;
-  const patternBaseFileName = `${PATH_PATTERN}${fileName}_pattern_0.png`;
-  const patternBaseBWFileName = `${PATH_PATTERN}${fileName}_pattern_bw_0.png`;
-  const patternPDFFileName = `${PATH_PATTERN}${fileName}_pattern.pdf`;
+  const previewFileName = `${patternDir}/preview.png`;
+  const patternPaletteFileName = `${patternDir}/pattern_palette.png`;
+  const patternBaseFileName = `${patternDir}/pattern_0.png`;
+  const patternBaseBWFileName = `${patternDir}/pattern_bw_0.png`;
+  
+  const patternPDFFileName = `${patternDir}/pattern.pdf`;
 
 
   //TODO test printing
@@ -296,7 +302,7 @@ function generatePDF(
     doc.end();
 
     pdfWriteStream.on('finish', () => {
-      generateZip(fileName, imagesForPDF);
+      generateZip(patternDir);
     })
   } catch (err) {
     console.error("Something went wrong when generating PDF: " + err);
@@ -304,37 +310,28 @@ function generatePDF(
 
 }
 
-function generateZip(
-  fileName: string,
-  imagesForPDF: Array<string>
+async function generateZip(
+  patternDir: string
 ) {
-  const previewFileName = `${PATH_UPLOAD}${fileName}_preview.png`;
-  const patternPaletteFileName = `${PATH_PATTERN}${fileName}_pattern_palette.png`;
-  const patternBaseFileName = `${PATH_PATTERN}${fileName}_pattern_0.png`;
-  const patternBaseBWFileName = `${PATH_PATTERN}${fileName}_pattern_bw_0.png`;
-  const patternPDFFileName = `${PATH_PATTERN}${fileName}_pattern.pdf`;
-  const patternZipFileName = `${PATH_PATTERN}${fileName}_pattern_images.zip`;
-  const patternZipAllFileName = `${PATH_PATTERN}${fileName}_pattern_all.zip`;
+  const patternPDFFileName = `${patternDir}/pattern.pdf`;
+  const patternZipFileName = `${patternDir}/pattern_images.zip`;
+  const patternZipAllFileName = `${patternDir}/pattern_all.zip`;
 
   try {
     let zip = new JSZip();
-    const allImages = [... imagesForPDF];
-    allImages.push(patternBaseFileName);
-    allImages.push(patternBaseBWFileName);
-    allImages.push(previewFileName);
-    allImages.push(patternPaletteFileName);
-
-    for (const image of allImages) {
-      let fileContent = fs.readFileSync(image);
-      let imageFileName = image.replace(PATH_PATTERN, '').replace(PATH_UPLOAD, '');
-      zip.file(imageFileName, fileContent);
+    for (const file of fs.readdirSync(patternDir)) {
+      console.log(file)
+      if (!file.includes('.pdf')) {
+        let fileContent = fs.readFileSync(`${patternDir}/${file}`);
+        zip.file(file, fileContent);
+      }
     }
     zip.generateAsync({ type: "nodebuffer" }).then((content) => {
       fs.writeFileSync(patternZipFileName, content);
     });
 
     let fileContent = fs.readFileSync(patternPDFFileName);
-    zip.file(`${fileName}_pattern.pdf`, fileContent);
+    zip.file(`pattern.pdf`, fileContent);
     zip.generateAsync({ type: "nodebuffer" }).then((content) => {
       fs.writeFileSync(patternZipAllFileName, content);
     });

@@ -119,9 +119,23 @@
         goto(`/preview/${uploadedFileGeneratedName}`);
     }
 
-    onMount(() => {
+    onMount(async () => {
         uploadedImage = null;
         sessionStorage.clear();
+
+        //Clearing upload and pattern folders at start of program
+        //In proper program this would not be present - instead each dedicated pattern folder
+        //would have time out for deleting it after certain time
+        const data: any = {};
+        data["src"] = ["static/images/upload", "static/images/pattern"]
+        await fetch(`/api/clearFolder`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json'
+            },
+            body: JSON.stringify({data})
+        });
     })
 </script>
 

@@ -126,18 +126,18 @@
         const imgDimensions = sessionStorage.getItem('imageDimension') || '';
         if (checkForSplit(imgDimensions)) {
             for(let i=1;i<=4;i++) {
-                generatedPatterns.push(`/images/pattern/${data.fileName}_pattern_${i}.png`);
-                generatedPatternsBW.push(`/images/pattern/${data.fileName}_pattern_bw_${i}.png`);
+                generatedPatterns.push(`/images/pattern/${data.fileName}/pattern_${i}.png`);
+                generatedPatternsBW.push(`/images/pattern/${data.fileName}/pattern_bw_${i}.png`);
             }
         }
 
         
-        generatedPattern = `/images/pattern/${data.fileName}_pattern_0.png`;
-        generatedPatternBW = `/images/pattern/${data.fileName}_pattern_bw_0.png`;
-        generatedPatternPalette = `/images/pattern/${data.fileName}_pattern_palette.png`;
-        generatedPatternPDF = `/images/pattern/${data.fileName}_pattern.pdf`;
-        generatedPatternZip = `/images/pattern/${data.fileName}_pattern_all.zip`;
-        generatedPatternZipImgs = `/images/pattern/${data.fileName}_pattern_images.zip`;
+        generatedPattern = `/images/pattern/${data.fileName}/pattern_0.png`;
+        generatedPatternBW = `/images/pattern/${data.fileName}/pattern_bw_0.png`;
+        generatedPatternPalette = `/images/pattern/${data.fileName}/pattern_palette.png`;
+        generatedPatternPDF = `/images/pattern/${data.fileName}/pattern.pdf`;
+        generatedPatternZip = `/images/pattern/${data.fileName}/pattern_all.zip`;
+        generatedPatternZipImgs = `/images/pattern/${data.fileName}/pattern_images.zip`;
 
         //making sure image is loaded
         const loadImage = new Image();

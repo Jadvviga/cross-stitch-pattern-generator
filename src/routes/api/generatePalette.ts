@@ -43,7 +43,7 @@ export function hexToRgb(hex: string): RGBA {
 // kazdy kolor zapisuje sie do plaety obraka i kazdy kolejny kolor najpierw
 //sprawdza czy w palecie obrazka jest juz wystarczajacy kolor - dodac to jako opcje do togglowania
 export async function loadPalette(fileName: string, mulineType: MULINE_TYPES): Promise<Palette[]> {
-  const paletteFileName = `${path}${fileName}_palette.png`;
+  const paletteFileName = `${path}/${fileName}/palette.png`;
   const mulinePalette = getMulinePalette(mulineType);
   const paletteImage = await Jimp.read(paletteFileName);
   let colors: Array<RGBA> = [];

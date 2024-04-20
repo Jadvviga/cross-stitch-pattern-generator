@@ -1,6 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { randomUUID } from 'crypto';
-import { writeFileSync } from 'fs';
+import fs from 'node:fs';
 
 export async function POST({ request }) {
     const { data } = await request.json();
@@ -9,7 +8,13 @@ export async function POST({ request }) {
     //const fileName = randomUUID();
     const fileName = data['fileName'];
 	console.log('save palette', fileName)
-    writeFileSync(`static/images/pattern/${fileName}_pattern_palette.png`, file, 'base64');
+
+    // Save pallette to new pattern folder
+    const patternDir = `static/images/pattern/${fileName}`;
+    if (!fs.existsSync(patternDir)){
+        fs.mkdirSync(patternDir);
+    }
+    fs.writeFileSync(`${patternDir}/pattern_palette.png`, file, 'base64');
     console.log('SAVED')
     return json({ "fileName": fileName }, { status: 201 });
 }
