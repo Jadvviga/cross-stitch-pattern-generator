@@ -15,9 +15,10 @@ export function loadImageToPixelsArray(image: Jimp, paletteSet?: Set<number>, pa
         for (let x = 0; x < ogWidth; x++) {
             let pixel = image.getPixelColor(x, y);
             if (paletteSet) { // for preview - add pixel to palette
+                // TODO change palette creation so it includes counts
                 paletteSet.add(pixel);
             }
-            if (palette) { // for pattern replace og colors with palette ones
+            if (palette) { // for pattern -  replace og colors with palette ones
                 const alpha = Jimp.intToRGBA(pixel).a;
                 const paletteColor = getColorFromPalette(rgbToHex(Jimp.intToRGBA(pixel)), palette);
                 if (paletteColor && alpha !== 0) { //do not replace transparent pixels

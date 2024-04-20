@@ -17,7 +17,7 @@
 
     export let selectedMulineType: MULINE_TYPES | string = MULINE_TYPES.Ariadna;
     export let label = "Select muline producer:";
-    export let disabled: boolean;
+    export let disabled: boolean = false;
 
     const dispatcher = createEventDispatcher();
 

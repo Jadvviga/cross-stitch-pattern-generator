@@ -127,9 +127,11 @@
 
 
     async function requestPalette() {
+        const useLeastColors = sessionStorage.getItem('useLeastColors') === "true";
         const data: any = {};
         data["fileName"] = fileName;
         data["mulineType"] = selectedMulineType;
+        data["useLeastColors"] = useLeastColors;
         const response = await fetch(`/api/getPalette`, {
             method: 'POST',
             headers: {

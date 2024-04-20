@@ -127,7 +127,6 @@
                     if (foundColor.index !== currentColor.index) {
                         palette[i].count += foundColor.count;
                         palette = palette.filter(c => c.index !== foundColor.index);
-                        
                     }
                 }
             }
