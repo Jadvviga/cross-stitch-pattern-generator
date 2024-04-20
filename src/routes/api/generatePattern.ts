@@ -30,7 +30,6 @@ const GRID_COLOR = 255;
 const GRID_COLOR_LIGHT = 4278244095; //when next to dark colors
 const GRID_MIDDLE_COLOR = 4278190335; //red
 const WHITE = 4294967295;
-// TODO consider filling in all aplha with white
 
 const GRID_SIZE = 3;
 const GRID_BIG_SIZE = 4;
@@ -102,8 +101,7 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
       fs.mkdirSync(patternDir);
   }
   fs.copyFileSync(`${PATH_UPLOAD}${fileName}/preview.png`, `${patternDir}/preview.png`);
-  //TODO create folder and add all related files there (palette, pdf, images)
-  //THEN try making splitting more clear - instead of curretn process, try:
+  //TODO try making splitting more clear - instead of curretn process, try:
   // split image -> reapeat same process for each image (generating images)
   //in reapeat, inlcude another split if possible 
 
@@ -261,10 +259,6 @@ function generatePDF(
   
   const patternPDFFileName = `${patternDir}/pattern.pdf`;
 
-
-  //TODO test printing
-  
-  
   const addRotatedImage = (doc: PDFKit.PDFDocument, image: string) => {
     doc.rotate(90, {origin : [0, 0]});
     doc.image(image, 0, -PAPER_MAX_WIDTH_PT,  { fit: [PAPER_MAX_HEIGHT_PT, PAPER_MAX_WIDTH_PT] });

@@ -9,6 +9,12 @@
             Sort by embroidery floss colors
         </label>
     </div>
+    <div>
+        <label>
+            <input type="checkbox" bind:checked={dontMergeSameColors}>
+            Do not merge same colors
+        </label>
+    </div>
    
     
     {#if imagePalette}
@@ -29,7 +35,7 @@
                         class="colorTile"
                         style=" --tileColor: {color.colorHex}"/>
                         <p style="width: 70px">({color.colorHex})</p>
-                        {#if !previousMulineColIsSame(color, index)}
+                        {#if !previousMulineColIsSame(color, index) || dontMergeSameColors}
                             <p>→ </p>
                             <div
                             class="colorTile"
@@ -40,7 +46,6 @@
                             <img src="/images/icons/{color.icon}.png" alt="symbol for color {color.muline.hex}" class="icon {color.invertIcon ? 'inverted' : ''}">
                             </div>
                             <p>{color.muline.id}</p>
-                            <!-- <p>({color.muline.hex})</p> -->
                         {/if}
                         
                     </div>
@@ -65,6 +70,7 @@
     export let fileName: string;
     export let imagePalette: Array<Palette> | null;
     let sortedByMuline = false;
+    let dontMergeSameColors = false;
     
 
     $: selectedMulineType = sessionStorage.getItem("mulineType") || MULINE_TYPES.Ariadna;
@@ -85,6 +91,10 @@
         sortedByMuline = !sortedByMuline;
         imagePalette?.sort(sortedByMuline ? compareByMuline : compareByPixels);
         imagePalette = imagePalette;
+    }
+
+    function unMergeColors(){
+       ;
     }
 
     function compareByMuline(col1: Palette, col2: Palette ) {
