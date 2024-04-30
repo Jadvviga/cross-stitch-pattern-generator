@@ -63,6 +63,7 @@
     import type { MULINE_TYPES } from "../data/mulineData";
     import MulineTypeSelector from "../components/MulineTypeSelector.svelte"
     import { fade } from "svelte/transition";
+    import { fetchRequest } from "../request";
 
 
     let fileInput: HTMLElement;
@@ -97,17 +98,7 @@
         const data: any = {};
         const imgData = imgBase64.split(',');
         data["image"] = imgData[1];
-        // data["name"] = originalImage.name;
-        // data["type"] = imageType;
-        const response = await fetch(`/api/uploadImage`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json'
-            },
-            body: JSON.stringify({data})
-        });
-        const{ fileName } = await response.json();
+        const{ fileName } = await fetchRequest('/api/uploadImage', data);
         uploadedFileGeneratedName = fileName;
         loading = false;
         sessionStorage.setItem('fileName', fileName);
@@ -120,15 +111,7 @@
         sessionStorage.setItem('useLeastColors', `${useLeastColors}`);
         const data: any = {};
         data["fileName"] = uploadedFileGeneratedName;
-        const response = await fetch('/api/generatePreview', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json'
-            },
-            body: JSON.stringify({data})
-        });
-        const dimensions =  await response.json();
+        const dimensions =  await fetchRequest('/api/generatePreview', data);
         
         sessionStorage.setItem("imageDimension", dimensions)
         goto(`/preview/${uploadedFileGeneratedName}`);
@@ -143,14 +126,7 @@
         //would have time out for deleting it after certain time
         const data: any = {};
         data["src"] = ["static/images/upload", "static/images/pattern"]
-        await fetch(`/api/clearFolder`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json'
-            },
-            body: JSON.stringify({data})
-        });
+        await fetchRequest('/api/clearFolder', data)
     })
 </script>
 

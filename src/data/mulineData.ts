@@ -8,13 +8,20 @@ export type MulineData = {
     RGBnumbers?: number[];
     hex: string;
 }
-
-export type Palette = {
+interface IPaletteFromImg  {
     index: number
     colorHex: string;
+    count: number;
+ }
+ interface IPaletteFull extends IPaletteFromImg  {
     muline: MulineData;
     icon: string;
     invertIcon: boolean;
-    count: number;
-}
+ }
+
+export type PaletteFromImg = IPaletteFromImg;
+
+export type Palette = IPaletteFull;
+
+
 

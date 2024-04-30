@@ -66,9 +66,11 @@
     import { MULINE_TYPES } from "../data/mulineData";
     import type { Palette } from "../data/mulineData";
     import Loading from "./Loading.svelte";
+    import { apiCall } from "../request";
 
     export let fileName: string;
     export let imagePalette: Array<Palette> | null;
+    export let imagePixelsPalette: Array<Palette> | null;
     let sortedByMuline = false;
     let dontMergeSameColors = false;
     
@@ -93,10 +95,6 @@
         imagePalette = imagePalette;
     }
 
-    function unMergeColors(){
-       ;
-    }
-
     function compareByMuline(col1: Palette, col2: Palette ) {
         if ( col1.muline.id < col2.muline.id ){
             return -1;
@@ -118,13 +116,13 @@
     }
 
     function previousMulineColIsSame(color: Palette, index: number) {
-        if (index === 0) {
+        if (index === 0 || !imagePalette) {
             return false;
         }
         return color.muline.id === imagePalette[index - 1].muline.id;
     }
 
-    function getMulineCount(palette: Array<Palette>): number {
+    function getMulineCount(palette: Array<Palette> | null): number {
         if (!palette) {
             return 0;
         }
@@ -142,21 +140,29 @@
         data["fileName"] = fileName;
         data["mulineType"] = selectedMulineType;
         data["useLeastColors"] = useLeastColors;
-        const response = await fetch(`/api/getPalette`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json'
-            },
-            body: JSON.stringify({data})
-        });
-       
-        const { palette } = await response.json();
+        data["pixelsPalette"] = imagePixelsPalette;
+        console.log(imagePixelsPalette)
+        const { palette } = await apiCall('/api/getPalette', data);
+        return palette;
+    }
+
+    async function requestPixelsPalette() {
+        const data: any = {};
+        data["fileName"] = fileName;
+        
+        const { palette } = await apiCall('/api/getPaletteFromImage', data);
         return palette;
     }
 
     onMount(async () => {
+        //TODO HERE
+        //TODO add first request for colors from image, then request palette
+        //palette from iamge will be passed fro reqestPalette, so that image color will not be loaded every time we chane palette settings
+       
+        imagePixelsPalette = await requestPixelsPalette();
         imagePalette = await requestPalette();
+        
+        
     })
     
 </script>

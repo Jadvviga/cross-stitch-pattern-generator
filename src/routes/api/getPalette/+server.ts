@@ -7,6 +7,8 @@ export async function POST({ request }) {
     const fileName = data["fileName"];
     const selectedMulineType = data["mulineType"];
     const useLeastColors = data["useLeastColors"];
-    let palette = await loadPalette(fileName, selectedMulineType, useLeastColors);
+    const pixelsPalette = data["pixelsPalette"];
+    console.log(pixelsPalette)
+    let palette = await loadPalette(fileName, pixelsPalette, selectedMulineType, useLeastColors);
     return json({palette});
 }

@@ -4,7 +4,6 @@ import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import { addIconsToImage, addTextToImage, generatePaletteImage, loadIconsFromPalette, loadImageToPixelsArray } from "./generationUtils";
 import JSZip from "jszip";
-import path from 'node:path';
 
 
 //A4 ma na 350 dpi 2893 x 4092 px
@@ -62,7 +61,15 @@ export async function generatePreview(fileName: string): Promise<string> {
   const scale = SCALE_PREVIEW;
 
   const paletteSet = new Set<number>();
-  const imagePixelsArray = loadImageToPixelsArray(image, paletteSet);
+  const imagePixelsArray: number[] = [];
+  //get pixels from og image to array
+  for (let y = 0; y < ogHeight; y++) {
+      for (let x = 0; x < ogWidth; x++) {
+          let pixel = image.getPixelColor(x, y);
+          paletteSet.add(pixel);
+          imagePixelsArray.push(pixel);  // value are in HEX number
+      }
+  }
 
   await generatePaletteImage(paletteFileName, paletteSet);
 
@@ -71,7 +78,7 @@ export async function generatePreview(fileName: string): Promise<string> {
   const newHeight = getResizedDimension(ogHeight, scale, GRID_SIZE_PREVIEW, GRID_HIGHLIGHT_SIZE_PREVIEW);
   const resizedImagePixelsArray = getPixelsOfGriddedImage(imagePixelsArray, ogWidth, ogHeight, newWidth, newHeight, scale, GRID_SIZE_PREVIEW, GRID_HIGHLIGHT_SIZE_PREVIEW);
 
-  //create resized image
+  //create resized, preveiw image
   try {
     new Jimp(newWidth, newHeight, (err, image) => {
       if (err) throw err;
@@ -126,7 +133,7 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
   //const fontToLoad = scale === SCALE_SMALL ? Jimp.FONT_SANS_32_BLACK : scale === SCALE_MEDIUM ? Jimp.FONT_SANS_16_BLACK : Jimp.FONT_SANS_8_BLACK;
   const font = await Jimp.loadFont(fontToLoad);
 
-  const firstImagePixelsArray = loadImageToPixelsArray(image, undefined, palette);
+  const firstImagePixelsArray = loadImageToPixelsArray(image, palette);
   const splitImagesArrays = splitImage(firstImagePixelsArray, ogWidth, ogHeight);
 
   const expectedImagesNumber = splitImagesArrays.length * 2; //times 2 cuz we count color + BW

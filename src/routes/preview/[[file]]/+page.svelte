@@ -59,6 +59,7 @@
     import { fade } from 'svelte/transition';
     import type { Palette as PaletteType} from '../../../data/mulineData';
     import Palette from '../../../components/Palette/Palette.svelte';
+    import { apiCall } from '../../../request';
 
 
     let uploadedImage: any;
@@ -96,19 +97,14 @@
         const data: any = {};
         data["fileName"] = fileName;
         data["palette"] = imagePalette;
-        const response = await fetch('/api/generatePattern', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json'
-            },
-            body: JSON.stringify({data})
-        });
-        await response.json();
-        
-        setTimeout(() => {
+        await apiCall('/api/generatePattern', data).then(() => {
             goto(`/pattern/${fileName}`);
-        }, 1000)
+        })
+       
+        
+        // setTimeout(() => {
+        //     goto(`/pattern/${fileName}`);
+        // }, 1000)
        
     }
 

@@ -1,12 +1,12 @@
 import Jimp from "jimp";
 import type { Palette } from "../../data/mulineData";
-import { hexToRgb, rgbToHex } from "./generatePalette";
+import { JimpHexToString, stringHexToJimp } from "./generatePalette";
 
 
 let middleYIcon: Jimp, middleXIcon: Jimp;
 
 
-export function loadImageToPixelsArray(image: Jimp, paletteSet?: Set<number>, palette?: Array<Palette>): Array<number> {
+export function loadImageToPixelsArray(image: Jimp, palette: Array<Palette>): Array<number> {
     const ogWidth = image.bitmap.width;
     const ogHeight = image.bitmap.height;
     const imagePixelsArray: number[] = [];
@@ -14,18 +14,12 @@ export function loadImageToPixelsArray(image: Jimp, paletteSet?: Set<number>, pa
     for (let y = 0; y < ogHeight; y++) {
         for (let x = 0; x < ogWidth; x++) {
             let pixel = image.getPixelColor(x, y);
-            if (paletteSet) { // for preview - add pixel to palette
-                // TODO change palette creation so it includes counts
-                paletteSet.add(pixel);
+            const alpha = Jimp.intToRGBA(pixel).a;
+            const paletteColor = getColorFromPalette(pixel, palette);
+            if (paletteColor && alpha !== 0) { //do not replace transparent pixels
+                pixel = stringHexToJimp(paletteColor.muline.hex);
             }
-            if (palette) { // for pattern -  replace og colors with palette ones
-                const alpha = Jimp.intToRGBA(pixel).a;
-                const paletteColor = getColorFromPalette(rgbToHex(Jimp.intToRGBA(pixel)), palette);
-                if (paletteColor && alpha !== 0) { //do not replace transparent pixels
-                    const rgb = hexToRgb(paletteColor.muline.hex);
-                    pixel = Jimp.rgbaToInt(rgb.r, rgb.g, rgb.b, rgb.a);
-                }
-            }
+            
             imagePixelsArray.push(pixel);  // value are in HEX number
         }
     }
@@ -33,8 +27,10 @@ export function loadImageToPixelsArray(image: Jimp, paletteSet?: Set<number>, pa
 }
 
 
-function getColorFromPalette(colorHex: string, palette: Array<Palette>): Palette | undefined {
-    return palette.find(col => col.colorHex.toLowerCase() === colorHex.toLowerCase() || col.muline.hex.toLowerCase() === colorHex.toLowerCase());
+
+function getColorFromPalette(colorHex: number, palette: Array<Palette>): Palette | undefined {
+    const hex = JimpHexToString(colorHex);
+    return palette.find(col => col.colorHex.toLowerCase() === hex.toLowerCase() || col.muline.hex.toLowerCase() === hex.toLowerCase());
 }
 
 export function addIconsToImage(
@@ -59,7 +55,7 @@ export function addIconsToImage(
             const pixel = srcImg.getPixelColor(x, y);
             const alpha = Jimp.intToRGBA(pixel).a;
             if (alpha !== 0) {
-                const paletteColor = getColorFromPalette(rgbToHex(Jimp.intToRGBA(pixel)), palette);
+                const paletteColor = getColorFromPalette(pixel, palette);
                 if (paletteColor) {
                     const iconID = Number(paletteColor?.icon.split('icon')[1]);
                     const icon = iconFiles[iconID + 1].clone(); //+1 cuz icons start at -1

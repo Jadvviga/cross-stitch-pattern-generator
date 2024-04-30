@@ -42,24 +42,24 @@
                             <p >x {color.count}</p>
                         </td>
                         {#if secondHalfOfPalette && secondHalfOfPalette[index]}
-                            <td>
-                                <div class="colorTile" style=" --tileColor: {secondHalfOfPalette[index].muline.hex}">
-                                    <img src="/images/icons/{secondHalfOfPalette[index].icon}.png" alt="symbol for color {secondHalfOfPalette[index].muline.hex}" class="icon {secondHalfOfPalette[index].invertIcon ? 'inverted' : ''}">
-                                </div>
-                            </td>
-                            <td>
-                                <div class="colorTile" style=" --tileColor: rgba(0, 0, 0, 0)">
-                                    <img src="/images/icons/{secondHalfOfPalette[index].icon}.png" alt="symbol for color {secondHalfOfPalette[index].muline.hex}" class="icon">
-                                </div>
-                            </td>
-                            <td> 
-                                <div class="colorTile"  style=" --tileColor: {secondHalfOfPalette[index].muline.hex}"/></td>
-                            <td> 
-                                <p>{secondHalfOfPalette[index].muline.id}</p>
-                            </td>
-                            <td> 
-                                <p >x {secondHalfOfPalette[index].count}</p>
-                            </td>
+                        <td>
+                            <div class="colorTile" style=" --tileColor: {secondHalfOfPalette[index].muline.hex}">
+                                <img src="/images/icons/{secondHalfOfPalette[index].icon}.png" alt="symbol for color {secondHalfOfPalette[index].muline.hex}" class="icon {secondHalfOfPalette[index].invertIcon ? 'inverted' : ''}">
+                            </div>
+                        </td>
+                        <td>
+                            <div class="colorTile" style=" --tileColor: rgba(0, 0, 0, 0)">
+                                <img src="/images/icons/{secondHalfOfPalette[index].icon}.png" alt="symbol for color {secondHalfOfPalette[index].muline.hex}" class="icon">
+                            </div>
+                        </td>
+                        <td> 
+                            <div class="colorTile"  style=" --tileColor: {secondHalfOfPalette[index].muline.hex}"/></td>
+                        <td> 
+                            <p>{secondHalfOfPalette[index].muline.id}</p>
+                        </td>
+                        <td> 
+                            <p >x {secondHalfOfPalette[index].count}</p>
+                        </td>
                         {/if}
                     </tr>
                     {/each}
@@ -74,6 +74,7 @@
     import { createEventDispatcher, onMount } from "svelte";
     import type { Palette } from "../../data/mulineData";
     import { getPaletteBlob, getPaletteCounts } from "./paletteUtils";
+    import { apiCall } from "../../request";
     
 
     export let fileName: string;
@@ -104,16 +105,10 @@
         const imgData = imgBase64.split(',');
         data["image"] = imgData[1];
         data["fileName"] = fileName;
-        const response = await fetch(`/api/savePaletteImage`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json'
-            },
-            body: JSON.stringify({data})
+        await apiCall('/api/savePaletteImage', data).then(() => {
+            dispatcher('paletteSaved');
         });
-        await response.json();
-        dispatcher('paletteSaved');
+        
     };
 
 

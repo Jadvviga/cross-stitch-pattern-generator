@@ -1,5 +1,5 @@
 import Jimp from "jimp";
-import { MULINE_TYPES, type MulineData, type Palette } from "../../data/mulineData";
+import { MULINE_TYPES, type MulineData, type Palette, type PaletteFromImg } from "../../data/mulineData";
 import { ARIADNA } from "../../data/ariadna";
 import { DMC } from "../../data/dmc";
 import colorsea from 'colorsea';
@@ -39,11 +39,46 @@ export function hexToRgb(hex: string): RGBA {
   } : { r: 255, g: 255, b: 255, a:255 };
 }
 
+export function JimpHexToString(hex: number): string {
+  return rgbToHex(Jimp.intToRGBA(hex));
+}
+
+export function stringHexToJimp(hex: string): number {
+  const rgb = hexToRgb(hex)
+  return Jimp.rgbaToInt(rgb.r, rgb.g, rgb.b, rgb.a);
+}
+
+export async function getPaletteFromImage(fileName: string):  Promise<PaletteFromImg[]>  {
+  const fullFileName = `static/images/upload/${fileName}/${fileName}.png`;
+  const image = await Jimp.read(fullFileName);
+  const ogWidth = image.bitmap.width;
+  const ogHeight = image.bitmap.height;
+  const paletteSet = new Set<number>();
+  const paletteArray: Array<PaletteFromImg> = []
+
+  let index = 0;
+  for (let y = 0; y < ogHeight; y++) {
+    for (let x = 0; x < ogWidth; x++) {
+        let pixel = image.getPixelColor(x, y);
+        if (paletteSet.has(pixel)) {
+          let i = Array.from(paletteSet).findIndex(p => p === pixel);
+          paletteArray[i].count++;
+        } else {
+          paletteArray.push({index, colorHex: JimpHexToString(pixel), count: 1 });
+          index++;
+        }
+        paletteSet.add(pixel); 
+    }
+  }
+  return paletteArray;
+}
+
 const MIN_DIST_THRESHOLD = 18; //for when using least colors as possible
 //ITP - 19
 //2000 - 7
 //TODO consider giving option of choosing the color disatnce algo
-export async function loadPalette(fileName: string, mulineType: MULINE_TYPES, useLeastColors: boolean): Promise<Palette[]> {
+export async function loadPalette(fileName: string, pixelsPalette: Array<PaletteFromImg>, mulineType: MULINE_TYPES, useLeastColors: boolean): Promise<Palette[]> {
+  //TODO uwzglednij pixelsarray
   const paletteFileName = `${path}/${fileName}/palette.png`;
   const mulinePalette = getMulinePalette(mulineType);
   const paletteImage = await Jimp.read(paletteFileName);
@@ -150,20 +185,4 @@ export function isColorDark(colorHex: string, threshold = 4.5) {
 
 function hasAlpha(colorsArray: Array<RGBA>) {
   return colorsArray.findIndex(color => color.a === 0) !== -1
-  
 }
-
-//colorsea
-// function getColorDifference_(colorHex1: string, colorHex2: string): number {
-//   const col1 = hexToRgb(colorHex1);
-//   const col2 = hexToRgb(colorHex2);
-  
-//   const color1 = colorsea.lab(col1.r, col1.g, col1.b);
-//   const color2 = colorsea.lab(col2.r, col2.g, col2.b);
-
-
-
-//   // CIE2000 not doing well with greens, otherwise very gud
-//   // CIE1976 is better
-//   return color1.deltaE(color2, "CIE1976");
-// }
