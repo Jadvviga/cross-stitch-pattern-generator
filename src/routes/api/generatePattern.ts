@@ -15,8 +15,8 @@ const PAPER_MAX_WIDTH_PT = 550
 const PAPER_MAX_HEIGHT_PT = 800
 const MARGIN_PT = 18;
 //Sizes of squre in pixels and icons depending on size of image (the larger img the less size of square)
-const SCALE_SMALL = 64;
-const SCALE_MEDIUM = 32;
+const SCALE_SMALL = 32;
+const SCALE_MEDIUM = 24;
 const SCALE_BIG = 16;
 
 // const SCALE_SMALL = 128;
@@ -39,8 +39,9 @@ const GRID_HIGHLIGHT_SIZE_PREVIEW = 3;  //grid size for grid every 10 square
 
 const GRID_COUNTER = 10; //how often we have highlighted (thicker) grid
 
-const THRESHOLD_SMALL = 20;
-const THRESHOLD_BIG = 100;
+const THRESHOLD_SMALL = 15;
+const THRESHOLD_BIG = 45;
+const THRESHOLD_SPLIT = 60;
 
 const PATH_UPLOAD = 'static/images/upload/';
 const PATH_PATTERN = 'static/images/pattern/';
@@ -102,16 +103,6 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
       fs.mkdirSync(patternDir);
   }
   fs.copyFileSync(`${PATH_UPLOAD}${fileName}/preview.png`, `${patternDir}/preview.png`);
-  //TODO try making splitting more clear - instead of curretn process, try:
-  // split image -> reapeat same process for each image (generating images)
-  //in reapeat, inlcude another split if possible 
-
-  //OR
-  //add additional process of splitting image itself, and recommend it to user if the image is above 200 pixels
-
-  //OR
-  //just make sure that the single image for page does not cross 60 in splitting process
-
 
   const fullFileName = `${PATH_UPLOAD}${fileName}/${fileName}.png`;
   const image = await Jimp.read(fullFileName);
@@ -135,12 +126,12 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
   const imagesForPDFBW: Array<string> = [];
   const shouldRotateForPrinting =ogWidth > ogHeight;
   for (const [index, imagePixelsArray] of splitImagesArrays.entries()) {
-    await generateImagePattern(patternDir, imagePixelsArray.array, imagePixelsArray.width, imagePixelsArray.height, imagePixelsArray.startX, imagePixelsArray.startY, index, imagesForPDFCol, imagesForPDFBW, expectedImagesNumber, scale, iconFiles, font, palette, shouldRotateForPrinting);
+    generateImagePattern(patternDir, imagePixelsArray.array, imagePixelsArray.width, imagePixelsArray.height, imagePixelsArray.startX, imagePixelsArray.startY, index, imagesForPDFCol, imagesForPDFBW, expectedImagesNumber, scale, iconFiles, font, palette, shouldRotateForPrinting);
   }
 
 }
 
-async function generateImagePattern(
+function generateImagePattern(
   patternDir: string,
   imagePixelsArray: Array<number>,
   width: number,
@@ -170,6 +161,7 @@ async function generateImagePattern(
   const resizedImageBWPixelsArray = getPixelsOfGriddedImage(imagePixelsArray, width, height, newWidth, newHeight, scale, gridSize, GRID_HIGHLIGHT_SIZE, true);
 
   const savePatterPDF = (imageFileName: string) => {
+    console.log('savePatternPdf')
     if (imageFileName.includes('bw')) {
       imagesForPDFBW.push(imageFileName);
     } else {
@@ -187,7 +179,7 @@ async function generateImagePattern(
   try {
     //color
     let colorImg: Jimp;
-    await new Jimp(resizedWidth, resizedHeight, async (err, image) => {
+    new Jimp(resizedWidth, resizedHeight, (err, image) => {
       let count = 0;
       for (let y = 0; y < resizedHeight; y++) {
         for (let x = 0; x < resizedWidth; x++) {
@@ -210,7 +202,7 @@ async function generateImagePattern(
       colorImg = image;
     });
     // BW
-    new Jimp(resizedWidth, resizedHeight, async (err, image) => {
+    new Jimp(resizedWidth, resizedHeight, (err, image) => {
       let count = 0;
       for (let y = 0; y < resizedHeight; y++) {
         for (let x = 0; x < resizedWidth; x++) {
@@ -335,54 +327,48 @@ async function generateZip(
   
 }
 
-
 function splitImage(imagePixelsArray: Array<number>, ogWidth: number, ogHeight: number): Array<{ array: Array<number>, width: number, height: number, startX: number, startY: number }> {
-  if (ogWidth < THRESHOLD_BIG && ogHeight < THRESHOLD_BIG) {
+  if (ogWidth < THRESHOLD_SPLIT && ogHeight < THRESHOLD_SPLIT) {
     return [{ array: imagePixelsArray, width: ogWidth, height: ogHeight, startX: 0, startY: 0 }];
   }
 
-  const getMidTen = (dim: number): number => {
-    let mid = Math.floor(dim / 2);
-    while (mid % 10 !== 0) {
-      mid++;
+  //TODO fixe when width/height is divisable by 60 - then we do not need +1
+  const numOfSplitsX = Math.floor(ogWidth/THRESHOLD_SPLIT) + 1;
+  const numOfSplitsY = Math.floor(ogHeight/THRESHOLD_SPLIT) + 1;
+  console.log(ogWidth, numOfSplitsX, ogHeight, numOfSplitsY);
+
+  const splitReturn: Array<any> = [];
+
+  //TODO add handling if last split is smaller then half of Threshold (then add its dim to 60 and split that to two)
+  
+  let startX = 0, startY = 0;
+  for (let y = 1; y <= numOfSplitsY; y++) {
+    let height = y === numOfSplitsY ? ogHeight%THRESHOLD_SPLIT : THRESHOLD_SPLIT;
+    for (let x = 1; x <= numOfSplitsX; x++) {
+      let width = x === numOfSplitsX ? ogWidth%THRESHOLD_SPLIT : THRESHOLD_SPLIT;
+      splitReturn.push( { array: [], width, height, startX, startY });
+      startX += width;
     }
-    return mid;
+    startY += height;
+    startX = 0;
   }
-
-  const midX = getMidTen(ogWidth);
-  const midY = getMidTen(ogHeight);
-
-  const imagePixels1: Array<number> = [];
-  const imagePixels2: Array<number> = [];
-  const imagePixels3: Array<number> = [];
-  const imagePixels4: Array<number> = [];
 
   for (let y = 0; y < ogHeight; y++) {
     for (let x = 0; x < ogWidth; x++) {
       let pos = y * ogWidth + x;
-      if (x < midX) {
-        if (y < midY) {
-          imagePixels1.push(imagePixelsArray[pos]);
-        } else {
-          imagePixels3.push(imagePixelsArray[pos]);
-        }
-      } else {
-        if (y < midY) {
-          imagePixels2.push(imagePixelsArray[pos]);
-        } else {
-          imagePixels4.push(imagePixelsArray[pos]);
-        }
-      }
+      let pixel = imagePixelsArray[pos];
+      let foundIndex = splitReturn.findIndex(({width, height, startX, startY}) => {
+        const inRangeX = x >= startX && x < startX + width;
+        const inRangeY = y >= startY && y < startY + height;
+        return inRangeX && inRangeY;
+      });
+     
+      splitReturn[foundIndex].array.push(pixel);
+      
     }
   }
-
-  return [
-    { array: imagePixelsArray, width: ogWidth, height: ogHeight, startX: 0, startY: 0  },
-    { array: imagePixels1, width: midX, height: midY, startX: 0, startY: 0  },
-    { array: imagePixels2, width: ogWidth - midX, height: midY, startX: midX, startY: 0  },
-    { array: imagePixels3, width: midX, height: ogHeight - midY, startX: 0, startY: midY  },
-    { array: imagePixels4, width: ogWidth - midX, height: ogHeight - midY, startX: midX, startY: midY  }
-  ];
+  splitReturn.unshift( { array: imagePixelsArray, width: ogWidth, height: ogHeight, startX: 0, startY: 0  });
+  return splitReturn;
 }
 
 
@@ -390,8 +376,9 @@ function determineScale(width: number, height: number): number {
   if (width <= THRESHOLD_SMALL || height <= THRESHOLD_SMALL) {
     return SCALE_SMALL;
   }
-  if (width > THRESHOLD_BIG || height > THRESHOLD_BIG) {
+  if (width > THRESHOLD_BIG || height > THRESHOLD_BIG ) {
     return SCALE_BIG;
+    
   }
   return SCALE_MEDIUM;
 }

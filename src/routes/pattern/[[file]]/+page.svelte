@@ -112,7 +112,7 @@
         }
         const width = Number(imgDimensions.split(' x ')[0]);
         const height = Number(imgDimensions.split(' x ')[1]);
-        return width >= 100 || height >= 100;
+        return width >= 60 || height >= 60;
     }
 
 
@@ -128,6 +128,7 @@
         fileName = data.fileName;
 
         const imgDimensions = sessionStorage.getItem('imageDimension') || '';
+        // TODO add handleing for new way of spliting
         if (checkForSplit(imgDimensions)) {
             for(let i=1;i<=4;i++) {
                 generatedPatterns.push(`/images/pattern/${data.fileName}/pattern_${i}.png`);
