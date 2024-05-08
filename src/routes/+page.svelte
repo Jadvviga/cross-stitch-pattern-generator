@@ -27,7 +27,7 @@
                         Skip settings and customization
                         <p>just generate the pattern</p>
                     </label>
-                    <p class:disabled{skipPreview}>Settings</p>
+                    <p class:disabled={skipPreview}>Settings</p>
                     <MulineTypeSelector
                         label={"Select embroidery thread producer"}
                         disabled={skipPreview}

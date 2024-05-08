@@ -36,6 +36,19 @@ button:hover {
     outline: black solid 2px;
 }
 
+button:disabled {
+    background-color: grey;
+    outline: grey solid 2px;
+    color: lightgray;
+    cursor: not-allowed;
+}
+
+button:disabled:hover {
+    background-color: grey;
+    outline: grey solid 2px;
+    color: lightgray;
+}
+
 h1,
 h2 {
     text-align: center;

@@ -1,6 +1,6 @@
 <div>
     <MulineTypeSelector
-        label={"Currently chosen palette (changing this will cause a refresh)"}
+        label={"Currently chosen palette (changing this will cause a palette refresh)"}
         {selectedMulineType}
         on:changedSelection={handleMulineChange}/>
     <div>
@@ -62,7 +62,7 @@
 </div>
 
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { createEventDispatcher, onMount } from "svelte";
     import MulineTypeSelector from "./MulineTypeSelector.svelte";
     import { MULINE_TYPES } from "../data/mulineData";
     import type { Palette } from "../data/mulineData";
@@ -74,11 +74,17 @@
     let imagePixelsPalette: Array<Palette> | null;
     let sortedByMuline = false;
     let dontMergeSameColors = false;
+
+    const dispatcher = createEventDispatcher();
     
 
     $: selectedMulineType = sessionStorage.getItem("mulineType") || MULINE_TYPES.Ariadna;
     $: numberOfColors = imagePalette?.length;
     $: numberOfMulineColors = getMulineCount(imagePalette);
+
+    $: if (imagePalette) {
+        dispatcher('paletteLoaded')
+    }
         
     async function handleMulineChange(event: Event | any) {
         const  { selected } = event.detail;

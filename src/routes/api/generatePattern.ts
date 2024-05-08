@@ -321,7 +321,6 @@ async function generateZip(
   try {
     let zip = new JSZip();
     for (const file of fs.readdirSync(patternDir)) {
-      console.log(file)
       if (!file.includes('.pdf')) {
         let fileContent = fs.readFileSync(`${patternDir}/${file}`);
         zip.file(file, fileContent);

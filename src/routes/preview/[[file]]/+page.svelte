@@ -1,4 +1,4 @@
-{#if uploadedImage && !loading} 
+{#if uploadedImage && !loadingImage} 
     <h1>Preview {fileName}</h1>
 
     <div transition:fade={{ delay: 250, duration: 300 }} class="container">
@@ -11,7 +11,9 @@
                 </span>
                 <span class="btn">
                     <button
-                    bind:this={generatePatternButton} 
+                    bind:this={generatePatternButton}
+                    disabled={loadingPalette}
+                    title={loadingPalette ? "Wait for palette to load" : ""}
                     on:click={() => loadingPattern = true}> GENERATE PATTERN</button>
                 </span>
                 <span class="btn">
@@ -29,7 +31,8 @@
         <div bind:offsetHeight={paletteNodeHeight}>
             <PaletteSettings
                 {fileName}
-                bind:imagePalette/>
+                bind:imagePalette
+                on:paletteLoaded={() => loadingPalette = false}/>
         </div>
     </div>
     {#if loadingPattern}
@@ -41,7 +44,7 @@
         </div>
     {/if}
 {:else}
-    <Loading/>
+    <Loading text="loading preview and palette..."/>
 {/if}
 
 {#if loadingPattern || skipPreview} 
@@ -64,7 +67,8 @@
 
     let uploadedImage: any;
     let fileName: string;
-    let loading = true;
+    let loadingImage = true;
+    let loadingPalette = true;
     let loadingPattern = false;
     let imgDimensions: string;
     let paletteNodeHeight: number;
@@ -100,18 +104,12 @@
         await apiCall('/api/generatePattern', data).then(() => {
             goto(`/pattern/${fileName}`);
         })
-       
-        
-        // setTimeout(() => {
-        //     goto(`/pattern/${fileName}`);
-        // }, 1000)
-       
     }
 
 
 
     onMount(() => {
-        loading = true;
+        loadingImage = true;
         const storageFileName = sessionStorage.getItem('fileName');
         if (!storageFileName || storageFileName !== data.fileName) {
             goto('/');
@@ -123,7 +121,7 @@
         uploadedImage = `/images/upload/${data.fileName}/preview.png`;
         const loadImage = new Image();
         loadImage.onload = () => {
-            loading = false;
+            loadingImage = false;
         }
         let errorCount = 0;
         loadImage.onerror = () => {

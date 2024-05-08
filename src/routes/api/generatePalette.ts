@@ -2,7 +2,6 @@ import Jimp from "jimp";
 import { MULINE_TYPES, type MulineData, type Palette, type PaletteFromImg } from "../../data/mulineData";
 import { ARIADNA } from "../../data/ariadna";
 import { DMC } from "../../data/dmc";
-import colorsea from 'colorsea';
 import Color from "colorjs.io";
 
 
@@ -142,89 +141,6 @@ export async function loadPalette(fileName: string, pixelsPalette: Array<Palette
       icon,
       invertIcon: isColorDark(mulineColor.hex),
       count
-    });
-  })
-
-  return palette;
-}
-
-export async function _loadPalette(fileName: string, pixelsPalette: Array<PaletteFromImg>, mulineType: MULINE_TYPES, useLeastColors: boolean): Promise<Palette[]> {
-  console.log('aaa', pixelsPalette)
-
-
-  const mulinePalette = getMulinePalette(mulineType);
-
-  const paletteFileName = `${path}/${fileName}/palette.png`;
-  const paletteImage = await Jimp.read(paletteFileName);
- 
-  let colors: Array<RGBA> = [];
-  const palette: Array<Palette> = []; // palette to return
-  const mulineColorSet = new Set<string>;
-
-  for (let i = 0; i < paletteImage.bitmap.width; i++) {
-    colors.push(Jimp.intToRGBA(paletteImage.getPixelColor(i, 0)));
-  }
-
-  //if there is alpha - remove it from palette and start icons from indx 0 instead of -1
-  // icon-1.png is empty image - used when we have most common color when we don't have alpha
-  let iconID = -1;
-  if (_hasAlpha(colors)) {
-    iconID = 0;
-    colors = colors.filter(color => color.a !== 0);
-  }
-
-  colors.forEach((color, index) => {
-
-    let mulineIndex = -1;
-    if (useLeastColors) {
-      //Version 2
-      //Get distance with color that is already in palette, cnd check for threshold minimum
-      //If there is none, do version 1
-      const colorDistancesPalette: number[] = [];
-      palette.forEach(mulineColor => {
-        colorDistancesPalette.push(getColorDifference(mulineColor.colorHex, rgbToHex(color)))
-      });
-      const minDistPalette = Math.min(...colorDistancesPalette);
-
-      if (minDistPalette < MIN_DIST_THRESHOLD) {
-        const paletteIndex = colorDistancesPalette.indexOf(minDistPalette);
-        const paletteColor = palette[paletteIndex];
-        mulineIndex = mulinePalette.indexOf(paletteColor.muline);
-      }
-    }
-
-    if (mulineIndex === -1) { //muline was not found in  palette
-      //Version 1
-      //Get distance with each muline color and get the minimum
-      const colorDistances: number[] = [];
-      mulinePalette.forEach(mulineColor => {
-        colorDistances.push(getColorDifference(mulineColor.hex, rgbToHex(color)))
-      });
-      const minDist = Math.min(...colorDistances);
-      mulineIndex = colorDistances.indexOf(minDist);
-    }
-   
-
-    let icon = `icon${iconID}`;
-    const mulineColor = mulinePalette[mulineIndex];
-    if (mulineColorSet.has(mulineColor.id)) {
-      const pal = palette.find(x => x.muline.id === mulineColor.id);
-      icon = pal?.icon || icon;
-    } else {
-      mulineColorSet.add(mulineColor.id);
-      iconID++;
-      if (iconID > ICON_COUNT) {
-        iconID = 0;
-      }
-    }
-    
-    palette.push({
-      index,
-      colorHex: rgbToHex(color),
-      muline: mulineColor,
-      icon,
-      invertIcon: isColorDark(mulineColor.hex),
-      count: 0
     });
   })
 
