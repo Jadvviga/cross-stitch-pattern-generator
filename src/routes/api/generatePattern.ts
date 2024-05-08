@@ -4,7 +4,7 @@ import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import { addIconsToImage, addTextToImage, loadIconsFromPalette, loadImageToPixelsArray } from "./generationUtils";
 import JSZip from "jszip";
-import { JimpHexToString } from "./generatePalette";
+import { JimpHexToString, stringHexToJimp } from "./generatePalette";
 
 
 //A4 ma na 350 dpi 2893 x 4092 px
@@ -25,10 +25,9 @@ const SCALE_BIG = 16;
 
 const SCALE_PREVIEW = 10;
 
-const GRID_COLOR = 255;
+const GRID_COLOR = 555819519;
+// const GRID_COLOR = 255; //BLACK
 // const GRID_COLOR_LIGHT = 170; //when next to dark colors
-const GRID_COLOR_LIGHT = 4278244095; //when next to dark colors
-const GRID_MIDDLE_COLOR = 4278190335; //red
 const WHITE = 4294967295;
 
 const GRID_SIZE = 3;
@@ -479,171 +478,6 @@ function getPixelsOfGriddedImage( //generic func
     }
   }
 
-  return resizedImagePixelsArray;
-}
-
-function _getPixelsOfGriddedImage( //generic func
-  ogImagePixelsArray: number[],
-  ogWidth: number,
-  ogHeight: number,
-  resizedWidth: number,
-  resizedHeight: number,
-  scale: number,
-  gridWidth: number,
-  highlightGridWidth: number
-): number[] {
-
-
-  let iconsPositions: Array<number[]>
-
-  const resizedImagePixelsArray: number[] = []
-  let pxColCount = 0;
-  let pxRowCount = 0;
-  let row: number[] = [];
-
-  // add grid row to whole image array
-  const addGridRow = (highlight: number) => {
-    for (let h = 0; h < highlight; h++) {
-      for (let i = 0; i < resizedWidth; i++) {
-        resizedImagePixelsArray.push(GRID_COLOR)
-      }
-    }
-
-  }
-
-  //add grid column to current row
-  const addGridCol = (counter: number) => {
-    for (let i = 0; i < counter; i++) {
-      row.push(GRID_COLOR);
-    }
-  }
-
-  //first grid column before row of color
-  addGridCol(highlightGridWidth);
-
-  for (const [index, pixel] of ogImagePixelsArray.entries()) {
-    for (let i = 0; i < scale; i++) { //add pixel color * scale (new width of one square)
-      row.push(pixel);
-    }
-    pxColCount++;
-    const shouldBeHighlightCol = pxColCount % GRID_COUNTER === 0 || pxColCount === ogWidth;
-    addGridCol(shouldBeHighlightCol ? highlightGridWidth : gridWidth);
-
-    if (pxColCount === ogWidth) {
-      if (pxRowCount === 0) {
-        addGridRow(highlightGridWidth);  //add first grid row before adding proper rows
-      }
-      pxColCount = 0;
-      for (let i = 0; i < scale; i++) { //push to image all pixel from current row
-        row.forEach(px => resizedImagePixelsArray.push(px));
-      }
-      pxRowCount++;
-      const shouldBeHighlightRow = pxRowCount % GRID_COUNTER === 0 || pxRowCount === ogHeight;
-      addGridRow(shouldBeHighlightRow ? highlightGridWidth : gridWidth);
-      if (pxRowCount !== ogHeight) { //if not end of image, clear row array and will go further
-        row = [];
-
-        addGridCol(highlightGridWidth); //first grid column before first row of color
-      }
-    }
-  }
-  //WIP trying to add lighter grid around dark pixels
-  /*
-  const notInOutsideGrids = (x: number, y: number) => {
-    return (x >= highlightGridWidth && x < resizedWidth - highlightGridWidth
-      &&  y >= highlightGridWidth && y < resizedHeight - highlightGridWidth)
-  }
-
-  let xCount = -100;
-  let yCount = -100;
-
-  let rowGridCounter = 0;
-  let colGridCounter = 0;
-  let onHighlightedRowGrid = 0;
-
-  let pos = (x: number, y: number,) => { return y * resizedWidth + x}
-  
-  for (let y=0; y < resizedHeight; y++) {
-    if (yCount % (scale+1) === 0) { // current (x,y) is on row grid
-      rowGridCounter++;
-    }
-    for (let x=0; x < resizedWidth; x++) {
-      if(notInOutsideGrids(x, y)){
-        if (xCount === -100) {
-          xCount = 0;
-          yCount = 1;
-          iconsPositions.push([x, y])
-          // resizedImagePixelsArray[pos(x, y)] = GRID_COLOR_LIGHT;
-        }
-        if (yCount % (scale+1) === 0 || onHighlightedRowGrid !== 0) { // current (x,y) is on row grid
-          let color = GRID_COLOR;
-          const pixelOnTop = rgbToHex(Jimp.intToRGBA(resizedImagePixelsArray[pos(x, y - highlightGridWidth)]));
-          const pixelOnBottom = rgbToHex(Jimp.intToRGBA(resizedImagePixelsArray[pos(x, y + highlightGridWidth)]));
-          if (isColorDark(pixelOnTop) || isColorDark(pixelOnBottom)) {
-            color = GRID_COLOR_LIGHT;
-          }
-          const currentGridWidth = rowGridCounter % GRID_COUNTER === 0 || onHighlightedRowGrid !== 0 ? highlightGridWidth : gridWidth;
-          for(let i=0;i < currentGridWidth; i++) {
-            resizedImagePixelsArray[pos(x, y+i)] = color;
-          }
-          if (currentGridWidth === highlightGridWidth) {
-            yCount--;
-            onHighlightedRowGrid++;
-            
-          }
-          
-
-         
-        } 
-          if (onHighlightedRowGrid === resizedWidth - 2*highlightGridWidth) {
-            console.log(onHighlightedRowGrid)
-            onHighlightedRowGrid = 0;
-            yCount--;
-          }
-        
-
-        if (xCount % scale === 0 && xCount > 0) { // current (x,y) is on column grid
-          let color = GRID_COLOR;
-          colGridCounter++;
-          const currentGridWidth = colGridCounter % GRID_COUNTER === 0 ? highlightGridWidth : gridWidth;
-          const pixelOnLeft = rgbToHex(Jimp.intToRGBA(resizedImagePixelsArray[pos(x - highlightGridWidth, y)]));
-          const pixelOnRight = rgbToHex(Jimp.intToRGBA(resizedImagePixelsArray[pos(x + highlightGridWidth, y)]));
-          if (isColorDark(pixelOnRight) || isColorDark(pixelOnLeft)) {
-            color = GRID_COLOR_LIGHT
-          }
-          
-          for(let i=0;i < currentGridWidth; i++) {
-            if ( resizedImagePixelsArray[pos(x+i, y)] !== GRID_COLOR_LIGHT) {
-              resizedImagePixelsArray[pos(x+i, y)] = color;
-            }
-          }
-          xCount = -currentGridWidth
-          
-          //ogranac icons positions
-          //if ((yCount- 1) )
-
-          
-    
-        } 
-        if (xCount !== -100) {
-          xCount++;
-        }
-      } else {
-        if (xCount !== -100) {
-          xCount = 0;
-          colGridCounter = 0;
-        }
-      }
-      // y * width + x
-
-      
-    }
-    if (yCount !== -100) {
-      yCount++;
-    }
-  }
-  */
-  // iconsPositions.push([0, 0])
   return resizedImagePixelsArray;
 }
 
