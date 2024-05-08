@@ -167,22 +167,3 @@ function getPaletteIcons(palette: Array<Palette>): Array<string> {
     }
     return Array.from(iconsSet);
 }
-
-export async function generatePaletteImage(path: string, paletteSet: Set<number>) {
-    try {
-      await new Jimp(paletteSet.size, 1, (err, image) => {
-        if (err) {
-          throw err;
-        }
-        const iterator = paletteSet.values()
-        for (let i = 0; i < paletteSet.size; i++) {
-          image.setPixelColor(iterator.next().value, i, 0)
-        }
-        image.write(path);
-      });
-    } catch (err) {
-      console.error("Something went wrong when generating the color palette: " + err);
-    }
-  
-  
-  }

@@ -2,8 +2,9 @@ import Jimp from "jimp";
 import type { Palette } from "../../data/mulineData";
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
-import { addIconsToImage, addTextToImage, generatePaletteImage, loadIconsFromPalette, loadImageToPixelsArray } from "./generationUtils";
+import { addIconsToImage, addTextToImage, loadIconsFromPalette, loadImageToPixelsArray } from "./generationUtils";
 import JSZip from "jszip";
+import { JimpHexToString } from "./generatePalette";
 
 
 //A4 ma na 350 dpi 2893 x 4092 px
@@ -53,26 +54,20 @@ export async function generatePreview(fileName: string): Promise<string> {
     }
   const fullFileName = `${uploadDir}/${fileName}.png`;
   const resizedFileName = `${uploadDir}/preview.png`;
-  const paletteFileName = `${uploadDir}/palette.png`;
 
   const image = await Jimp.read(fullFileName);
   const ogWidth = image.bitmap.width;
   const ogHeight = image.bitmap.height;
   const scale = SCALE_PREVIEW;
 
-  const paletteSet = new Set<number>();
   const imagePixelsArray: number[] = [];
   //get pixels from og image to array
   for (let y = 0; y < ogHeight; y++) {
       for (let x = 0; x < ogWidth; x++) {
           let pixel = image.getPixelColor(x, y);
-          paletteSet.add(pixel);
           imagePixelsArray.push(pixel);  // value are in HEX number
       }
   }
-
-  await generatePaletteImage(paletteFileName, paletteSet);
-
   // get resized image pixel array
   const newWidth = getResizedDimension(ogWidth, scale, GRID_SIZE_PREVIEW, GRID_HIGHLIGHT_SIZE_PREVIEW);
   const newHeight = getResizedDimension(ogHeight, scale, GRID_SIZE_PREVIEW, GRID_HIGHLIGHT_SIZE_PREVIEW);
@@ -85,10 +80,10 @@ export async function generatePreview(fileName: string): Promise<string> {
       let count = 0;
       for (let y = 0; y < newHeight; y++) {
         for (let x = 0; x < newWidth; x++) {
-          if (resizedImagePixelsArray[count]) {
+          if (resizedImagePixelsArray[count] && Jimp.intToRGBA(resizedImagePixelsArray[count]).a !== 0) {
             image.setPixelColor(resizedImagePixelsArray[count], x, y);
           } else {
-            image.setPixelColor(0, x, y);
+            image.setPixelColor(WHITE, x, y);
           }
 
           count++;
@@ -201,7 +196,7 @@ async function generateImagePattern(
           if (x < offset || y < offset || x >= resizedWidth - offset || y >= resizedHeight - offset) {
             image.setPixelColor(WHITE, x, y);
           } else {
-            if (resizedImagePixelsArray[count]) {
+            if (resizedImagePixelsArray[count] && Jimp.intToRGBA(resizedImagePixelsArray[count]).a !== 0) {
               image.setPixelColor(resizedImagePixelsArray[count], x, y);
             }
             count++;
