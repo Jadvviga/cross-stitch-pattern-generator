@@ -27,7 +27,7 @@
                         Skip settings and customization
                         <p>just generate the pattern</p>
                     </label>
-                    <p>Settings</p>
+                    <p class:disabled{skipPreview}>Settings</p>
                     <MulineTypeSelector
                         label={"Select embroidery thread producer"}
                         disabled={skipPreview}
@@ -63,7 +63,7 @@
     import type { MULINE_TYPES } from "../data/mulineData";
     import MulineTypeSelector from "../components/MulineTypeSelector.svelte"
     import { fade } from "svelte/transition";
-    import { fetchRequest } from "../request";
+    import { apiCall } from "../request";
 
 
     let fileInput: HTMLElement;
@@ -98,7 +98,7 @@
         const data: any = {};
         const imgData = imgBase64.split(',');
         data["image"] = imgData[1];
-        const{ fileName } = await fetchRequest('/api/uploadImage', data);
+        const{ fileName } = await apiCall('/api/uploadImage', data);
         uploadedFileGeneratedName = fileName;
         loading = false;
         sessionStorage.setItem('fileName', fileName);
@@ -111,7 +111,7 @@
         sessionStorage.setItem('useLeastColors', `${useLeastColors}`);
         const data: any = {};
         data["fileName"] = uploadedFileGeneratedName;
-        const dimensions =  await fetchRequest('/api/generatePreview', data);
+        const dimensions =  await apiCall('/api/generatePreview', data);
         
         sessionStorage.setItem("imageDimension", dimensions)
         goto(`/preview/${uploadedFileGeneratedName}`);
@@ -126,12 +126,15 @@
         //would have time out for deleting it after certain time
         const data: any = {};
         data["src"] = ["static/images/upload", "static/images/pattern"]
-        await fetchRequest('/api/clearFolder', data)
+        await apiCall('/api/clearFolder', data)
     })
 </script>
 
 
 <style>
+    .disabled {
+        color: grey;
+    }
     #uploadedImg {
         height: auto;
         width: 128px;

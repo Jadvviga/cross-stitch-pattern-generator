@@ -1,7 +1,5 @@
 <div class='paletteNode'>
     <button on:click={createPaletteImg} style="display: hidden" bind:this={getPaletteImgBtn}> preview</button>
-    <img bind:this={ogImageNode} src="/images/upload/{fileName}/{fileName}.png" alt=''>
-
     <div  bind:this={paletteNode} style="background-color: white;">
         {#key imagePalette} 
             {#if imagePalette}
@@ -73,7 +71,7 @@
 <script lang="ts">
     import { createEventDispatcher, onMount } from "svelte";
     import type { Palette } from "../../data/mulineData";
-    import { getPaletteBlob, getPaletteCounts } from "./paletteUtils";
+    import { getPaletteBlob } from "./paletteUtils";
     import { apiCall } from "../../request";
     
 
@@ -83,7 +81,6 @@
 
     let paletteNode: HTMLElement;
     let getPaletteImgBtn: HTMLElement;
-    let ogImageNode: HTMLElement
         
     const dispatcher = createEventDispatcher();
 
@@ -134,7 +131,6 @@
     onMount(async () => {
         imagePalette = [ ...exportedImagePalette]
         setTimeout(async () => {
-            imagePalette = await getPaletteCounts(ogImageNode, imagePalette);
             imagePalette = mergeSameColors(imagePalette);
             paletteIsBig = imagePalette.length > 10;
             getPaletteImgBtn.click();

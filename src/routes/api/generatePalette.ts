@@ -78,12 +78,87 @@ const MIN_DIST_THRESHOLD = 18; //for when using least colors as possible
 //2000 - 7
 //TODO consider giving option of choosing the color disatnce algo
 export async function loadPalette(fileName: string, pixelsPalette: Array<PaletteFromImg>, mulineType: MULINE_TYPES, useLeastColors: boolean): Promise<Palette[]> {
-  //TODO uwzglednij pixelsarray
-  const paletteFileName = `${path}/${fileName}/palette.png`;
   const mulinePalette = getMulinePalette(mulineType);
+  const palette: Array<Palette> = []; // palette to return
+  const mulineColorSet = new Set<string>; // set for icon control
+
+  //if there is alpha - remove it from palette and start icons from indx 0 instead of -1
+  // icon-1.png is empty image - used on most common color when we don't have alpha
+  let iconID = -1;
+  if (hasAlpha(pixelsPalette)) {
+    iconID = 0;
+    pixelsPalette = pixelsPalette.filter(pal => hexToRgb(pal.colorHex).a !== 0);
+  }
+
+  pixelsPalette.forEach(({colorHex, count, index}) => {
+    let mulineIndex = -1;
+    if (useLeastColors) {
+      //Version 2
+      //Get distance with color that is already in palette, and check for threshold minimum
+      //If there is none, do version 1
+      const colorDistancesPalette: number[] = [];
+      palette.forEach(mulineColor => {
+        colorDistancesPalette.push(getColorDifference(mulineColor.colorHex, colorHex))
+      });
+      const minDistPalette = Math.min(...colorDistancesPalette);
+
+      if (minDistPalette < MIN_DIST_THRESHOLD) {
+        const paletteIndex = colorDistancesPalette.indexOf(minDistPalette);
+        const paletteColor = palette[paletteIndex];
+        mulineIndex = mulinePalette.indexOf(paletteColor.muline);
+      }
+    }
+
+    if (mulineIndex === -1) { //muline was not found in  palette
+      //Version 1
+      //Get distance with each muline color and get the minimum
+      const colorDistances: number[] = [];
+      mulinePalette.forEach(mulineColor => {
+        colorDistances.push(getColorDifference(mulineColor.hex, colorHex))
+      });
+      const minDist = Math.min(...colorDistances);
+      mulineIndex = colorDistances.indexOf(minDist);
+    }
+   
+
+    let icon = `icon${iconID}`;
+    const mulineColor = mulinePalette[mulineIndex];
+    // check if muline color already in palette - if so, take its icon; otherwise take new icon
+    if (mulineColorSet.has(mulineColor.id)) {
+      const pal = palette.find(x => x.muline.id === mulineColor.id);
+      icon = pal?.icon || icon;
+    } else {
+      mulineColorSet.add(mulineColor.id);
+      iconID++;
+      if (iconID > ICON_COUNT) {
+        iconID = 0;
+      }
+    }
+    
+    palette.push({
+      index,
+      colorHex,
+      muline: mulineColor,
+      icon,
+      invertIcon: isColorDark(mulineColor.hex),
+      count
+    });
+  })
+
+  return palette;
+}
+
+export async function _loadPalette(fileName: string, pixelsPalette: Array<PaletteFromImg>, mulineType: MULINE_TYPES, useLeastColors: boolean): Promise<Palette[]> {
+  console.log('aaa', pixelsPalette)
+
+
+  const mulinePalette = getMulinePalette(mulineType);
+
+  const paletteFileName = `${path}/${fileName}/palette.png`;
   const paletteImage = await Jimp.read(paletteFileName);
+ 
   let colors: Array<RGBA> = [];
-  const palette: Array<Palette> = [];
+  const palette: Array<Palette> = []; // palette to return
   const mulineColorSet = new Set<string>;
 
   for (let i = 0; i < paletteImage.bitmap.width; i++) {
@@ -93,7 +168,7 @@ export async function loadPalette(fileName: string, pixelsPalette: Array<Palette
   //if there is alpha - remove it from palette and start icons from indx 0 instead of -1
   // icon-1.png is empty image - used when we have most common color when we don't have alpha
   let iconID = -1;
-  if (hasAlpha(colors)) {
+  if (_hasAlpha(colors)) {
     iconID = 0;
     colors = colors.filter(color => color.a !== 0);
   }
@@ -183,6 +258,11 @@ export function isColorDark(colorHex: string, threshold = 4.5) {
 }
 
 
-function hasAlpha(colorsArray: Array<RGBA>) {
+function _hasAlpha(colorsArray: Array<RGBA>) {
   return colorsArray.findIndex(color => color.a === 0) !== -1
+}
+
+function hasAlpha(pixelsPalette: Array<PaletteFromImg>) {
+  const foundIndex = pixelsPalette.findIndex(pal => hexToRgb( pal.colorHex ).a === 0);
+  return foundIndex !== -1
 }

@@ -46,6 +46,7 @@
                             <img src="/images/icons/{color.icon}.png" alt="symbol for color {color.muline.hex}" class="icon {color.invertIcon ? 'inverted' : ''}">
                             </div>
                             <p>{color.muline.id}</p>
+                            <p style="font-size: 10px; margin-left: 10px;">x{color.count}</p>
                         {/if}
                         
                     </div>
@@ -53,7 +54,7 @@
                 {/each}
             </div>
         {:else}
-            <Loading/>
+            <Loading text="loading palette..."/>
         {/if}
    
     
@@ -70,7 +71,7 @@
 
     export let fileName: string;
     export let imagePalette: Array<Palette> | null;
-    export let imagePixelsPalette: Array<Palette> | null;
+    let imagePixelsPalette: Array<Palette> | null;
     let sortedByMuline = false;
     let dontMergeSameColors = false;
     
@@ -141,7 +142,6 @@
         data["mulineType"] = selectedMulineType;
         data["useLeastColors"] = useLeastColors;
         data["pixelsPalette"] = imagePixelsPalette;
-        console.log(imagePixelsPalette)
         const { palette } = await apiCall('/api/getPalette', data);
         return palette;
     }
@@ -155,14 +155,8 @@
     }
 
     onMount(async () => {
-        //TODO HERE
-        //TODO add first request for colors from image, then request palette
-        //palette from iamge will be passed fro reqestPalette, so that image color will not be loaded every time we chane palette settings
-       
         imagePixelsPalette = await requestPixelsPalette();
         imagePalette = await requestPalette();
-        
-        
     })
     
 </script>
