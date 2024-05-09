@@ -15,32 +15,25 @@
                 {#if hasSplitImages}
                     <span style="width: {imagesScrollableBoxWidth}px; text-align: center;">(scroll for not split images)</span>
                 {/if}
-                 <!-- Split Images-->
-                 {#if hasSplitImages}
-                    <div class="rowContainer">
-                        <div class="splitGallery">
-                            <div>
-                                <Download type="image" imgSrc={generatedPatterns[0]} href={generatedPatterns[0]} downloadFileName="generatedPattern_1" imgAlt="generated pattern in color split in 4 - part 1" isSplitImg={true} />
-                                <Download type="image" imgSrc={generatedPatterns[1]} href={generatedPatterns[1]} downloadFileName="generatedPattern_2" imgAlt="generated pattern in color split in 4 - part 2" isSplitImg={true} />
+                <!-- Split Images-->
+                {#if hasSplitImages}
+                <div class="test">
+                    <div class="gridGallery" style="--splitCountX: {numOfSplitsX}; --splitCountY: {numOfSplitsY};">
+                        {#each generatedPatterns as image, index}
+                            <div class="gridGalleryItem">
+                                <Download type="image" imgSrc={image} href={image} downloadFileName="generatedPattern_{index}" imgAlt="generated pattern in color split in {numOfSplitsX*numOfSplitsY} - part {index}" isSplitImg={true} />
                             </div>
-                            <div>
-                                <Download type="image" imgSrc={generatedPatterns[2]} href={generatedPatterns[2]} downloadFileName="generatedPattern_3" imgAlt="generated pattern in color split in 4 - part 3" isSplitImg={true} />
-                                <Download type="image" imgSrc={generatedPatterns[3]} href={generatedPatterns[3]} downloadFileName="generatedPattern_4" imgAlt="generated pattern in color split in 4 - part 4"  isSplitImg={true} />
-                            
-                            </div>
-                        </div>
-
-                        <div class="splitGallery">
-                            <div>
-                                <Download type="image" imgSrc={generatedPatternsBW[0]} href={generatedPatternsBW[0]} downloadFileName="generatedPatternBW_1" imgAlt="generated pattern in black and white split in 4 - part 1"  isSplitImg={true} />
-                                <Download type="image" imgSrc={generatedPatternsBW[1]} href={generatedPatternsBW[1]} downloadFileName="generatedPatternBW_2" imgAlt="generated pattern in black and white split in 4 - part 2"  isSplitImg={true} />
-                            </div>
-                            <div>
-                                <Download type="image" imgSrc={generatedPatternsBW[2]} href={generatedPatternsBW[2]} downloadFileName="generatedPatternBW_3" imgAlt="generated pattern in black and white split in 4 - part 3"  isSplitImg={true} />
-                                <Download type="image" imgSrc={generatedPatternsBW[3]} href={generatedPatternsBW[3]} downloadFileName="generatedPatternBW_4" imgAlt="generated pattern in black and white split in 4 - part 4"  isSplitImg={true} />
-                            </div>
-                        </div>
+                        {/each}
                     </div>
+                    <div class="gridGallery" style="--splitCountX: {numOfSplitsX}; --splitCountY: {numOfSplitsY};">
+                        {#each generatedPatternsBW as image, index}
+                            <div class="gridGalleryItem">
+                                <Download type="image" imgSrc={image} href={image} downloadFileName="generatedPattern_{index}" imgAlt="generated pattern in black and white split in {numOfSplitsX*numOfSplitsY} - part {index}" isSplitImg={true} />
+                        
+                            </div>
+                        {/each}
+                    </div>
+                </div>
                 {/if}
                 <!-- Base images -->
                 <div class="rowContainer">
@@ -101,6 +94,9 @@
 
     let skipPreview: boolean;
 
+    let numOfSplitsX = 0;
+    let numOfSplitsY = 0;
+
 
     export let data;
 
@@ -112,7 +108,14 @@
         }
         const width = Number(imgDimensions.split(' x ')[0]);
         const height = Number(imgDimensions.split(' x ')[1]);
-        return width >= 60 || height >= 60;
+        const THRESHOLD_SPLIT = 60
+        if (width >= 60 || height >= 60) {
+            numOfSplitsX = Math.floor(width/THRESHOLD_SPLIT) + (width%THRESHOLD_SPLIT === 0 ? 0 : 1);
+            numOfSplitsY = Math.floor(height/THRESHOLD_SPLIT) + (height%THRESHOLD_SPLIT === 0 ? 0 : 1);
+            return true
+        }
+      
+        return false;
     }
 
 
@@ -128,9 +131,8 @@
         fileName = data.fileName;
 
         const imgDimensions = sessionStorage.getItem('imageDimension') || '';
-        // TODO add handleing for new way of spliting
         if (checkForSplit(imgDimensions)) {
-            for(let i=1;i<=4;i++) {
+            for(let i=1;i<=numOfSplitsX*numOfSplitsY;i++) {
                 generatedPatterns.push(`/images/pattern/${data.fileName}/pattern_${i}.png`);
                 generatedPatternsBW.push(`/images/pattern/${data.fileName}/pattern_bw_${i}.png`);
             }
@@ -165,16 +167,30 @@
 
 
 <style>
-    .splitGallery {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+
+    .test {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(1, 1fr);
+    }
+
+    .gridGallery {
+        margin: 0;
+        margin-right: 20px;
+        display: grid;
+        overflow: auto;
+        grid-template-columns: repeat(var(--splitCountX), calc(100% / var(--splitCountX)));
+        grid-template-rows: repeat(var(--splitCountY), calc(100% / var(--splitCountY)));
+    }
+
+    .gridGalleryItem {
         text-align: center;
     }
 
     .scrollable {
         overflow: scroll;
         max-height: 60vh;
+        max-width: 70vw;
         box-shadow: inset gray 0px 0px 20px -12px;
     }
 

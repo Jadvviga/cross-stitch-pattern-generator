@@ -341,7 +341,6 @@ function splitImage(imagePixelsArray: Array<number>, ogWidth: number, ogHeight: 
       return THRESHOLD_SPLIT;
     }
     const specialCase = total%THRESHOLD_SPLIT <= THRESHOLD_SPLIT/2; //the rest from divisin is smaller then 30
-    console.log(total%THRESHOLD_SPLIT, specialCase)
     if (currentIndex === numOfSplits - 1) {
       return specialCase ? THRESHOLD_SPLIT_SPECIAL : THRESHOLD_SPLIT;
     }
