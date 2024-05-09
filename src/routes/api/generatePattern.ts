@@ -41,7 +41,8 @@ const GRID_COUNTER = 10; //how often we have highlighted (thicker) grid
 
 const THRESHOLD_SMALL = 15;
 const THRESHOLD_BIG = 45;
-const THRESHOLD_SPLIT = 60;
+const THRESHOLD_SPLIT = 60; //limit for splitting image
+const THRESHOLD_SPLIT_SPECIAL = 40; //for cases when last split is less then 30 - the we split last and snd to last by half
 
 const PATH_UPLOAD = 'static/images/upload/';
 const PATH_PATTERN = 'static/images/pattern/';
@@ -161,7 +162,6 @@ function generateImagePattern(
   const resizedImageBWPixelsArray = getPixelsOfGriddedImage(imagePixelsArray, width, height, newWidth, newHeight, scale, gridSize, GRID_HIGHLIGHT_SIZE, true);
 
   const savePatterPDF = (imageFileName: string) => {
-    console.log('savePatternPdf')
     if (imageFileName.includes('bw')) {
       imagesForPDFBW.push(imageFileName);
     } else {
@@ -332,27 +332,36 @@ function splitImage(imagePixelsArray: Array<number>, ogWidth: number, ogHeight: 
     return [{ array: imagePixelsArray, width: ogWidth, height: ogHeight, startX: 0, startY: 0 }];
   }
 
-  //TODO fixe when width/height is divisable by 60 - then we do not need +1
-  const numOfSplitsX = Math.floor(ogWidth/THRESHOLD_SPLIT) + 1;
-  const numOfSplitsY = Math.floor(ogHeight/THRESHOLD_SPLIT) + 1;
+  const numOfSplitsX = Math.floor(ogWidth/THRESHOLD_SPLIT) + (ogWidth%THRESHOLD_SPLIT === 0 ? 0 : 1);
+  const numOfSplitsY = Math.floor(ogHeight/THRESHOLD_SPLIT) + (ogHeight%THRESHOLD_SPLIT === 0 ? 0 : 1);
   console.log(ogWidth, numOfSplitsX, ogHeight, numOfSplitsY);
 
-  const splitReturn: Array<any> = [];
+  const getCurrentDimension= (currentIndex: number, numOfSplits: number, total: number) => {
+    if (currentIndex < numOfSplits - 1) {
+      return THRESHOLD_SPLIT;
+    }
+    const specialCase = total%THRESHOLD_SPLIT <= THRESHOLD_SPLIT/2; //the rest from divisin is smaller then 30
+    console.log(total%THRESHOLD_SPLIT, specialCase)
+    if (currentIndex === numOfSplits - 1) {
+      return specialCase ? THRESHOLD_SPLIT_SPECIAL : THRESHOLD_SPLIT;
+    }
+    return total - (numOfSplits - 2) * THRESHOLD_SPLIT - (specialCase ? THRESHOLD_SPLIT_SPECIAL : THRESHOLD_SPLIT);
+  }
 
-  //TODO add handling if last split is smaller then half of Threshold (then add its dim to 60 and split that to two)
+  const splitReturn: Array<any> = [];
   
   let startX = 0, startY = 0;
   for (let y = 1; y <= numOfSplitsY; y++) {
-    let height = y === numOfSplitsY ? ogHeight%THRESHOLD_SPLIT : THRESHOLD_SPLIT;
+   let height = getCurrentDimension(y, numOfSplitsY, ogHeight);
     for (let x = 1; x <= numOfSplitsX; x++) {
-      let width = x === numOfSplitsX ? ogWidth%THRESHOLD_SPLIT : THRESHOLD_SPLIT;
+      let width = getCurrentDimension(x, numOfSplitsX, ogWidth)
       splitReturn.push( { array: [], width, height, startX, startY });
       startX += width;
     }
     startY += height;
     startX = 0;
   }
-
+  
   for (let y = 0; y < ogHeight; y++) {
     for (let x = 0; x < ogWidth; x++) {
       let pos = y * ogWidth + x;
