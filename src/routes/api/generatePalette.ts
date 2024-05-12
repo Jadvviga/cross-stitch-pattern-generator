@@ -1,23 +1,10 @@
 import Jimp from "jimp";
-import { MULINE_TYPES, type MulineData, type Palette, type PaletteFromImg } from "../../data/mulineData";
-import { ARIADNA } from "../../data/ariadna";
-import { DMC } from "../../data/dmc";
+import { MULINE_TYPES, type MulineData, type Palette, type PaletteFromImg, getMulinePalette } from "../../data/mulineData";
 import Color from "colorjs.io";
 
 
 const path = 'static/images/upload/';
 const ICON_COUNT = 55;
-
-function getMulinePalette(mulineType: MULINE_TYPES): Array<MulineData> {
-    switch (mulineType){
-        case MULINE_TYPES.Ariadna:
-            return ARIADNA;
-        case MULINE_TYPES.DMC:
-            return DMC;
-        // possibly more muline producers in the future
-    }
-        
-}
 
 function componentToHex(c: number) {
   var hex = c.toString(16);

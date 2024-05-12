@@ -57,7 +57,7 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
-    import PaletteSettings from '../../../components/PaletteSettings.svelte';
+    import PaletteSettings from '../../../components/PaletteSettings/PaletteSettings.svelte';
     import Loading from '../../../components/Loading.svelte';
     import { fade } from 'svelte/transition';
     import type { Palette as PaletteType} from '../../../data/mulineData';

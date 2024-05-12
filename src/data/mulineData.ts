@@ -1,3 +1,6 @@
+import { ARIADNA } from "./ariadna";
+import { DMC } from "./dmc";
+
 export enum MULINE_TYPES {
     Ariadna = "Ariadna",
     DMC = "DMC"
@@ -5,7 +8,6 @@ export enum MULINE_TYPES {
 
 export type MulineData = {
     id: string;
-    RGBnumbers?: number[];
     hex: string;
 }
 interface IPaletteFromImg  {
@@ -22,6 +24,17 @@ interface IPaletteFromImg  {
 export type PaletteFromImg = IPaletteFromImg;
 
 export type Palette = IPaletteFull;
+
+export function getMulinePalette(mulineType: MULINE_TYPES): Array<MulineData> {
+    switch (mulineType){
+        case MULINE_TYPES.Ariadna:
+            return ARIADNA;
+        case MULINE_TYPES.DMC:
+            return DMC;
+        // possibly more muline producers in the future
+    }
+        
+}
 
 
 

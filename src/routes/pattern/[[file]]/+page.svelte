@@ -17,7 +17,7 @@
                 {/if}
                 <!-- Split Images-->
                 {#if hasSplitImages}
-                <div class="test">
+                <div class="gridGalleryWrapper">
                     <div class="gridGallery" style="--splitCountX: {numOfSplitsX}; --splitCountY: {numOfSplitsY};">
                         {#each generatedPatterns as image, index}
                             <div class="gridGalleryItem">
@@ -168,7 +168,7 @@
 
 <style>
 
-    .test {
+    .gridGalleryWrapper {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         grid-template-rows: repeat(1, 1fr);

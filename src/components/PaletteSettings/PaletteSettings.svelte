@@ -31,20 +31,18 @@
             <div class='palette'>
                 {#each imagePalette as color, index}
                     <div class="rowContainer colorsContainer">
-                        <div
-                        class="colorTile"
-                        style=" --tileColor: {color.colorHex}"/>
+                        <ColorTile
+                            {color}/>
                         <p style="width: 70px">({color.colorHex})</p>
                         {#if !previousMulineColIsSame(color, index) || dontMergeSameColors}
                             <p>→ </p>
-                            <div
-                            class="colorTile"
-                            style=" --tileColor: {color.muline.hex}"/>
-                            <div
-                            class="colorTile"
-                            style=" --tileColor: {color.muline.hex}">
-                            <img src="/images/icons/{color.icon}.png" alt="symbol for color {color.muline.hex}" class="icon {color.invertIcon ? 'inverted' : ''}">
-                            </div>
+                            <ColorTile
+                                {color}
+                                clickable={true}/>
+                            <ColorTile
+                                {color}
+                                clickable={true}
+                                icon={color.icon}/>
                             <p>{color.muline.id}</p>
                             <p style="font-size: 10px; margin-left: 10px;">x{color.count}</p>
                         {/if}
@@ -53,27 +51,36 @@
                     
                 {/each}
             </div>
-        {:else}
-            <Loading text="loading palette..."/>
-        {/if}
-   
+    {:else}
+        <Loading text="loading palette..."/>
+    {/if}
+
+    
+<MulineColorPicker
+{selectedMulineType}/>
+    
     
    
 </div>
 
 <script lang="ts">
     import { createEventDispatcher, onMount } from "svelte";
-    import MulineTypeSelector from "./MulineTypeSelector.svelte";
-    import { MULINE_TYPES } from "../data/mulineData";
-    import type { Palette } from "../data/mulineData";
-    import Loading from "./Loading.svelte";
-    import { apiCall } from "../request";
+    import MulineTypeSelector from "../MulineTypeSelector.svelte";
+    import { MULINE_TYPES } from "../../data/mulineData";
+    import type { Palette } from "../../data/mulineData";
+    import Loading from "../Loading.svelte";
+    import { apiCall } from "../../request";
+    import ColorTile from "../ColorTile.svelte";
+    import MulineColorPicker from "./MulineColorPicker.svelte";
 
     export let fileName: string;
     export let imagePalette: Array<Palette> | null;
     let imagePixelsPalette: Array<Palette> | null;
     let sortedByMuline = false;
     let dontMergeSameColors = false;
+
+    let showMulineColorPicker = false;
+    let showIconPicker = false;
 
     const dispatcher = createEventDispatcher();
     
@@ -168,24 +175,6 @@
 </script>
 
 <style>
-    .colorTile {
-        width: 30px;
-        height: 30px;
-        margin: 10px;
-        border: 3px white solid;
-        box-shadow: 2px 2px 4px 2px rgba(0, 0, 0, 0.3);
-        background-color: var(--tileColor);
-    }
-
-    .icon {
-        width: 30px;
-        height: 30px;
-    }
-
-    .inverted {
-        filter: invert(1);
-    }
-
     .colorsContainer {
         gap: 0;
         margin: 0;
