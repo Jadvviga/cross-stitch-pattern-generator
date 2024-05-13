@@ -1,10 +1,12 @@
 <div
+    bind:this={node}
     class="colorTile"
     class:clickableTile={clickable}
-    style=" --tileColor: {color?.colorHex || color?.hex}"
-    on:click={handleClick}>
+    style=" --tileColor: {colorToDisplay}"
+    on:click={handleClick}
+    title={clickable ? `Click to change ${icon ? 'icon' : 'embroidery floss color'}` : ''}>
     {#if icon} 
-        <img src="/images/icons/{icon}.png" alt="symbol for color {color?.muline.hex || color?.hex}" class="icon {color?.invertIcon ? 'inverted' : ''}">
+        <img src="/images/icons/{icon}.png" alt="symbol for color {colorToDisplay}" class="icon {color?.invertIcon ? 'inverted' : ''}">
     {/if}
 </div>
 
@@ -13,15 +15,17 @@
     import type { MulineData, Palette } from "../data/mulineData";
 
     export let color: Palette | MulineData;
+    export let colorToDisplay: string;
     export let icon: string | null = null;
     export let clickable = false;
 
+    let node: HTMLElement;
 
     const dispatcher = createEventDispatcher();
 
     function handleClick() {
-        if (clickable) {
-            dispatcher('click', {color});
+        if (clickable && node) {
+            dispatcher('click', {color, node});
         }
     }
 

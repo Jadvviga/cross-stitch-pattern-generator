@@ -1,34 +1,94 @@
-<div class="mulinePicker" class:visible={show}>
+<svelte:body on:click={onClickOutside}/>
+<div class="mulinePicker {show ? "visible" : "invisible"}" bind:this={node}>
 
     {#if mulinePalette}
-    <div class="tilesContainer">
-            {#each mulinePalette as color}
-            <div class="tile">
-                <ColorTile
-                    {color}
-                    clickable={true}/>
-                <span class="label">{color.id}</span>
-            </div>
-                
-            {/each}
+        <div class="tilesContainer">
+                {#each mulinePalette as color}
+                    <div id={color.id} class="tile" class:selected={currentColor?.muline.id === color.id} use:scrollToTile={currentColor}>
+                        <ColorTile
+                            {color}
+                            colorToDisplay={color.hex}
+                            clickable={true}
+                            on:click={() => handleMulineSelect(color)}/>
+                        <span class="label">{color.id}</span>
+                    </div>
+                {/each}
         </div>
     {/if}
    
 </div>
 
 <script lang="ts">
-    import { MULINE_TYPES, getMulinePalette, type MulineData} from "../../data/mulineData";
-    import { onMount } from 'svelte';
+    import { MULINE_TYPES, getMulinePalette, type MulineData, type Palette} from "../../data/mulineData";
+    import { createEventDispatcher, onMount } from 'svelte';
     import ColorTile from "../ColorTile.svelte";
 
 
-export let selectedMulineType: MULINE_TYPES = MULINE_TYPES.Ariadna;
+export let selectedMulineType: MULINE_TYPES | string = MULINE_TYPES.Ariadna;
 let mulinePalette: Array<MulineData>;
 // export let currentTileColor: string; //hex
-// export let currentIndex: number;
-// export let tileNode: HTMLElement;
+export let currentColor: Palette;
+export let targetTileNode: HTMLElement;
 
 export let show = false;
+let node: HTMLElement;
+
+$: if (targetTileNode) {
+    setPickerPosition();
+}
+$: if (!show) {
+    setTimeout(() => { if (node) node.style.display = "none";}, 200);
+} else {
+    if (node) node.style.display = "initial";
+    
+   
+}
+
+const dispatcher = createEventDispatcher();
+
+function handleMulineSelect(clickedColor: MulineData) {
+    dispatcher("mulinePicked", {currentColor, clickedColor})
+    show = false;
+}
+
+
+function setPickerPosition() {
+    if (!node || !node.parentElement) {
+        return;
+    }
+    //todo calculate if should be on bottom or top (dependig if the tile is near bottom or not)
+    const { height, width} = targetTileNode.getBoundingClientRect();
+    const scrollContainer = targetTileNode?.parentElement?.parentElement;
+    const scrollOffset = scrollContainer ? scrollContainer.scrollTop : 0;
+    const top = targetTileNode.offsetTop + height - scrollOffset;
+    const left = targetTileNode.offsetLeft + width ;
+    node.style.top = `${top}px`;
+    node.style.left = `${left}px`
+}
+
+function scrollToTile(tileNode: HTMLElement, _targetColor: Palette) {
+    return {
+        update(targetColor: Palette) {
+            if (tileNode.id === targetColor.muline.id) {
+                tileNode.scrollIntoView();
+            }
+        }
+    }
+}
+
+
+function onClickOutside(event: MouseEvent) {
+    console.log('click')
+    if (!show || !targetTileNode) {
+        return;
+    }
+    const target = event.target as Node;
+    if (node.contains(target) || node === target || targetTileNode === target) {
+        return;
+    }
+    show = false;
+}
+
 
 onMount(() => {
     mulinePalette = getMulinePalette(selectedMulineType);
@@ -40,18 +100,25 @@ onMount(() => {
 <style>
     .mulinePicker {
         position: absolute;
-        top: 0;
         overflow: scroll;
         height: 500px;
         border-radius: 10px;
         border: 1px solid rgb(58, 57, 57);
         box-shadow:  rgb(58, 57, 57) 10px 10px 20px -12px;
         background-color: white;
-
+       
     }
 
     .visible {
-        display: none;
+        visibility: visible;
+        opacity: 1;
+        transition:  opacity 0.2s linear;
+    }
+
+    .invisible {
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.2s linear, visibility 0s 0.2s;
     }
 
     .tilesContainer {
@@ -62,6 +129,10 @@ onMount(() => {
 
     .tile {
         text-align: center;
+    }
+
+    .selected {
+        box-shadow:  rgba(4, 0, 238, 0.7) 0px 0px 4px 2px;
     }
 
     .label {
