@@ -62,13 +62,12 @@
         {/if}
     {/key}
 
-    
-<MulineColorPicker
-    {selectedMulineType}
-    bind:show={showMulineColorPicker}
-    targetTileNode={clickedTile}
-    currentColor={clickedColor}
-    on:mulinePicked={changeColorInPalette}/>
+    <MulineColorPicker
+        {selectedMulineType}
+        bind:show={showMulineColorPicker}
+        targetTileNode={clickedTile}
+        currentColor={clickedColor}
+        on:mulinePicked={changeColorInPalette}/>
     
     
    
@@ -108,7 +107,6 @@
 
     function handleColorTileClick(event: CustomEvent) {
         const {color, node: tileNode} = event.detail;
-        console.log(tileNode)
         showMulineColorPicker = true;
         clickedTile = tileNode;
         clickedColor = color;
@@ -121,6 +119,14 @@
         const {currentColor: colorToChange, clickedColor} = event.detail;
         const foundIndex = imagePalette.findIndex(col => col.index === colorToChange.index);
         imagePalette[foundIndex].muline = clickedColor;
+
+        // If clicked muline color is already in palette - apply its icon
+        const mulineAlreadyInPalette = imagePalette.findIndex(col => col.muline.id === clickedColor.id);
+        if (mulineAlreadyInPalette) {
+            const takeIconFrom = imagePalette[mulineAlreadyInPalette];
+            imagePalette[foundIndex].icon = takeIconFrom.icon;
+            imagePalette[foundIndex].invertIcon = takeIconFrom.invertIcon;
+        }
         imagePalette = imagePalette;
     }
         
@@ -201,6 +207,7 @@
     onMount(async () => {
         imagePixelsPalette = await requestPixelsPalette();
         imagePalette = await requestPalette();
+        console.log(imagePalette)
     })
     
 </script>

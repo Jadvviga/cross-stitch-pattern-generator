@@ -25,7 +25,7 @@ export type PaletteFromImg = IPaletteFromImg;
 
 export type Palette = IPaletteFull;
 
-export function getMulinePalette(mulineType: MULINE_TYPES): Array<MulineData> {
+export function getMulinePalette(mulineType: MULINE_TYPES | string): Array<MulineData> {
     switch (mulineType){
         case MULINE_TYPES.Ariadna:
             return ARIADNA;
@@ -33,6 +33,7 @@ export function getMulinePalette(mulineType: MULINE_TYPES): Array<MulineData> {
             return DMC;
         // possibly more muline producers in the future
     }
+    return [];
         
 }
 

@@ -1,5 +1,5 @@
 <svelte:body on:click={onClickOutside}/>
-<div class="mulinePicker {show ? "visible" : "invisible"}" bind:this={node}>
+<div class="mulinePicker {show ? "visible" : "invisible"} {shouldBeAbove ? 'above' : 'below'}" bind:this={node}>
 
     {#if mulinePalette}
         <div class="tilesContainer">
@@ -24,89 +24,96 @@
     import ColorTile from "../ColorTile.svelte";
 
 
-export let selectedMulineType: MULINE_TYPES | string = MULINE_TYPES.Ariadna;
-let mulinePalette: Array<MulineData>;
-// export let currentTileColor: string; //hex
-export let currentColor: Palette;
-export let targetTileNode: HTMLElement;
+    export let selectedMulineType: MULINE_TYPES | string = MULINE_TYPES.Ariadna;
+    export let currentColor: Palette;
+    export let targetTileNode: HTMLElement;
 
-export let show = false;
-let node: HTMLElement;
+    let mulinePalette: Array<MulineData>;
 
-$: if (targetTileNode) {
-    setPickerPosition();
-}
-$: if (!show) {
-    setTimeout(() => { if (node) node.style.display = "none";}, 200);
-} else {
-    if (node) node.style.display = "initial";
-    
-   
-}
+    export let show = false;
+    let node: HTMLElement;
+    let shouldBeAbove: boolean
 
-const dispatcher = createEventDispatcher();
-
-function handleMulineSelect(clickedColor: MulineData) {
-    dispatcher("mulinePicked", {currentColor, clickedColor})
-    show = false;
-}
-
-
-function setPickerPosition() {
-    if (!node || !node.parentElement) {
-        return;
+    $: if (targetTileNode && node) {
+        setPickerPosition();
     }
-    //todo calculate if should be on bottom or top (dependig if the tile is near bottom or not)
-    const { height, width} = targetTileNode.getBoundingClientRect();
-    const scrollContainer = targetTileNode?.parentElement?.parentElement;
-    const scrollOffset = scrollContainer ? scrollContainer.scrollTop : 0;
-    const top = targetTileNode.offsetTop + height - scrollOffset;
-    const left = targetTileNode.offsetLeft + width ;
-    node.style.top = `${top}px`;
-    node.style.left = `${left}px`
-}
+    $: if (!show) {
+        setTimeout(() => { if (node) node.style.display = "none";}, 200);
+    } else {
+        if (node) node.style.display = "initial";
+    }
 
-function scrollToTile(tileNode: HTMLElement, _targetColor: Palette) {
-    return {
-        update(targetColor: Palette) {
-            if (tileNode.id === targetColor.muline.id) {
-                tileNode.scrollIntoView();
+    const dispatcher = createEventDispatcher();
+
+    function handleMulineSelect(clickedColor: MulineData) {
+        dispatcher("mulinePicked", {currentColor, clickedColor})
+        show = false;
+    }
+
+
+    function setPickerPosition() {
+        if (!node || !node.parentElement) {
+            return;
+        }
+       const { height, width, x, y, } = targetTileNode.getBoundingClientRect();
+        const scrollContainer = targetTileNode?.parentElement?.parentElement?.getBoundingClientRect();
+       
+        shouldBeAbove = scrollContainer && y > (scrollContainer?.y + scrollContainer.height)/2 || false;
+        console.log(shouldBeAbove)
+        const top = y + height - (shouldBeAbove ? node.offsetHeight + targetTileNode.offsetHeight : 0);
+        const left = x + width ;
+        node.style.top = `${top}px`;
+        node.style.left = `${left}px`;
+        node = node;
+    }
+
+    function scrollToTile(tileNode: HTMLElement, _targetColor: Palette) {
+        return {
+            update(targetColor: Palette) {
+                if (tileNode.id === targetColor.muline.id) {
+                    tileNode.scrollIntoView();
+                }
             }
         }
     }
-}
 
 
-function onClickOutside(event: MouseEvent) {
-    console.log('click')
-    if (!show || !targetTileNode) {
-        return;
+    function onClickOutside(event: MouseEvent) {
+        if (!show || !targetTileNode) {
+            return;
+        }
+        const target = event.target as Node;
+        if (node.contains(target) || node === target || targetTileNode === target) {
+            return;
+        }
+        show = false;
     }
-    const target = event.target as Node;
-    if (node.contains(target) || node === target || targetTileNode === target) {
-        return;
-    }
-    show = false;
-}
 
 
-onMount(() => {
-    mulinePalette = getMulinePalette(selectedMulineType);
-    console.log(mulinePalette)
-});
+    onMount(() => {
+        mulinePalette = getMulinePalette(selectedMulineType);
+    });
 
 </script>
 
 <style>
     .mulinePicker {
-        position: absolute;
+        position: fixed;
         overflow: scroll;
-        height: 500px;
+        height: 450px;
         border-radius: 10px;
-        border: 1px solid rgb(58, 57, 57);
+        border: 1px solid rgb(168, 168, 168);
         box-shadow:  rgb(58, 57, 57) 10px 10px 20px -12px;
         background-color: white;
        
+    }
+
+    .above {
+        border-radius: 10px 10px 10px 0px;
+    }
+
+    .below {
+        border-radius: 0px 10px 10px 10px;
     }
 
     .visible {
