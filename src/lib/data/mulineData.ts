@@ -14,6 +14,7 @@ interface IPaletteFromImg  {
     index: number
     colorHex: string;
     count: number;
+    isAlpha: boolean;
  }
  interface IPaletteFull extends IPaletteFromImg  {
     muline: MulineData;

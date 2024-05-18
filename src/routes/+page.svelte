@@ -68,7 +68,7 @@
 
     let fileInput: HTMLElement;
 
-    let files: File[];
+    let files: FileList;
     let uploadedImage: any;
     let imageType: string;
     let uploadedFileGeneratedName = "";

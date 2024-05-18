@@ -1,6 +1,7 @@
 import Jimp from "jimp";
 import type { Palette } from "$lib/data/mulineData";
 import { JimpHexToString, stringHexToJimp } from "$api/generatePalette";
+import type { IconFiles } from "$lib/data/generation";
 
 
 let middleYIcon: Jimp, middleXIcon: Jimp;
@@ -42,7 +43,7 @@ export function addIconsToImage(
     gridSize: number,
     gridHighlightSize: number,
     palette: Array<Palette>,
-    iconFiles: Jimp[],
+    iconFiles: Array<IconFiles>,
     bw = false,
     colorImg: Jimp | null = null
 ): Jimp {
@@ -58,11 +59,14 @@ export function addIconsToImage(
                 const paletteColor = getColorFromPalette(pixel, palette);
                 if (paletteColor) {
                     const iconID = Number(paletteColor?.icon.split('icon')[1]);
-                    const icon = iconFiles[iconID + 1].clone(); //+1 cuz icons start at -1
-                    if (bw) {
-                        icon.brightness(-1);
+                    const icon = iconFiles.find(iconFile => iconFile.index === iconID)?.file.clone();
+                    if (icon) {
+                        if (bw) {
+                            icon.brightness(-1);
+                        }
+                        image.composite(icon, x, y);
                     }
-                    image.composite(icon, x, y);
+                    
                 }
 
             }
@@ -137,25 +141,23 @@ function printTextToImage(image: Jimp, font: Font, posX: number, posY: number, t
     return image;
 }
 
-export async function loadIconsFromPalette(palette: Array<Palette>, scale: number): Promise<Jimp[]> {
+export async function loadIconsFromPalette(palette: Array<Palette>, scale: number): Promise<Array<IconFiles>> {
     middleYIcon =  await Jimp.read(`static/images/icons/middle_left.png`);
     middleYIcon.resize(scale, scale, Jimp.RESIZE_NEAREST_NEIGHBOR);
     middleXIcon =  await Jimp.read(`static/images/icons/middle_top.png`);
     middleXIcon.resize(scale, scale, Jimp.RESIZE_NEAREST_NEIGHBOR);
     const icons = getPaletteIcons(palette);
-    const iconFiles: Array<Jimp> = []; // TODO create object {index, jimp} fro this
-    const found = icons.find(icon => icon.includes('-1'));
-    if (found == undefined) { //if icon-1 is not included (aka there is alpha), add it still for proper calculations
-        iconFiles.push(await Jimp.read(`static/images/icons/icon-1.png`));
-    }
+    const iconFiles: Array<IconFiles> = [];
     for (const fileName of icons) {
         const inverse = fileName.includes('!');
-        const icon = await Jimp.read(`static/images/icons/${fileName.split('!')[0]}.png`);
+        const iconName: string = fileName.split('!')[0]
+        const icon = await Jimp.read(`static/images/icons/${iconName}.png`);
+        const index = Number(iconName.replace('icon', ''));
         icon.resize(scale, scale, Jimp.RESIZE_NEAREST_NEIGHBOR);
         if (inverse) {
             icon.invert();
         }
-        iconFiles.push(icon);
+        iconFiles.push({index, file: icon});
     }
     return iconFiles;
 }
