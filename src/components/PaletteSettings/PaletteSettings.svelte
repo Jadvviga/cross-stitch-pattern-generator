@@ -3,18 +3,30 @@
         label={"Currently chosen palette (changing this will cause a palette refresh)"}
         {selectedMulineType}
         on:changedSelection={handleMulineTypeChange}/>
-    <div>
-        <label>
-            <input type="checkbox" on:change={changePaletteSorting}>
-            Sort by embroidery floss colors
-        </label>
+    
+    <div class="rowContainer" style="margin: 0">
+        <div>
+            <div>
+                <label>
+                    <input type="checkbox" on:change={changePaletteSorting}>
+                    Sort by embroidery floss colors
+                </label>
+            </div>
+            <div>
+                <label>
+                    <input type="checkbox" bind:checked={dontMergeSameColors}>
+                    Do not merge same colors
+                </label>
+            </div>
+        </div>
+        
+        <button on:click={revertAllChanges}
+            class:visible={showRevertButton} class="revertButton">
+            <img src="/undo.png" alt="revert all changes" title="Click to revert the changes" class="icon">      
+            Revert all changes
+        </button>
     </div>
-    <div>
-        <label>
-            <input type="checkbox" bind:checked={dontMergeSameColors}>
-            Do not merge same colors
-        </label>
-    </div>
+    
    
     {#key imagePalette}
         {#if imagePalette}
@@ -52,9 +64,9 @@
                                     on:click={handleIconTileClick}/>
                                 <p>{color.muline.id}</p>
                                 <p style="font-size: 10px; margin-left: 0px;">x{color.count}</p>
-                                <img src="/undo.png" alt="revert color/icon change" title="Click to revert the changes" class="revert">
-                               
-                                <!-- TODO revert button apper properly -->
+                                {#if inModified(color)}
+                                    <img on:click={() => revertSingleColorChanges(color, index)}  src="/undo.png" alt="revert color/icon change" title="Click to revert the changes" class="revert">
+                                {/if}
                             {/if}
                             
                         </div>
@@ -95,8 +107,9 @@
     import MulineColorPicker from "$components/PaletteSettings/MulineColorPicker.svelte";
 
     export let fileName: string;
-    export let imagePalette: Array<Palette> | null;
-    let imagePixelsPalette: Array<Palette> | null;
+    export let imagePalette: Array<Palette> = [];
+    let ogImagePalette: Array<Palette>;
+    let imagePixelsPalette: Array<Palette>;
     let sortedByMuline = false;
     let dontMergeSameColors = false;
 
@@ -105,15 +118,18 @@
     let clickedTile: HTMLElement;
     let clickedColor: Palette;
 
+    let modifiedColors: Array<Palette> = [];
+
     const dispatcher = createEventDispatcher();
     
 
     $: selectedMulineType = sessionStorage.getItem("mulineType") || MULINE_TYPES.Ariadna;
     $: numberOfColors = imagePalette?.length;
     $: numberOfMulineColors = getMulineCount(imagePalette);
+    $: showRevertButton = modifiedColors.length !== 0;
 
     $: if (imagePalette) {
-        dispatcher('paletteLoaded')
+        dispatcher('paletteLoaded');
     }
 
     function handleColorTileClick(event: CustomEvent) {
@@ -136,9 +152,6 @@
     }
 
     function changeColorInPalette(event: CustomEvent) {
-        if (!imagePalette) {
-            return;
-        }
         const {currentColor: colorToChange, clickedColor} = event.detail;
         const foundIndex = imagePalette.findIndex(col => col.index === colorToChange.index);
         imagePalette[foundIndex].muline = clickedColor;
@@ -151,12 +164,10 @@
             imagePalette[foundIndex].invertIcon = takeIconFrom.invertIcon;
         }
         imagePalette = imagePalette;
+        addToModified(colorToChange);
     }
 
     function changeIconInPalette(event: CustomEvent) {
-        if (!imagePalette) {
-            return;
-        }
         const {currentColor: colorToChange, clickedIcon} = event.detail;
         const foundIndex = imagePalette.findIndex(col => col.index === colorToChange.index);
         imagePalette[foundIndex].icon = clickedIcon;
@@ -164,15 +175,40 @@
         //It is up to user if they decide to have 2 diff colors with same icons
         imagePalette = imagePalette;
     }
+
+    function addToModified(color: Palette): void {
+        if (!inModified(color)) {
+            modifiedColors.push(color);
+            modifiedColors = modifiedColors;
+        }
+    }
+
+    function inModified(color: Palette): boolean {
+        return modifiedColors.findIndex(col => col.index === color.index) !== -1;
+    }
+
+    function revertSingleColorChanges(color: Palette, index: number): void {
+        modifiedColors = modifiedColors.filter(col => col.index !== color.index);
+        const ogIndex = ogImagePalette.findIndex(col => col.index === color.index);
+        imagePalette[index] = {...ogImagePalette[ogIndex]};
+        imagePalette = imagePalette;
         
+    }
+
+    function revertAllChanges(): void {
+        modifiedColors = [];
+        imagePalette = JSON.parse(JSON.stringify(ogImagePalette));
+    }
+
     async function handleMulineTypeChange(event: Event | any) {
         const  { selected } = event.detail;
         sessionStorage.setItem("mulineType", selected);
         selectedMulineType = selected;
         
-        imagePalette = null;
+        imagePalette = [];
         imagePalette = await requestPalette();
-        imagePalette?.sort(sortedByMuline ? compareByMuline : compareByPixels);
+        imagePalette.sort(sortedByMuline ? compareByMuline : compareByPixels);
+        saveOgImagePallet();
     }
     
     function changePaletteSorting() {
@@ -239,10 +275,15 @@
         return palette;
     }
 
+    function saveOgImagePallet() {
+        ogImagePalette = JSON.parse(JSON.stringify(imagePalette));
+    }
+
     onMount(async () => {
         imagePixelsPalette = await requestPixelsPalette();
         imagePalette = await requestPalette();
-        console.log(imagePalette)
+        saveOgImagePallet();
+
     })
     
 </script>
@@ -272,6 +313,27 @@
     .paletteHeader span::before {
         content: "\A";
         white-space: pre;
+    }
+
+    .revertButton {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        visibility: hidden;
+    }
+
+    .revertButton.visible {
+        visibility: visible;
+    }
+
+    .revertButton .icon {
+        width: 32px;
+        height: 32px;
+        filter: invert(100%);
+    }
+
+    .revertButton:hover .icon {
+        filter: invert(0);
     }
 
     .palette {

@@ -63,7 +63,6 @@ export async function getPaletteFromImage(fileName: string):  Promise<PaletteFro
 const MIN_DIST_THRESHOLD = 18; //for when using least colors as possible
 //ITP - 19
 //2000 - 7
-//TODO consider giving option of choosing the color disatnce algo
 export async function loadPalette(pixelsPalette: Array<PaletteFromImg>, mulineType: MULINE_TYPES, useLeastColors: boolean): Promise<Palette[]> {
   const mulinePalette = getMulinePalette(mulineType);
   const palette: Array<Palette> = []; // palette to return
