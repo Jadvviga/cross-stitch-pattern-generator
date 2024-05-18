@@ -41,14 +41,16 @@
         background-color: var(--tileColor);
     }
 
+
     .clickableTile {
         cursor: pointer;
     }
 
     .clickableTile:hover {
         transform: scale(1.1);
-        
     }
+
+    
 
     .icon {
         width: 30px;

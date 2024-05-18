@@ -1,42 +1,43 @@
 <svelte:body on:click={onClickOutside}/>
-<div class="mulinePicker {show ? "visible" : "invisible"} {shouldBeAbove ? 'above' : 'below'}" bind:this={node}>
+<div class="picker {show ? "visible" : "invisible"} {shouldBeAbove ? 'above' : 'below'}" bind:this={node}>
 
-    {#if mulinePalette}
-        <div class="tilesContainer">
-                {#each mulinePalette as color}
-                    <div id={color.id} class="tile" class:selected={currentColor?.muline.id === color.id} use:scrollToTile={currentColor}>
-                        <ColorTile
-                            {color}
-                            colorToDisplay={color.hex}
-                            clickable={true}
-                            on:click={() => handleMulineSelect(color)}/>
-                        <span class="label">{color.id}</span>
-                    </div>
-                {/each}
-        </div>
-    {/if}
+    <div class="tilesContainer">
+        {#each Array(ICONS_COUNT) as _, index}
+            <div id="icon{index-1}" class="tile" class:selected={currentColor?.icon === `icon${index-1}`} use:scrollToTile={currentColor}>
+                <ColorTile
+                    color={currentColorNonInvert}
+                    icon="icon{index-1}"
+                    colorToDisplay="#FFFFFF"
+                    clickable={true}
+                    on:click={() => handleIconSelect(index-1)}/>
+            </div>
+        {/each}
+    </div>
+ 
    
 </div>
 
 <script lang="ts">
-    import { MULINE_TYPES, getMulinePalette, type MulineData, type Palette} from "../../data/mulineData";
-    import { createEventDispatcher, onMount } from 'svelte';
+    import type { Palette} from "../../data/mulineData";
+    import { createEventDispatcher } from 'svelte';
     import ColorTile from "../ColorTile.svelte";
 
-
-    export let selectedMulineType: MULINE_TYPES | string = MULINE_TYPES.Ariadna;
     export let currentColor: Palette;
     export let targetTileNode: HTMLElement;
 
-    let mulinePalette: Array<MulineData>;
-
     export let show = false;
+
+    const ICONS_COUNT = 56;
+
     let node: HTMLElement;
-    let shouldBeAbove: boolean
+    let shouldBeAbove: boolean;
+
+    $: currentColorNonInvert = { ...currentColor, invertIcon: false}
 
     $: if (targetTileNode && node) {
         setPickerPosition();
     }
+
     $: if (!show) {
         setTimeout(() => { if (node) node.style.display = "none";}, 200);
     } else {
@@ -45,8 +46,9 @@
 
     const dispatcher = createEventDispatcher();
 
-    function handleMulineSelect(clickedColor: MulineData) {
-        dispatcher("mulinePicked", {currentColor, clickedColor})
+    function handleIconSelect(iconIndex: number) {
+        const clickedIcon = `icon${iconIndex}`
+        dispatcher("iconPicked", {currentColor, clickedIcon});
         show = false;
     }
 
@@ -69,7 +71,7 @@
     function scrollToTile(tileNode: HTMLElement, _targetColor: Palette) {
         return {
             update(targetColor: Palette) {
-                if (tileNode.id === targetColor.muline.id) {
+                if (tileNode.id === targetColor.icon) {
                     tileNode.scrollIntoView();
                 }
             }
@@ -82,21 +84,17 @@
             return;
         }
         const target = event.target as Node;
-        if (node.contains(target) || node === target || targetTileNode === target) {
+        if (node.contains(target) || node === target || targetTileNode === target || targetTileNode.contains(target)) {
             return;
         }
         show = false;
     }
 
 
-    onMount(() => {
-        mulinePalette = getMulinePalette(selectedMulineType);
-    });
-
 </script>
 
 <style>
-    .mulinePicker {
+    .picker {
         position: fixed;
         overflow: scroll;
         height: 450px;

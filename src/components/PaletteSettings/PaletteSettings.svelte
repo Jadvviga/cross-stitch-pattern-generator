@@ -22,10 +22,12 @@
                 <p>
                     Pixel color
                     <span>{numberOfColors} colors</span>
+                    <span style="opacity: 0;">0</span>
                 </p>
                 <p>
                     Embroidery floss color
                     <span>{numberOfMulineColors} colors</span>
+                    <span style="font-weight: bold">(click on embroidery tiles to change colors or icons)</span>
                 </p>
             </div>
                 <div class='palette' on:scroll={() => {showIconPicker = false; showMulineColorPicker = false;}}>
@@ -47,10 +49,12 @@
                                     colorToDisplay={color.muline.hex}
                                     clickable={true}
                                     icon={color.icon}
-                                    on:click/>
+                                    on:click={handleIconTileClick}/>
                                 <p>{color.muline.id}</p>
                                 <p style="font-size: 10px; margin-left: 0px;">x{color.count}</p>
-                                <!-- TODO revert button -->
+                                <img src="/undo.png" alt="revert color/icon change" title="Click to revert the changes" class="revert">
+                               
+                                <!-- TODO revert button apper properly -->
                             {/if}
                             
                         </div>
@@ -64,10 +68,16 @@
 
     <MulineColorPicker
         {selectedMulineType}
-        bind:show={showMulineColorPicker}
         targetTileNode={clickedTile}
         currentColor={clickedColor}
+        bind:show={showMulineColorPicker}
         on:mulinePicked={changeColorInPalette}/>
+
+    <IconPicker
+        targetTileNode={clickedTile}
+        currentColor={clickedColor}
+        bind:show={showIconPicker}
+        on:iconPicked={changeIconInPalette}/>
     
     
    
@@ -81,6 +91,7 @@
     import Loading from "../Loading.svelte";
     import { apiCall } from "../../request";
     import ColorTile from "../ColorTile.svelte";
+    import IconPicker from "./IconPicker.svelte";
     import MulineColorPicker from "./MulineColorPicker.svelte";
 
     export let fileName: string;
@@ -106,8 +117,20 @@
     }
 
     function handleColorTileClick(event: CustomEvent) {
+        showIconPicker = false;
+        showMulineColorPicker = false;
         const {color, node: tileNode} = event.detail;
         showMulineColorPicker = true;
+        clickedTile = tileNode;
+        clickedColor = color;
+    }
+
+    function handleIconTileClick(event: CustomEvent) {
+        showIconPicker = false;
+        showMulineColorPicker = false;
+        const {color, node: tileNode} = event.detail;
+        showIconPicker = true;
+        console.log('aaa')
         clickedTile = tileNode;
         clickedColor = color;
     }
@@ -127,6 +150,18 @@
             imagePalette[foundIndex].icon = takeIconFrom.icon;
             imagePalette[foundIndex].invertIcon = takeIconFrom.invertIcon;
         }
+        imagePalette = imagePalette;
+    }
+
+    function changeIconInPalette(event: CustomEvent) {
+        if (!imagePalette) {
+            return;
+        }
+        const {currentColor: colorToChange, clickedIcon} = event.detail;
+        const foundIndex = imagePalette.findIndex(col => col.index === colorToChange.index);
+        imagePalette[foundIndex].icon = clickedIcon;
+        //We do not change the muline color if icon is already in palette
+        //It is up to user if they decide to have 2 diff colors with same icons
         imagePalette = imagePalette;
     }
         
@@ -245,5 +280,16 @@
         overflow-y: scroll;
         box-shadow: inset gray 0px 0px 20px -12px; 
         border-radius: 10px;
+    }
+
+    .revert {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+    }
+
+    .revert:hover {
+        transform: scale(1.1);
+        
     }
 </style>

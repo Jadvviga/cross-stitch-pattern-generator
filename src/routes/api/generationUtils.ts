@@ -143,7 +143,7 @@ export async function loadIconsFromPalette(palette: Array<Palette>, scale: numbe
     middleXIcon =  await Jimp.read(`static/images/icons/middle_top.png`);
     middleXIcon.resize(scale, scale, Jimp.RESIZE_NEAREST_NEIGHBOR);
     const icons = getPaletteIcons(palette);
-    const iconFiles: Array<Jimp> = [];
+    const iconFiles: Array<Jimp> = []; // TODO create object {index, jimp} fro this
     const found = icons.find(icon => icon.includes('-1'));
     if (found == undefined) { //if icon-1 is not included (aka there is alpha), add it still for proper calculations
         iconFiles.push(await Jimp.read(`static/images/icons/icon-1.png`));
