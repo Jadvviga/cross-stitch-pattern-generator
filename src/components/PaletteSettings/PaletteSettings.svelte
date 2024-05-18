@@ -174,6 +174,7 @@
         //We do not change the muline color if icon is already in palette
         //It is up to user if they decide to have 2 diff colors with same icons
         imagePalette = imagePalette;
+        addToModified(colorToChange);
     }
 
     function addToModified(color: Palette): void {
