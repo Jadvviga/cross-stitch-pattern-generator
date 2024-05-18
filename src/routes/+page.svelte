@@ -59,11 +59,11 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     import { onMount } from "svelte";
-    import Loading from "../components/Loading.svelte";
-    import type { MULINE_TYPES } from "../data/mulineData";
-    import MulineTypeSelector from "../components/MulineTypeSelector.svelte"
+    import Loading from "$components/Loading.svelte";
+    import type { MULINE_TYPES } from "$lib/data/mulineData";
+    import MulineTypeSelector from "$components/MulineTypeSelector.svelte"
     import { fade } from "svelte/transition";
-    import { apiCall } from "../request";
+    import { apiCall } from "$lib/request";
 
 
     let fileInput: HTMLElement;

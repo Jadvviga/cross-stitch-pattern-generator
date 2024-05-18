@@ -1,6 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { loadPalette } from '../generatePalette.js';
-import type { MULINE_TYPES } from '../../../data/mulineData.js';
+import { loadPalette } from '$api/generatePalette.js';
  
 export async function POST({ request }) {
     const { data } = await request.json();

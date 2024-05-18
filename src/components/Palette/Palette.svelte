@@ -70,9 +70,9 @@
 
 <script lang="ts">
     import { createEventDispatcher, onMount } from "svelte";
-    import type { Palette } from "../../data/mulineData";
-    import { getPaletteBlob } from "./paletteUtils";
-    import { apiCall } from "../../request";
+    import type { Palette } from "$lib/data/mulineData";
+    import { getPaletteBlob } from "$components/Palette/paletteUtils";
+    import { apiCall } from "$lib/request";
     
 
     export let fileName: string;

@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { generatePattern } from '../generatePattern.js';
+import { generatePattern } from '$api/generatePattern.js';
  
 export async function POST({ request }) {
     const { data } = await request.json();

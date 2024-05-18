@@ -19,9 +19,9 @@
 </div>
 
 <script lang="ts">
-    import { MULINE_TYPES, getMulinePalette, type MulineData, type Palette} from "../../data/mulineData";
+    import { MULINE_TYPES, getMulinePalette, type MulineData, type Palette} from "$lib/data/mulineData";
     import { createEventDispatcher, onMount } from 'svelte';
-    import ColorTile from "../ColorTile.svelte";
+    import ColorTile from "$components/ColorTile.svelte";
 
 
     export let selectedMulineType: MULINE_TYPES | string = MULINE_TYPES.Ariadna;

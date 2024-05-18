@@ -1,10 +1,9 @@
 import Jimp from "jimp";
-import type { Palette } from "../../data/mulineData";
+import type { Palette } from "$lib/data/mulineData";
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
-import { addIconsToImage, addTextToImage, loadIconsFromPalette, loadImageToPixelsArray } from "./generationUtils";
+import { addIconsToImage, addTextToImage, loadIconsFromPalette, loadImageToPixelsArray } from "$api/generationUtils";
 import JSZip from "jszip";
-import { JimpHexToString, stringHexToJimp } from "./generatePalette";
 
 
 //A4 ma na 350 dpi 2893 x 4092 px

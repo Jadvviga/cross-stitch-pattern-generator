@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { getPaletteFromImage, loadPalette } from '../generatePalette.js';
+import { getPaletteFromImage, loadPalette } from '$api/generatePalette.js';
  
 export async function POST({ request }) {
     const { data } = await request.json();

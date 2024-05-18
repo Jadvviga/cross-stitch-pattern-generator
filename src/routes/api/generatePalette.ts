@@ -1,5 +1,5 @@
 import Jimp from "jimp";
-import { MULINE_TYPES, type MulineData, type Palette, type PaletteFromImg, getMulinePalette } from "../../data/mulineData";
+import { MULINE_TYPES, type MulineData, type Palette, type PaletteFromImg, getMulinePalette } from "$lib/data/mulineData";
 import Color from "colorjs.io";
 
 

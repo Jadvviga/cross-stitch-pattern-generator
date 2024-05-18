@@ -57,12 +57,12 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
-    import PaletteSettings from '../../../components/PaletteSettings/PaletteSettings.svelte';
-    import Loading from '../../../components/Loading.svelte';
+    import PaletteSettings from '$src/components/PaletteSettings/PaletteSettings.svelte';
+    import Loading from '$src/components/Loading.svelte'
     import { fade } from 'svelte/transition';
-    import type { Palette as PaletteType} from '../../../data/mulineData';
-    import Palette from '../../../components/Palette/Palette.svelte';
-    import { apiCall } from '../../../request';
+    import type { Palette as PaletteType} from '$lib/data/mulineData';
+    import Palette from '$src/components/Palette/Palette.svelte';
+    import { apiCall } from '$lib/request';
 
 
     let uploadedImage: any;

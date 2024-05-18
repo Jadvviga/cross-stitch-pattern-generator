@@ -13,7 +13,7 @@
 
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { MULINE_TYPES } from "../data/mulineData";
+    import { MULINE_TYPES } from "$lib/data/mulineData";
 
     export let selectedMulineType: MULINE_TYPES | string = MULINE_TYPES.Ariadna;
     export let label = "Select muline producer:";

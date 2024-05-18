@@ -85,14 +85,14 @@
 
 <script lang="ts">
     import { createEventDispatcher, onMount } from "svelte";
-    import MulineTypeSelector from "../MulineTypeSelector.svelte";
-    import { MULINE_TYPES } from "../../data/mulineData";
-    import type { Palette } from "../../data/mulineData";
-    import Loading from "../Loading.svelte";
-    import { apiCall } from "../../request";
-    import ColorTile from "../ColorTile.svelte";
-    import IconPicker from "./IconPicker.svelte";
-    import MulineColorPicker from "./MulineColorPicker.svelte";
+    import MulineTypeSelector from "$components/MulineTypeSelector.svelte";
+    import { MULINE_TYPES } from "$lib/data/mulineData";
+    import type { Palette } from "$lib/data/mulineData";
+    import Loading from "$components/Loading.svelte";
+    import { apiCall } from "$lib/request";
+    import ColorTile from "$components/ColorTile.svelte";
+    import IconPicker from "$components/PaletteSettings/IconPicker.svelte";
+    import MulineColorPicker from "$components/PaletteSettings/MulineColorPicker.svelte";
 
     export let fileName: string;
     export let imagePalette: Array<Palette> | null;

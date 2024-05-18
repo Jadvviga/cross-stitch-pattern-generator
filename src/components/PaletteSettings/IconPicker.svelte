@@ -18,9 +18,9 @@
 </div>
 
 <script lang="ts">
-    import type { Palette} from "../../data/mulineData";
+    import type { Palette} from "$lib/data/mulineData";
     import { createEventDispatcher } from 'svelte';
-    import ColorTile from "../ColorTile.svelte";
+    import ColorTile from "$components/ColorTile.svelte";
 
     export let currentColor: Palette;
     export let targetTileNode: HTMLElement;

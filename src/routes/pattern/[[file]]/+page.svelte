@@ -73,8 +73,8 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
-    import Loading from '../../../components/Loading.svelte';
-    import Download from '../../../components/Download.svelte';
+    import Loading from '$components/Loading.svelte';
+    import Download from '$components/Download.svelte';
     import { fade } from 'svelte/transition';
 
 

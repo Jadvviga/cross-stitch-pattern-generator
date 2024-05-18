@@ -1,6 +1,6 @@
 import Jimp from "jimp";
-import type { Palette } from "../../data/mulineData";
-import { JimpHexToString, stringHexToJimp } from "./generatePalette";
+import type { Palette } from "$lib/data/mulineData";
+import { JimpHexToString, stringHexToJimp } from "$api/generatePalette";
 
 
 let middleYIcon: Jimp, middleXIcon: Jimp;

@@ -12,7 +12,7 @@
 
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import type { MulineData, Palette } from "../data/mulineData";
+    import type { MulineData, Palette } from "$lib/data/mulineData";
 
     export let color: Palette | MulineData;
     export let colorToDisplay: string;
