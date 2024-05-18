@@ -16,7 +16,7 @@ export function rgbToHex({r, g, b}: RGBA) {
 }
 
 export function hexToRgb(hex: string): RGBA {
-  var result = /^#?([A-Fa-f\d]{2})([A-Fa-f\d]{2})([A-Fa-f\d]{2})$/i.exec(hex);
+  let result = /^#?([A-Fa-f\d]{2})([A-Fa-f\d]{2})([A-Fa-f\d]{2})$/i.exec(hex);
   return result ? {
     r: parseInt(result[1], 16),
     g: parseInt(result[2], 16),
@@ -50,7 +50,8 @@ export async function getPaletteFromImage(fileName: string):  Promise<PaletteFro
           let i = Array.from(paletteSet).findIndex(p => p === pixel);
           paletteArray[i].count++;
         } else {
-          paletteArray.push({index, colorHex: JimpHexToString(pixel), count: 1 });
+          const isAlpha = Jimp.intToRGBA(pixel).a === 0;
+          paletteArray.push({index, colorHex: JimpHexToString(pixel), count: 1, isAlpha });
           index++;
         }
         paletteSet.add(pixel); 
@@ -63,7 +64,7 @@ const MIN_DIST_THRESHOLD = 18; //for when using least colors as possible
 //ITP - 19
 //2000 - 7
 //TODO consider giving option of choosing the color disatnce algo
-export async function loadPalette(fileName: string, pixelsPalette: Array<PaletteFromImg>, mulineType: MULINE_TYPES, useLeastColors: boolean): Promise<Palette[]> {
+export async function loadPalette(pixelsPalette: Array<PaletteFromImg>, mulineType: MULINE_TYPES, useLeastColors: boolean): Promise<Palette[]> {
   const mulinePalette = getMulinePalette(mulineType);
   const palette: Array<Palette> = []; // palette to return
   const mulineColorSet = new Set<string>; // set for icon control
@@ -73,10 +74,10 @@ export async function loadPalette(fileName: string, pixelsPalette: Array<Palette
   let iconID = -1;
   if (hasAlpha(pixelsPalette)) {
     iconID = 0;
-    pixelsPalette = pixelsPalette.filter(pal => hexToRgb(pal.colorHex).a !== 0);
+    pixelsPalette = pixelsPalette.filter(pal => pal.isAlpha === false);
   }
 
-  pixelsPalette.forEach(({colorHex, count, index}) => {
+  pixelsPalette.forEach(({colorHex, count, index, isAlpha}) => {
     let mulineIndex = -1;
     if (useLeastColors) {
       //Version 2
@@ -127,7 +128,8 @@ export async function loadPalette(fileName: string, pixelsPalette: Array<Palette
       muline: mulineColor,
       icon,
       invertIcon: isColorDark(mulineColor.hex),
-      count
+      count,
+      isAlpha
     });
   })
 
@@ -166,6 +168,7 @@ function _hasAlpha(colorsArray: Array<RGBA>) {
 }
 
 function hasAlpha(pixelsPalette: Array<PaletteFromImg>) {
-  const foundIndex = pixelsPalette.findIndex(pal => hexToRgb( pal.colorHex ).a === 0);
+  const foundIndex = pixelsPalette.findIndex(pal => pal.isAlpha === true);
+  console.log(pixelsPalette[foundIndex])
   return foundIndex !== -1
 }
