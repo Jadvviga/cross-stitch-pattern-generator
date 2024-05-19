@@ -337,7 +337,7 @@ function splitImage(imagePixelsArray: Array<number>, ogWidth: number, ogHeight: 
 
   const numOfSplitsX = Math.floor(ogWidth/THRESHOLD_SPLIT) + (ogWidth%THRESHOLD_SPLIT === 0 ? 0 : 1);
   const numOfSplitsY = Math.floor(ogHeight/THRESHOLD_SPLIT) + (ogHeight%THRESHOLD_SPLIT === 0 ? 0 : 1);
-  console.log(ogWidth, numOfSplitsX, ogHeight, numOfSplitsY);
+  //console.log(ogWidth, numOfSplitsX, ogHeight, numOfSplitsY);
 
   const getCurrentDimension= (currentIndex: number, numOfSplits: number, total: number) => {
     if (currentIndex < numOfSplits - 1) {

@@ -146,7 +146,6 @@
         showMulineColorPicker = false;
         const {color, node: tileNode} = event.detail;
         showIconPicker = true;
-        console.log('aaa')
         clickedTile = tileNode;
         clickedColor = color;
     }
@@ -154,15 +153,15 @@
     function changeColorInPalette(event: CustomEvent) {
         const {currentColor: colorToChange, clickedColor} = event.detail;
         const foundIndex = imagePalette.findIndex(col => col.index === colorToChange.index);
-        imagePalette[foundIndex].muline = clickedColor;
-
+    
         // If clicked muline color is already in palette - apply its icon
         const mulineAlreadyInPalette = imagePalette.findIndex(col => col.muline.id === clickedColor.id);
-        if (mulineAlreadyInPalette) {
+        if (mulineAlreadyInPalette !== -1) {
             const takeIconFrom = imagePalette[mulineAlreadyInPalette];
             imagePalette[foundIndex].icon = takeIconFrom.icon;
             imagePalette[foundIndex].invertIcon = takeIconFrom.invertIcon;
         }
+        imagePalette[foundIndex].muline = clickedColor;
         imagePalette = imagePalette;
         addToModified(colorToChange);
     }
