@@ -3,8 +3,6 @@ node_modules
 /build
 /.svelte-kit
 /package
-/static/images/upload
-/static/images/pattern
 .env
 .env.*
 !.env.example
