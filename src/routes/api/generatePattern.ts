@@ -4,6 +4,7 @@ import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import { addIconsToImage, addTextToImage, loadIconsFromPalette, loadImageToPixelsArray } from "$api/generationUtils";
 import JSZip from "jszip";
+import type { IconFiles } from "$src/lib/data/generation";
 
 
 //A4 ma na 350 dpi 2893 x 4092 px
@@ -29,8 +30,8 @@ const GRID_COLOR = 555819519;
 // const GRID_COLOR_LIGHT = 170; //when next to dark colors
 const WHITE = 4294967295;
 
-const GRID_SIZE = 3;
-const GRID_BIG_SIZE = 4;
+const GRID_SIZE = 2;
+const GRID_BIG_SIZE = 3;
 const GRID_HIGHLIGHT_SIZE = 8;  //grid size for grid every 10 square
 
 const GRID_SIZE_PREVIEW = 1;
@@ -143,12 +144,11 @@ function generateImagePattern(
   imagesForPDFBW: Array<string>,
   expectedImagesNumber: number,
   scale: number,
-  iconFiles: Array<Jimp>,
+  iconFiles: Array<IconFiles>,
   font: Font,
   palette: Array<Palette>,
   shouldRotateForPrinting: boolean
 ) {
-
   const patternBWFileName = `${patternDir}/pattern_bw_${index}.png`;
   const patternFileName = `${patternDir}/pattern_${index}.png`;
 
