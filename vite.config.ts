@@ -5,6 +5,7 @@ export default defineConfig({
 	plugins: [sveltekit()],
 	server: {
 		port: 2137,
-		open: true
+		open: true,
+		host: true
 	}
 });

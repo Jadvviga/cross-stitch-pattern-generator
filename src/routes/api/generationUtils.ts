@@ -20,7 +20,7 @@ export function loadImageToPixelsArray(image: Jimp, palette: Array<Palette>): Ar
             if (paletteColor && alpha !== 0) { //do not replace transparent pixels
                 pixel = stringHexToJimp(paletteColor.muline.hex);
             }
-            
+
             imagePixelsArray.push(pixel);  // value are in HEX number
         }
     }
@@ -66,7 +66,7 @@ export function addIconsToImage(
                         }
                         image.composite(icon, x, y);
                     }
-                    
+
                 }
 
             }
@@ -93,7 +93,7 @@ export function addTextToImage(
     let iY = 0, iX = 0;
     let i = startingNumberY;
     let middle = Math.floor(height / 2);
-    
+
     for (let y = offset; iY < height; y += scale) {
         const isOnTenth = i % 10 === 0;
         y += isOnTenth ? gridHighlightSize : gridSize;
@@ -103,7 +103,7 @@ export function addTextToImage(
         if (isOnTenth) {
             image = printTextToImage(image, font, Math.floor(offset / 2) - 2, y, `${i}`, offset / 2);
         }
-       
+
         i++;
         iY++;
     }
@@ -114,7 +114,7 @@ export function addTextToImage(
         const isOnTenth = i % 10 === 0;
         x += isOnTenth ? gridHighlightSize : gridSize;
         if (i === middle && middleXIcon) {
-            image.composite(middleXIcon, x, Math.floor(offset / 2) );
+            image.composite(middleXIcon, x, Math.floor(offset / 2));
         }
         if (isOnTenth && i !== 0) {
             image = printTextToImage(image, font, x, Math.floor(offset / 2), `${i}`, offset / 2);
@@ -142,9 +142,9 @@ function printTextToImage(image: Jimp, font: Font, posX: number, posY: number, t
 }
 
 export async function loadIconsFromPalette(palette: Array<Palette>, scale: number): Promise<Array<IconFiles>> {
-    middleYIcon =  await Jimp.read(`static/images/icons/middle_left.png`);
+    middleYIcon = await Jimp.read(`static/images/icons/middle_left.png`);
     middleYIcon.resize(scale, scale, Jimp.RESIZE_NEAREST_NEIGHBOR);
-    middleXIcon =  await Jimp.read(`static/images/icons/middle_top.png`);
+    middleXIcon = await Jimp.read(`static/images/icons/middle_top.png`);
     middleXIcon.resize(scale, scale, Jimp.RESIZE_NEAREST_NEIGHBOR);
     const icons = getPaletteIcons(palette);
     const iconFiles: Array<IconFiles> = [];
@@ -157,7 +157,7 @@ export async function loadIconsFromPalette(palette: Array<Palette>, scale: numbe
         if (inverse) {
             icon.invert();
         }
-        iconFiles.push({index, file: icon});
+        iconFiles.push({ index, file: icon });
     }
     return iconFiles;
 }

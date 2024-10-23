@@ -11,7 +11,7 @@ function componentToHex(c: number) {
   return hex.length == 1 ? "0" + hex : hex;
 }
 
-export function rgbToHex({r, g, b}: RGBA) {
+export function rgbToHex({ r, g, b }: RGBA) {
   return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }
 
@@ -22,10 +22,11 @@ export function hexToRgb(hex: string): RGBA {
     g: parseInt(result[2], 16),
     b: parseInt(result[3], 16),
     a: 255
-  } : { r: 255, g: 255, b: 255, a:255 };
+  } : { r: 255, g: 255, b: 255, a: 255 };
 }
 
 export function JimpHexToString(hex: number): string {
+  // console.log('aaa', rgbToHex(Jimp.intToRGBA(555819519)))
   return rgbToHex(Jimp.intToRGBA(hex));
 }
 
@@ -34,7 +35,7 @@ export function stringHexToJimp(hex: string): number {
   return Jimp.rgbaToInt(rgb.r, rgb.g, rgb.b, rgb.a);
 }
 
-export async function getPaletteFromImage(fileName: string):  Promise<PaletteFromImg[]>  {
+export async function getPaletteFromImage(fileName: string): Promise<PaletteFromImg[]> {
   const fullFileName = `static/images/upload/${fileName}/${fileName}.png`;
   const image = await Jimp.read(fullFileName);
   const ogWidth = image.bitmap.width;
@@ -45,24 +46,24 @@ export async function getPaletteFromImage(fileName: string):  Promise<PaletteFro
   let index = 0;
   for (let y = 0; y < ogHeight; y++) {
     for (let x = 0; x < ogWidth; x++) {
-        let pixel = image.getPixelColor(x, y);
-        if (paletteSet.has(pixel)) {
-          let i = Array.from(paletteSet).findIndex(p => p === pixel);
-          paletteArray[i].count++;
-        } else {
-          const isAlpha = Jimp.intToRGBA(pixel).a === 0;
-          paletteArray.push({index, colorHex: JimpHexToString(pixel), count: 1, isAlpha });
-          index++;
-        }
-        paletteSet.add(pixel); 
+      let pixel = image.getPixelColor(x, y);
+      if (paletteSet.has(pixel)) {
+        let i = Array.from(paletteSet).findIndex(p => p === pixel);
+        paletteArray[i].count++;
+      } else {
+        const isAlpha = Jimp.intToRGBA(pixel).a === 0;
+        paletteArray.push({ index, colorHex: JimpHexToString(pixel), count: 1, isAlpha });
+        index++;
+      }
+      paletteSet.add(pixel);
     }
   }
   return paletteArray;
 }
 
-const MIN_DIST_THRESHOLD = 18; //for when using least colors as possible
+const MIN_DIST_THRESHOLD = 5; //for when using least colors as possible
 //ITP - 19
-//2000 - 7
+//2000 - 5
 export async function loadPalette(pixelsPalette: Array<PaletteFromImg>, mulineType: MULINE_TYPES, useLeastColors: boolean): Promise<Palette[]> {
   const mulinePalette = getMulinePalette(mulineType);
   const palette: Array<Palette> = []; // palette to return
@@ -76,7 +77,7 @@ export async function loadPalette(pixelsPalette: Array<PaletteFromImg>, mulineTy
     pixelsPalette = pixelsPalette.filter(pal => pal.isAlpha === false);
   }
 
-  pixelsPalette.forEach(({colorHex, count, index, isAlpha}) => {
+  pixelsPalette.forEach(({ colorHex, count, index, isAlpha }) => {
     let mulineIndex = -1;
     if (useLeastColors) {
       //Version 2
@@ -105,7 +106,7 @@ export async function loadPalette(pixelsPalette: Array<PaletteFromImg>, mulineTy
       const minDist = Math.min(...colorDistances);
       mulineIndex = colorDistances.indexOf(minDist);
     }
-   
+
 
     let icon = `icon${iconID}`;
     const mulineColor = mulinePalette[mulineIndex];
@@ -120,7 +121,7 @@ export async function loadPalette(pixelsPalette: Array<PaletteFromImg>, mulineTy
         iconID = 0;
       }
     }
-    
+
     palette.push({
       index,
       colorHex,
@@ -150,7 +151,7 @@ function getColorDifference(colorHex1: string, colorHex2: string): number {
 
   // CIE2000 is okay but gives more saturated colors
   // ITP seems okay too but give worse greens
-  return color1.deltaE(color2, "ITP");
+  return color1.deltaE(color2, "2000");
 }
 
 export function isColorDark(colorHex: string, threshold = 4.5) {

@@ -57,10 +57,10 @@
         if (!node || !node.parentElement) {
             return;
         }
-       const { height, width, x, y, } = targetTileNode.getBoundingClientRect();
+        const { height, width, x, y, } = targetTileNode.getBoundingClientRect();
         const scrollContainer = targetTileNode?.parentElement?.parentElement?.getBoundingClientRect();
-       
-        shouldBeAbove = scrollContainer && y > (scrollContainer?.y + scrollContainer.height)/2 || false;
+
+        shouldBeAbove = (scrollContainer && y > (scrollContainer?.y + scrollContainer.height)) || false;
         const top = y + height - (shouldBeAbove ? node.offsetHeight + targetTileNode.offsetHeight : 0);
         const left = x + width ;
         node.style.top = `${top}px`;

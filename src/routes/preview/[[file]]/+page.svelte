@@ -1,5 +1,6 @@
 {#if uploadedImage && !loadingImage} 
-    <h1>Preview {fileName}</h1>
+    <!-- <h1>Preview {fileName}</h1> -->
+    <h1>Preview</h1>
 
     <div transition:fade={{ delay: 250, duration: 300 }} class="container">
         <div class='columnContainer'

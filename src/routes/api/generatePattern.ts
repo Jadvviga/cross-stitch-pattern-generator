@@ -50,9 +50,9 @@ const PATH_PATTERN = 'static/images/pattern/';
 // generating preview (image just scaled only a bit with grid)
 export async function generatePreview(fileName: string): Promise<string> {
   const uploadDir = `static/images/upload/${fileName}`;
-    if (!fs.existsSync(uploadDir)){
-        fs.mkdirSync(uploadDir);
-    }
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+  }
   const fullFileName = `${uploadDir}/${fileName}.png`;
   const resizedFileName = `${uploadDir}/preview.png`;
 
@@ -64,17 +64,17 @@ export async function generatePreview(fileName: string): Promise<string> {
   const imagePixelsArray: number[] = [];
   //get pixels from og image to array
   for (let y = 0; y < ogHeight; y++) {
-      for (let x = 0; x < ogWidth; x++) {
-          let pixel = image.getPixelColor(x, y);
-          imagePixelsArray.push(pixel);  // value are in HEX number
-      }
+    for (let x = 0; x < ogWidth; x++) {
+      let pixel = image.getPixelColor(x, y);
+      imagePixelsArray.push(pixel);  // value are in HEX number
+    }
   }
   // get resized image pixel array
   const newWidth = getResizedDimension(ogWidth, scale, GRID_SIZE_PREVIEW, GRID_HIGHLIGHT_SIZE_PREVIEW);
   const newHeight = getResizedDimension(ogHeight, scale, GRID_SIZE_PREVIEW, GRID_HIGHLIGHT_SIZE_PREVIEW);
   const resizedImagePixelsArray = getPixelsOfGriddedImage(imagePixelsArray, ogWidth, ogHeight, newWidth, newHeight, scale, GRID_SIZE_PREVIEW, GRID_HIGHLIGHT_SIZE_PREVIEW);
 
-  //create resized, preveiw image
+  //create resized, preview image
   try {
     new Jimp(newWidth, newHeight, (err, image) => {
       if (err) throw err;
@@ -100,8 +100,8 @@ export async function generatePreview(fileName: string): Promise<string> {
 
 export async function generatePattern(fileName: string, palette: Array<Palette>) {
   const patternDir = `${PATH_PATTERN}${fileName}`;
-  if (!fs.existsSync(patternDir)){
-      fs.mkdirSync(patternDir);
+  if (!fs.existsSync(patternDir)) {
+    fs.mkdirSync(patternDir);
   }
   fs.copyFileSync(`${PATH_UPLOAD}${fileName}/preview.png`, `${patternDir}/preview.png`);
 
@@ -125,7 +125,7 @@ export async function generatePattern(fileName: string, palette: Array<Palette>)
   const expectedImagesNumber = splitImagesArrays.length * 2; //times 2 cuz we count color + BW
   const imagesForPDFCol: Array<string> = [];
   const imagesForPDFBW: Array<string> = [];
-  const shouldRotateForPrinting =ogWidth > ogHeight;
+  const shouldRotateForPrinting = ogWidth > ogHeight;
   for (const [index, imagePixelsArray] of splitImagesArrays.entries()) {
     generateImagePattern(patternDir, imagePixelsArray.array, imagePixelsArray.width, imagePixelsArray.height, imagePixelsArray.startX, imagePixelsArray.startY, index, imagesForPDFCol, imagesForPDFBW, expectedImagesNumber, scale, iconFiles, font, palette, shouldRotateForPrinting);
   }
@@ -160,7 +160,7 @@ function generateImagePattern(
   const resizedImagePixelsArray = getPixelsOfGriddedImage(imagePixelsArray, width, height, newWidth, newHeight, scale, gridSize, GRID_HIGHLIGHT_SIZE);
   const resizedImageBWPixelsArray = getPixelsOfGriddedImage(imagePixelsArray, width, height, newWidth, newHeight, scale, gridSize, GRID_HIGHLIGHT_SIZE, true);
 
-  const savePatterPDF = (imageFileName: string) => {
+  const savePatternPDF = (imageFileName: string) => {
     if (imageFileName.includes('bw')) {
       imagesForPDFBW.push(imageFileName);
     } else {
@@ -197,7 +197,7 @@ function generateImagePattern(
 
       image = addIconsToImage(image, width, height, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, palette, iconFiles);
       image = addTextToImage(image, width, height, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, font, startingNumberX, startingNumberY);
-      image.write(patternFileName, () => { savePatterPDF(patternFileName) });
+      image.write(patternFileName, () => { savePatternPDF(patternFileName) });
       colorImg = image;
     });
     // BW
@@ -221,7 +221,7 @@ function generateImagePattern(
       image = addIconsToImage(image, width, height, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, palette, iconFiles, true, colorImg);
       image = addTextToImage(image, width, height, scale, offset, gridSize, GRID_HIGHLIGHT_SIZE, font, startingNumberX, startingNumberY);
 
-      image.write(patternBWFileName, () => { savePatterPDF(patternBWFileName) });
+      image.write(patternBWFileName, () => { savePatternPDF(patternBWFileName) });
     });
 
   } catch (err) {
@@ -248,12 +248,12 @@ function generatePDF(
   const patternPaletteFileName = `${patternDir}/pattern_palette.png`;
   const patternBaseFileName = `${patternDir}/pattern_0.png`;
   const patternBaseBWFileName = `${patternDir}/pattern_bw_0.png`;
-  
+
   const patternPDFFileName = `${patternDir}/pattern.pdf`;
 
   const addRotatedImage = (doc: PDFKit.PDFDocument, image: string) => {
-    doc.rotate(90, {origin : [0, 0]});
-    doc.image(image, 0, -PAPER_MAX_WIDTH_PT,  { fit: [PAPER_MAX_HEIGHT_PT, PAPER_MAX_WIDTH_PT] });
+    doc.rotate(90, { origin: [0, 0] });
+    doc.image(image, 0, -PAPER_MAX_WIDTH_PT, { fit: [PAPER_MAX_HEIGHT_PT, PAPER_MAX_WIDTH_PT] });
     doc.restore();
   }
 
@@ -265,23 +265,23 @@ function generatePDF(
     } else {
       doc.image(image, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_HEIGHT_PT] });
     }
-    doc.text(`Pixel to Pattern - page ${pageNo}`, doc.page.width/2 - 50, doc.page.height - 15, { lineBreak: false });
+    doc.text(`Pixel to Pattern - page ${pageNo}`, doc.page.width / 2 - 50, doc.page.height - 15, { lineBreak: false });
     pageNo++;
   }
-  
+
 
   try {
     const doc = new PDFDocument({ size: 'A4', margin: MARGIN_PT });
     const pdfWriteStream = fs.createWriteStream(patternPDFFileName)
     doc.pipe(pdfWriteStream);
-    doc.image(previewFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_HEIGHT_PT/2] });
-    doc.image(patternPaletteFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_HEIGHT_PT/2] } );
-    doc.text(`Pixel to Pattern - page ${pageNo}`, doc.page.width/2 - 50, doc.page.height - 15, {lineBreak: false});
+    doc.image(previewFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_HEIGHT_PT / 2] });
+    doc.image(patternPaletteFileName, { fit: [PAPER_MAX_WIDTH_PT, PAPER_MAX_HEIGHT_PT / 2] });
+    doc.text(`Pixel to Pattern - page ${pageNo}`, doc.page.width / 2 - 50, doc.page.height - 15, { lineBreak: false });
     pageNo++;
     if (expectedImagesNumber > 2) { //image is split
       for (const image of imagesForPDF) {
         if (!image.includes('_0')) {
-            addPageWithImage(doc, image);
+          addPageWithImage(doc, image);
         }
       }
     } else {
@@ -327,7 +327,7 @@ async function generateZip(
   } catch (err) {
     console.error("Something went wrong when generating ZIP: " + err);
   }
-  
+
 }
 
 function splitImage(imagePixelsArray: Array<number>, ogWidth: number, ogHeight: number): Array<{ array: Array<number>, width: number, height: number, startX: number, startY: number }> {
@@ -335,15 +335,15 @@ function splitImage(imagePixelsArray: Array<number>, ogWidth: number, ogHeight: 
     return [{ array: imagePixelsArray, width: ogWidth, height: ogHeight, startX: 0, startY: 0 }];
   }
 
-  const numOfSplitsX = Math.floor(ogWidth/THRESHOLD_SPLIT) + (ogWidth%THRESHOLD_SPLIT === 0 ? 0 : 1);
-  const numOfSplitsY = Math.floor(ogHeight/THRESHOLD_SPLIT) + (ogHeight%THRESHOLD_SPLIT === 0 ? 0 : 1);
+  const numOfSplitsX = Math.floor(ogWidth / THRESHOLD_SPLIT) + (ogWidth % THRESHOLD_SPLIT === 0 ? 0 : 1);
+  const numOfSplitsY = Math.floor(ogHeight / THRESHOLD_SPLIT) + (ogHeight % THRESHOLD_SPLIT === 0 ? 0 : 1);
   //console.log(ogWidth, numOfSplitsX, ogHeight, numOfSplitsY);
 
-  const getCurrentDimension= (currentIndex: number, numOfSplits: number, total: number) => {
+  const getCurrentDimension = (currentIndex: number, numOfSplits: number, total: number) => {
     if (currentIndex < numOfSplits - 1) {
       return THRESHOLD_SPLIT;
     }
-    const specialCase = total%THRESHOLD_SPLIT <= THRESHOLD_SPLIT/2; //the rest from divisin is smaller then 30
+    const specialCase = total % THRESHOLD_SPLIT <= THRESHOLD_SPLIT / 2;
     if (currentIndex === numOfSplits - 1) {
       return specialCase ? THRESHOLD_SPLIT_SPECIAL : THRESHOLD_SPLIT;
     }
@@ -351,34 +351,34 @@ function splitImage(imagePixelsArray: Array<number>, ogWidth: number, ogHeight: 
   }
 
   const splitReturn: Array<any> = [];
-  
+
   let startX = 0, startY = 0;
   for (let y = 1; y <= numOfSplitsY; y++) {
-   let height = getCurrentDimension(y, numOfSplitsY, ogHeight);
+    let height = getCurrentDimension(y, numOfSplitsY, ogHeight);
     for (let x = 1; x <= numOfSplitsX; x++) {
       let width = getCurrentDimension(x, numOfSplitsX, ogWidth)
-      splitReturn.push( { array: [], width, height, startX, startY });
+      splitReturn.push({ array: [], width, height, startX, startY });
       startX += width;
     }
     startY += height;
     startX = 0;
   }
-  
+
   for (let y = 0; y < ogHeight; y++) {
     for (let x = 0; x < ogWidth; x++) {
       let pos = y * ogWidth + x;
       let pixel = imagePixelsArray[pos];
-      let foundIndex = splitReturn.findIndex(({width, height, startX, startY}) => {
+      let foundIndex = splitReturn.findIndex(({ width, height, startX, startY }) => {
         const inRangeX = x >= startX && x < startX + width;
         const inRangeY = y >= startY && y < startY + height;
         return inRangeX && inRangeY;
       });
-     
+
       splitReturn[foundIndex].array.push(pixel);
-      
+
     }
   }
-  splitReturn.unshift( { array: imagePixelsArray, width: ogWidth, height: ogHeight, startX: 0, startY: 0  });
+  splitReturn.unshift({ array: imagePixelsArray, width: ogWidth, height: ogHeight, startX: 0, startY: 0 });
   return splitReturn;
 }
 
@@ -387,21 +387,22 @@ function determineScale(width: number, height: number): number {
   if (width <= THRESHOLD_SMALL || height <= THRESHOLD_SMALL) {
     return SCALE_SMALL;
   }
-  if (width > THRESHOLD_BIG || height > THRESHOLD_BIG ) {
+  if (width > THRESHOLD_BIG || height > THRESHOLD_BIG) {
     return SCALE_BIG;
-    
+
   }
   return SCALE_MEDIUM;
 }
 
 function getResizedDimension(
-  ogDimension: number, //30 / 45
-  scale: number, //10
-  gridWidth: number, //1
-  highlightGridWidth: number //3
+  ogDimension: number,
+  scale: number,
+  gridWidth: number,
+  highlightGridWidth: number
 ): number {
   // num of highlights without the edges ones
-  const numOfHighlightsNoEdges = Math.floor((ogDimension - 1) / GRID_COUNTER); //If dimention is divisible by GRID_COUNTER=10, then the last of numOfHighlist will be on the v.last column, so we only add 1 for fisrt column, isnetad of 2 for both last and first columns
+  const numOfHighlightsNoEdges = Math.floor((ogDimension - 1) / GRID_COUNTER);
+  //If dimension is divisible by GRID_COUNTER=10, then the last of numOfHighlights will be on the v.last column, so we only add 1 for first column, instead of 2 for both last and first columns
   // colors
   const pixels = ogDimension * scale;
   // we add 2 to highlight for edges
@@ -430,8 +431,8 @@ function getPixelsOfGriddedImage( //generic func
   let row: number[] = [];
 
   // add grid row to whole image array
-  const addGridRow = (highlight: number) => {
-    for (let h = 0; h < highlight; h++) {
+  const addGridRow = (rowSize: number) => {
+    for (let h = 0; h < rowSize; h++) {
       for (let i = 0; i < resizedWidth; i++) {
         resizedImagePixelsArray.push(GRID_COLOR)
       }
@@ -440,8 +441,8 @@ function getPixelsOfGriddedImage( //generic func
   }
 
   //add grid column to current row
-  const addGridCol = (counter: number) => {
-    for (let i = 0; i < counter; i++) {
+  const addGridCol = (colSize: number) => {
+    for (let i = 0; i < colSize; i++) {
       row.push(GRID_COLOR);
     }
   }

@@ -7,8 +7,8 @@ export async function POST({ request }) {
     const { data } = await request.json();
     const file = data['image'];
 
-    //const fileName = randomUUID();
-    const fileName = `img${id}`;
+    const fileName = randomUUID();
+   // const fileName = `img${id}`;
     id++;
     const uploadDir = `static/images/upload/${fileName}`;
     if (!fs.existsSync(uploadDir)){
